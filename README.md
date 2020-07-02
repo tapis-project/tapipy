@@ -13,9 +13,10 @@ pip install tapylib
 ```
 
 ## Running the tests
-The tests resources are contained within the `test` directory in this repository.  
-1. Build the test docker image: `docker build -t tapis/pysdk-tests -f Dockerfile-tests .`
-2. Run these tests using the built docker image: `docker run -it --rm  tapis/pysdk-tests`
+
+Tests resources are contained within the `test` directory. `Dockerfile-tests` is at root.
+1. Build the test docker image: `docker build -t tapis/tapipy-tests -f Dockerfile-tests .`
+2. Run these tests using the built docker image: `docker run -it --rm  tapis/tapipy-tests`
 
 ## Usage
 
