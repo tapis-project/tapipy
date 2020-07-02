@@ -1,0 +1,33 @@
+# Image: tapis/tapipy-tests
+# Build: docker build -t tapis/tapipy-tests -f Dockerfile-tests .
+# Run it:
+#    docker run -it --rm tapis/tapipy-tests
+# Try it:
+#    docker run -it --rm tapis/tapipy bash
+#    docker run -it --rm -v $(pwd)/test/resource_examples:/home/tapis/resource_examples tapis/tapipy bash
+#    docker run -it --network tenants-api_tenants --rm tapis/tapipy bash
+
+from tapis/flaskbase
+
+USER root
+
+# Moving files
+ADD . /home/tapis/tapipy-install-dir
+ADD tests/tapipy-tests.py /home/tapis/tapipy-tests.py
+ADD tests/configschema.json /home/tapis/configschema.json
+ADD tests/config-dev-develop.json /home/tapis/config.json
+
+# Build
+RUN pip install -r /home/tapis/tapipy-install-dir/requirements.txt
+WORKDIR /home/tapis/tapipy-install-dir
+RUN poetry build
+WORKDIR /home/tapis/tapipy-install-dir/dist
+RUN pip install *.whl
+WORKDIR /home/tapis
+
+# Permissions
+RUN chown -R tapis:tapis /home/tapis
+USER tapis
+
+# Testing
+ENTRYPOINT ["pytest", "/home/tapis/tapipy-tests.py"]

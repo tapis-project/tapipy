@@ -1,0 +1,7 @@
+{
+  "service_name": "pysdk-tests",
+  "tenants": ["master"],
+  "base_url": "https://master.develop.tapis.io",
+  "username": "tenants",
+  "service_password": "<get from SK>"
+}

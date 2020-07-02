@@ -1,0 +1,31 @@
+{
+  "$id": "http://github.com/tapis-project/tokens-api/tokens-api/configschema.json",
+  "$schema": "http://json-schema.org/schema#",
+  "properties": {
+    "tenant_id": {
+      "type": "string",
+      "description": "Tenant id to run the tests in.",
+      "default": "master"
+    },
+    "username": {
+      "type": "string",
+      "description": "The username to run the tests under.",
+      "default": "pysdk"
+    },
+    "account_type": {
+      "type": "string",
+      "description": "The account type associated with the username.",
+      "default": "service"
+    },
+    "service_password": {
+      "type": "string",
+      "description": "The password to use when retrieving a token.",
+      "default": "pysdk"
+    },
+    "base_url": {
+      "type": "string",
+      "description": "The base URL of the tenant to run the tests in.",
+      "default": "https://dev.develop.tapis.io"
+    }
+  }
+}
