@@ -9,7 +9,7 @@ This project is under active development, exploring different approaches to SDK 
 ## Installation
 
 ```
-pip install tapylib
+pip install tapipy
 ```
 
 ## Running the tests
