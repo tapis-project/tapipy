@@ -37,3 +37,23 @@ new_token = openapi_client.NewTokenRequest(token_type='service', token_tenant_id
 resp = api_instance.create_token(new_token)
 jwt = resp.get('result').get('access_token').get('access_token')
 ```
+
+## Build instructions
+
+Building is done with poetry as follows:
+```
+pip install poetry
+poetry install
+```
+This installs `tapipy` to a virtual environment. Run a shell in this environment with:
+```
+poetry shell
+```
+
+To install locally (not in a virtual environment):
+```
+pip install poetry
+poetry build
+cd dists
+pip install *.whl
+```
