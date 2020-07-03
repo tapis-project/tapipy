@@ -53,7 +53,7 @@ def _getspec(resource_name, resource_url, download_spec=False):
             response = requests.get(resource_url)
             if response.status_code == 200:
                 try:
-                    spec_dict = yaml.load(response.content)
+                    spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
                     return create_spec(spec_dict)
                 # for now, if there are errors trying to fetch the latest spec, we fall back to the spec files defined in the
                 # the python-sdk package;
@@ -67,7 +67,7 @@ def _getspec(resource_name, resource_url, download_spec=False):
         # established.
         resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
         spec_path = f'{resources_dir}/openapi_v3-{resource_name}.yml'
-        spec_dict = yaml.load(open(spec_path, 'r'))
+        spec_dict = yaml.load(open(spec_path, 'r'), Loader=yaml.FullLoader)
         return create_spec(spec_dict)
     except Exception as e:
         print(f"Got exception trying to load spec_path: {spec_path}; exception: {e}")
