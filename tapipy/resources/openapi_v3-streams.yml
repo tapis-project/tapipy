@@ -20,6 +20,89 @@ servers:
   description: Develop Instance
 
 paths:
+
+### Begin of Hello
+  /v3/streams/hello:
+    get:
+      tags:
+        - Hello
+      summary: Say Hello
+      description: Say Hello
+      operationId: hello
+      x-swagger-router-controller: connexContr
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: string
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+### End of Hello
+
+### Begin of Ready
+  /v3/streams/ready:
+    get:
+      tags:
+        - Ready
+      summary: Check readiness of InfluxDB, Chords and Kapacitor
+      description: Readiness check
+      operationId: ready
+      x-swagger-router-controller: connexContr
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: string
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+### End of Ready
+
 ### Begin of Projects
   /v3/streams/projects:
     get:
@@ -823,7 +906,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateInstRequest'
+              $ref: '#/components/schemas/NewInstrument'
       responses:
         '201':
           description: Updated
