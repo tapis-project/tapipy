@@ -57,3 +57,10 @@ poetry build
 cd dists
 pip install *.whl
 ```
+
+## PyPi Push Instructions
+
+```
+poetry build
+poetry publish
+```
