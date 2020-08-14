@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "tapipy"
-version = "0.2.0"
+version = "0.2.2"
 description = "Python lib for interacting with an instance of the Tapis API Framework"
 license = "BSD-4-Clause"
 authors = ["Joe Stubbs <jstubbs@tacc.utexas.edu>"]
 maintainers = ["Joe Stubbs <jstubbs@tacc.utexas.edu>",
 			   "Christian Garcia <cgarcia@tacc.utexas.edu>"]
 readme = "README.md"
-repository = "https://github.com/tapis-project/python-sdk"
+repository = "https://github.com/tapis-project/tapipy"
 include = ["tapipy/resources"]
 
 [tool.poetry.dependencies]
