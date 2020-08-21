@@ -9,6 +9,7 @@ from openapi_core import create_spec
 from openapi_core.schema.parameters.enums import ParameterLocation
 import yaml
 from . import errors
+import typing
 
 import tapipy.errors
 
@@ -22,27 +23,28 @@ def _seq_but_not_str(obj):
     return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))
 
 
-RESOURCES = [('actors', 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml'),
-             ('authenticator',
-              'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml'),
-             ('meta',
-              'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml'),
-             ('files',
-              'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml'),
-             ## currently the files spec is missing operationId's for some of its operations.
-             ('sk',
-              'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml'),
-             ('streams',
-              'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml'),
-             ('systems',
-              'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml'),
-             ('tenants',
-              'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml'),
-             ('tokens',
-              'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'), ]
+## currently the files spec is missing operationId's for some of its operations.
+RESOURCES = {'master': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+                        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+                        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
+                        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+                        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+                        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+                        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
+                        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
+                        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'},
+             'dev': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+                     'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+                     'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
+                     'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+                     'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+                     'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+                     'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
+                     'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
+                     'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'}}
 
 
-def _getspec(resource_name, resource_url, download_spec=False):
+def _getspec(resource_name: str, resource_url: str, download_spec: bool = False):
     """
     Returns the openapi spec
     :param resource_name: (str) the name of the resource.
@@ -57,7 +59,7 @@ def _getspec(resource_name, resource_url, download_spec=False):
                     spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
                     return create_spec(spec_dict)
                 # for now, if there are errors trying to fetch the latest spec, we fall back to the spec files defined in the
-                # the python-sdk package;
+                # the tapipy package;
                 except:
                     pass
         except:
@@ -73,9 +75,6 @@ def _getspec(resource_name, resource_url, download_spec=False):
     except Exception as e:
         print(f"Got exception trying to load spec_path: {spec_path}; exception: {e}")
         raise e
-
-
-RESOURCE_SPECS = {resource[0]: _getspec(resource[0], resource[1]) for resource in RESOURCES}
 
 
 def get_basic_auth_header(username, password):
@@ -106,7 +105,9 @@ class Tapis(object):
                  service_password=None,
                  client_id=None,
                  client_key=None,
-                 download_latest_specs=False
+                 resource_set: str = 'master',
+                 custom_spec_dict: typing.Dict[str, str] = None, # Type checking with typing is for >=3.8 only
+                 download_latest_specs: bool = False
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -154,16 +155,35 @@ class Tapis(object):
         self.x_tenant_id = x_tenant_id
         self.x_username = x_username
 
-        # whether to dowload the very latest OpenAPI v3 definition files for the services -- setting this to True
+        # Allows a user to specify which set of resources to pull from.
+        # Only used when download_lastest_specs is used.
+        self.resource_set = resource_set
+        if not self.resource_set in RESOURCES.keys():
+            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
+
+        # If a custom spec dict is provided then the RESOURCES dict gets updated with it.
+        # If any repeated fields are used, the RESOURCES fields are overwritten.
+        # Only works when download_latest_specs is True
+        self.custom_spec_dict = custom_spec_dict
+
+        # Type checking dictionary interior, it'll be cool to do this with typing, but that's
+        # not available or available on a high python version.
+        if self.custom_spec_dict:
+            for spec_name, spec_val in self.custom_spec_dict.items():
+                if isinstance(spec_name, str) and isinstance(spec_val, str):
+                    RESOURCES[self.resource_set].update({spec_name: spec_val})
+                else:
+                    raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
+
+        # whether to download the very latest OpenAPI v3 definition files for the services -- setting this to True
         # could result in "live updates" to your code without warning. It also adds significant overhead to this method.
         # Use at your own risk!
         self.download_latest_specs = download_latest_specs
 
         if self.download_latest_specs:
-            resource_specs = {resource[0]: _getspec(resource[0], resource[1], download_spec=True)
-                              for resource in RESOURCES}
+            resource_specs = {resource[0]: _getspec(resource[0], resource[1], download_spec=True) for resource in RESOURCES[resource_set].items()}
         else:
-            resource_specs = RESOURCE_SPECS
+            resource_specs = {resource[0]: _getspec(resource[0], resource[1]) for resource in RESOURCES[resource_set].items()}
 
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
