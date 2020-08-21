@@ -9,6 +9,7 @@ from openapi_core import create_spec
 from openapi_core.schema.parameters.enums import ParameterLocation
 import yaml
 from . import errors
+import typing
 
 import tapipy.errors
 
@@ -104,9 +105,9 @@ class Tapis(object):
                  service_password=None,
                  client_id=None,
                  client_key=None,
-                 resource_set='master',
-                 custom_spec_dict=None,
-                 download_latest_specs=False
+                 resource_set: str = 'master',
+                 custom_spec_dict: typing.Dict[str, str] = None, # Type checking with typing is for >=3.8 only
+                 download_latest_specs: bool = False
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -157,14 +158,21 @@ class Tapis(object):
         # Allows a user to specify which set of resources to pull from.
         # Only used when download_lastest_specs is used.
         self.resource_set = resource_set
+        if not self.resource_set in RESOURCES.keys():
+            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
 
         # If a custom spec dict is provided then the RESOURCES dict gets updated with it.
         # If any repeated fields are used, the RESOURCES fields are overwritten.
         # Only works when download_latest_specs is True
         self.custom_spec_dict = custom_spec_dict
 
-        if self.custom_spec_dict:
-            RESOURCES[resource_set].update(custom_spec_dict)
+        # Type checking dictionary interior, it'll be cool to do this with typing, but that's
+        # not available or available on a high python version.
+        for spec in self.custom_spec_dict.items():
+            if isinstance(spec[0], str) and isinstance(spec[1], str):
+                RESOURCES[resource_set].update(spec)
+            else:
+                raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
 
         # whether to download the very latest OpenAPI v3 definition files for the services -- setting this to True
         # could result in "live updates" to your code without warning. It also adds significant overhead to this method.
