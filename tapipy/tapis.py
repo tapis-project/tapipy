@@ -169,9 +169,9 @@ class Tapis(object):
         # Type checking dictionary interior, it'll be cool to do this with typing, but that's
         # not available or available on a high python version.
         if self.custom_spec_dict:
-            for spec in self.custom_spec_dict.items():
-                if isinstance(spec[0], str) and isinstance(spec[1], str):
-                    RESOURCES[resource_set].update(spec)
+            for spec_name, spec_val in self.custom_spec_dict.items():
+                if isinstance(spec_name, str) and isinstance(spec_val, str):
+                    RESOURCES['master'].update({spec_name: spec_val})
                 else:
                     raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
 
