@@ -171,7 +171,7 @@ class Tapis(object):
         if self.custom_spec_dict:
             for spec_name, spec_val in self.custom_spec_dict.items():
                 if isinstance(spec_name, str) and isinstance(spec_val, str):
-                    RESOURCES['master'].update({spec_name: spec_val})
+                    RESOURCES[self.resource_set].update({spec_name: spec_val})
                 else:
                     raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
 
