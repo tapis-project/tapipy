@@ -168,11 +168,12 @@ class Tapis(object):
 
         # Type checking dictionary interior, it'll be cool to do this with typing, but that's
         # not available or available on a high python version.
-        for spec in self.custom_spec_dict.items():
-            if isinstance(spec[0], str) and isinstance(spec[1], str):
-                RESOURCES[resource_set].update(spec)
-            else:
-                raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
+        if self.custom_spec_dict:
+            for spec in self.custom_spec_dict.items():
+                if isinstance(spec[0], str) and isinstance(spec[1], str):
+                    RESOURCES[resource_set].update(spec)
+                else:
+                    raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
 
         # whether to download the very latest OpenAPI v3 definition files for the services -- setting this to True
         # could result in "live updates" to your code without warning. It also adds significant overhead to this method.
