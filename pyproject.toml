@@ -8,7 +8,7 @@ maintainers = ["Joe Stubbs <jstubbs@tacc.utexas.edu>",
 			   "Christian Garcia <cgarcia@tacc.utexas.edu>"]
 readme = "README.md"
 repository = "https://github.com/tapis-project/tapipy"
-include = ["tapipy/resources"]
+include = ["tapipy/specs"]
 
 [tool.poetry.dependencies]
 python = "^3.6"

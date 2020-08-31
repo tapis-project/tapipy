@@ -9,6 +9,10 @@ from openapi_core import create_spec
 from openapi_core.schema.parameters.enums import ParameterLocation
 import yaml
 from . import errors
+import pickle
+import shutil
+import multiprocessing
+import copy
 import typing
 
 import tapipy.errors
@@ -44,38 +48,125 @@ RESOURCES = {'master': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/
                      'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'}}
 
 
-def _getspec(resource_name: str, resource_url: str, download_spec: bool = False):
+def _get_specs(resources, spec_dir: str = None, download_latest_specs: bool = False):
     """
-    Returns the openapi spec
-    :param resource_name: (str) the name of the resource.
-    :param resource_url: (str) URL to download the resource spec file.
-    :return: (openapi_core.schema.specs.models.Spec) The Spec object associated with this resource.
+    Gets specs requested in resources.
+    Will download any spec that is not already downloaded.
+
+    Inputs: 
+    Outputs: {'spec1_name': openapi_core_spec_object1,
+              'spec2_name': openapi_core_spec_object2,
+              ...}
     """
-    if download_spec:
+    # Create a new directory for specs by copy Tapipy's to new dir
+    # Useful in case you don't have write access to Tapipy install location
+    if spec_dir:
+        if not os.path.exists(spec_dir):
+            try:
+                shutil.copytree(os.path.join(os.path.dirname(__file__), 'specs'), spec_dir)
+            except PermissionError:
+                raise PermissionError(f"You do not have permission to create/write to your specifed spec_dir at '{spec_dir}.'")
+    else:
+        spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
+    
+    # Get list of specs and check if we need to download any or if they already exist
+    # We download if the file name requested does not exist
+    list_of_existing_specs = os.listdir(spec_dir)
+    resources_to_download = []
+    for resource_name, resource_url in resources.items():
+        spec_name = make_filename_from_url(resource_url)
+        full_spec_name = f'{spec_name}.pickle'
+        spec_path = f'{spec_dir}/{spec_name}.pickle'
+        if download_latest_specs:
+            resources_to_download.append([resource_name, resource_url, spec_path])
+        else:
+            if not full_spec_name in list_of_existing_specs:
+                resources_to_download.append([resource_name, resource_url, spec_path])
+
+    # Download and save requested specs if neccessary
+    if resources_to_download:
+        download_and_pickle_spec_dicts(resources_to_download)
+    
+    # Load, unpickle, and create specs
+    specs = {}
+    for resource_name, resource_url in resources.items():
+        spec_name = make_filename_from_url(resource_url)
+        spec_path = f'{spec_dir}/{spec_name}.pickle'
+        spec = unpickle_and_create_spec(spec_path)
+        specs.update({resource_name: spec})
+    return specs
+
+def download_and_pickle_spec_dicts(resources_to_download: list):
+    """
+    Function that calls threads to download and pickle specs.
+    Cuts wait time for 9 specs from 4s to 0.7s
+
+    Inputs: [resource_name: str, resource_url: str, spec_path:str]
+    Outputs: None
+    """
+    POOL_SIZE = os.environ.get('POOL_SIZE', 16)
+    pool = multiprocessing.Pool(processes=POOL_SIZE)
+    pool.map(_thread_download_spec_dict, resources_to_download)
+    pool.close()
+    pool.join()
+
+def _thread_download_spec_dict(resource_info: list):
+    """
+    Function that multiprocessing pool calls to download and store pickled spec dicts.
+    Gets spec dict, if it's valid, stores it at 'spec_path', else it does nothing.
+
+    Inputs: [resource_name: str, resource_url: str, spec_path:str]
+    Outputs: None
+    """
+    resource_name, resource_url, spec_path = resource_info
+    # Attempt to get spec from url
+    response = requests.get(resource_url)
+    if response.status_code == 200:
         try:
-            response = requests.get(resource_url)
-            if response.status_code == 200:
-                try:
-                    spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
-                    return create_spec(spec_dict)
-                # for now, if there are errors trying to fetch the latest spec, we fall back to the spec files defined in the
-                # the tapipy package;
-                except:
-                    pass
-        except:
-            pass
-
+            # Loads yaml into Python dictionary
+            spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
+        except Exception as e:
+            print(f'Got exception when attempting to load yaml for "{resource_name}" resource; exception: {e}')
+            return
+        try:
+            # Attempts to create spec from dict to ensure the spec is valid
+            # We do a deepcopy as create_spec for some reason adds fields to the dictionary that's given
+            test_spec_dict = copy.deepcopy(spec_dict)
+            create_spec(test_spec_dict)
+        except Exception as e:
+            print(f'Got exception when test creating spec for "{resource_name}" resource; Spec probably not verifying; exception: {e}')
+            return
+        try:
+            # Pickles and saves the spec dict to the spec_path
+            with open(f'{spec_path}', 'wb') as spec_file:
+                pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception as e:
+            print(f'Got exception when attempting to pickle spec_dict for "{resource_name}" resource; exception: {e}')
+            return
+    else:
+        raise KeyError(f'Error getting "{resource_name}" resource. URL: "{url}". Did not get 200, got the following back:\n{response.text}')
+        return
+    
+def unpickle_and_create_spec(spec_path: str):
+    """
+    Pickles loads a specifed spec_path and creates said spec.
+    Can be made even faster with multiprocessing, but it's not very slow to begin with.
+    
+    Inputs: spec_path (including filename.ext)
+    Outputs: OpenAPI spec
+    """
     try:
-        # for now, hardcode the paths; we could look these up based on a canonical URL once that is
-        # established.
-        resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
-        spec_path = f'{resources_dir}/openapi_v3-{resource_name}.yml'
-        spec_dict = yaml.load(open(spec_path, 'r'), Loader=yaml.FullLoader)
-        return create_spec(spec_dict)
+        with open(spec_path, 'rb') as spec_file:
+            spec_dict = pickle.load(spec_file)
+            return create_spec(spec_dict)
     except Exception as e:
-        print(f"Got exception trying to load spec_path: {spec_path}; exception: {e}")
-        raise e
+        print(f'Got exception trying to unpickle and create spec for spec_path: "{spec_path}"; exception: {e}')
 
+def make_filename_from_url(url_str: str):
+    """
+    Using a url string we create a file name to store said url contents.
+    """
+    return url_str.replace('https://raw.githubusercontent.com/', '').replace('.yml', '').replace('.yaml', '').replace('/', '-').lower()
 
 def get_basic_auth_header(username, password):
     """
@@ -181,9 +272,9 @@ class Tapis(object):
         self.download_latest_specs = download_latest_specs
 
         if self.download_latest_specs:
-            resource_specs = {resource[0]: _getspec(resource[0], resource[1], download_spec=True) for resource in RESOURCES[resource_set].items()}
+            resource_specs = _get_specs(RESOURCES[resource_set])
         else:
-            resource_specs = {resource[0]: _getspec(resource[0], resource[1]) for resource in RESOURCES[resource_set].items()}
+            resource_specs = _get_specs(RESOURCES[resource_set])
 
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
@@ -205,6 +296,9 @@ class Tapis(object):
             if self.account_type == 'service':
                 self.x_tenant_id = self.tenant_id
                 self.x_username = self.username
+
+    def update_spec_cache(self):
+
 
     def update_tenant_cache(self):
         """
