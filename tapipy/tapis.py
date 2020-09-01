@@ -9,9 +9,24 @@ from openapi_core import create_spec
 from openapi_core.schema.parameters.enums import ParameterLocation
 import yaml
 from . import errors
+import pickle
+import shutil
+import multiprocessing
+import copy
+from typing import Dict, List, TypedDict, NewType, Mapping
+from atomicwrites import atomic_write
+import openapi_core
 
 import tapipy.errors
 
+# Type declarations
+ResourceName = NewType('ResourceName', str)
+ResourceUrl = NewType('ResourceUrl', str)
+SpecPath = NewType('SpecPath', str)
+OpenApiSpec = NewType('OpenApiSpec', openapi_core.schema.specs.models.Spec)
+Resources = Dict[ResourceName, ResourceUrl]
+Specs = Dict[ResourceName, OpenApiSpec]
+ResourceInfo = Mapping[ResourceName, SpecPath]
 
 def _seq_but_not_str(obj):
     """
@@ -22,65 +37,182 @@ def _seq_but_not_str(obj):
     return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))
 
 
-RESOURCES = [('actors', 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml'),
-             ('authenticator',
-              'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml'),
-             ('meta',
-              'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml'),
-             ('files',
-              'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml'),
-             ## currently the files spec is missing operationId's for some of its operations.
-             ('sk',
-              'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml'),
-             ('streams',
-              'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml'),
-             ('systems',
-              'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml'),
-             ('tenants',
-              'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml'),
-             ('tokens',
-              'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'), ]
+## currently the files spec is missing operationId's for some of its operations.
+RESOURCES = {'master': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+                        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+                        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
+                        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+                        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+                        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+                        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
+                        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
+                        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'},
+             'dev': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+                     'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+                     'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
+                     'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+                     'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+                     'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+                     'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
+                     'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
+                     'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'}}
 
 
-def _getspec(resource_name, resource_url, download_spec=False):
+def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
     """
-    Returns the openapi spec
-    :param resource_name: (str) the name of the resource.
-    :param resource_url: (str) URL to download the resource spec file.
-    :return: (openapi_core.schema.specs.models.Spec) The Spec object associated with this resource.
+    Gets specs requested in resources.
+    Will download any spec that is not already downloaded.
     """
-    if download_spec:
+    spec_dir = get_spec_dir(spec_dir)
+    # Download and save specs if neccessary
+    download_and_pickle_spec_dicts(resources.values(), spec_dir=spec_dir, download_latest_specs=download_latest_specs)
+    # Load, unpickle, and create specs
+    specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
+    return specs
+
+def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_latest_specs: bool) -> None:
+    """
+    Function that calls threads to download and pickle specs.
+    Cuts wait time for 9 specs from 4s to 0.7s
+    """
+    # Get list of specs and check which we need to download
+    # We download if the file name requested does not exist
+    urls_to_download = []
+    for url in set(url_list):
+        _, full_spec_name, spec_path = get_file_info_from_url(url, spec_dir)
+        if download_latest_specs:
+            urls_to_download.append([url, spec_path])
+        else:
+            if not full_spec_name in os.listdir(spec_dir):
+                urls_to_download.append([url, spec_path])
+    
+    # Set off some parallel processes cause it's quick.
+    POOL_SIZE = os.environ.get('POOL_SIZE', 16)
+    pool = multiprocessing.Pool(processes=POOL_SIZE)
+    pool.map(_thread_download_spec_dict, urls_to_download)
+    pool.close()
+    pool.join()
+
+def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
+    """
+    Function that multiprocessing pool calls to download and store pickled
+    spec dicts. Gets spec dict, if it's valid, stores it at 'spec_path',
+    else it does nothing.
+    """
+    resource_url, spec_path = resource_info
+    # Attempt to get spec from url
+    response = requests.get(resource_url)
+    if response.status_code == 200:
         try:
-            response = requests.get(resource_url)
-            if response.status_code == 200:
-                try:
-                    spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
-                    return create_spec(spec_dict)
-                # for now, if there are errors trying to fetch the latest spec, we fall back to the spec files defined in the
-                # the python-sdk package;
-                except:
-                    pass
-        except:
-            pass
+            # Loads yaml into Python dictionary
+            spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
+        except Exception as e:
+            print(f'Got exception when attempting to load yaml for'
+                  f'"{spec_path}" resource; exception: {e}')
+            return
+        try:
+            # Attempts to create spec from dict to ensure the spec is valid
+            # We do a deepcopy as create_spec for some reason adds fields
+            # to the dictionary that's given
+            test_spec_dict = copy.deepcopy(spec_dict)
+            create_spec(test_spec_dict)
+        except Exception as e:
+            print(f'Got exception when test creating spec for "{spec_path}" '
+                  f'resource; Spec probably not verifying; exception: {e}')
+            return
+        try:
+            # Pickles and saves the spec dict to the spec_path atomically
+            with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
+                pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
+        except Exception as e:
+            print(f'Got exception when attempting to pickle spec_dict for'
+                  f'"{spec_path}" resource; exception: {e}')
+            return
+    else:
+        raise KeyError(f'Error getting "{spec_path}" resource. URL: "{url}".'
+                       f'Did not get 200, got the following back:\n{response.text}')
+        return
+    
+def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
+    """
+    Pickles loads a specifed spec_path and creates said spec.
+    Can't be threaded, map doesn't allow spec object to be sent back.
+    """
+    specs = {}
+    # Get resource path to point the unpickling at.
+    for resource_name, url in resources.items():
+        _, _, spec_path = get_file_info_from_url(url, spec_dir)
+        try:
+            # Unpickle and create_spec
+            with open(spec_path, 'rb') as spec_file:
+                spec_dict = pickle.load(spec_file)
+            specs.update({resource_name: create_spec(spec_dict)})
+        except Exception as e:
+            print(f'Got exception trying to unpickle and create spec for'
+                  f'spec_path: "{spec_path}"; exception: {e}')
+    return specs
 
-    try:
-        # for now, hardcode the paths; we could look these up based on a canonical URL once that is
-        # established.
-        resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
-        spec_path = f'{resources_dir}/openapi_v3-{resource_name}.yml'
-        spec_dict = yaml.load(open(spec_path, 'r'), Loader=yaml.FullLoader)
-        return create_spec(spec_dict)
-    except Exception as e:
-        print(f"Got exception trying to load spec_path: {spec_path}; exception: {e}")
-        raise e
+def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
+    """
+    Allows users to update specified specs in cache.
+    If nothing specified, all urls in "RESOURCES" are updated
+    in the Tapipy folder.
+    If a folder is specified, all urls specified are updated there.
+    """
+    if not resources:
+        # Get base resources from RESOURCES if resoruces not inputted
+        url_list = []
+        for resource_set in RESOURCES:
+            url_list.extend(list(RESOURCES[resource_set].values()))
+    else:
+        # Get just the URL's from the resources given
+        url_list = resources.values()
 
+    spec_dir = get_spec_dir(spec_dir)
+    download_and_pickle_spec_dicts(url_list, spec_dir=spec_dir, download_latest_specs=True)
+    
+def get_file_info_from_url(url: str, spec_dir: str):
+    """
+    Using a url string we create a file name to store said url contents.
+    """
+    # Parse a url to create a filename
+    spec_name = url.replace('https://raw.githubusercontent.com/', '')\
+                   .replace('.yml', '')\
+                   .replace('.yaml', '')\
+                   .replace('/', '-')\
+                   .lower()
+    # Get directory and full name for spec file
+    full_spec_name = f'{spec_name}.pickle'
+    spec_path = f'{spec_dir}/{spec_name}.pickle'
+    return spec_name, full_spec_name, spec_path
 
-RESOURCE_SPECS = {resource[0]: _getspec(resource[0], resource[1]) for resource in RESOURCES}
+def get_spec_dir(spec_dir: str):
+    """
+    Create a new directory for specs by copy Tapipy's to new dir
+    Useful in cases where you don't want to overwrite base specs
+    """
+    if spec_dir:
+        # Create folder if it doesn't exist
+        if not os.path.exists(spec_dir):
+            try:
+                # Copy over base specs so we don't need to redownload them
+                shutil.copytree(os.path.join(os.path.dirname(__file__), 'specs'), spec_dir)
+            except PermissionError:
+                raise PermissionError(f"You do not have permission to create/write"
+                                      f"to your specifed spec_dir at '{spec_dir}.'")
+    else:
+        # Fallback on the spec folder from the Tapipy package directory
+        spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
+    return spec_dir
+    
+
+RESOURCE_SPECS = _get_specs(RESOURCES['master'])
 
 
 def get_basic_auth_header(username, password):
     """
-    Convenience function with will return a properly formatted Authorization header from a username and password.
+    Convenience function with will return a properly formatted Authorization
+    header from a username and password.
     """
     user_pass = bytes(f"{username}:{password}", 'utf-8')
     return 'Basic {}'.format(b64encode(user_pass).decode())
@@ -106,7 +238,10 @@ class Tapis(object):
                  service_password=None,
                  client_id=None,
                  client_key=None,
-                 download_latest_specs=False
+                 resource_set: str = 'master',
+                 custom_spec_dict: Resources = None,
+                 download_latest_specs: bool = False,
+                 spec_dir: str = None
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -154,14 +289,38 @@ class Tapis(object):
         self.x_tenant_id = x_tenant_id
         self.x_username = x_username
 
-        # whether to dowload the very latest OpenAPI v3 definition files for the services -- setting this to True
-        # could result in "live updates" to your code without warning. It also adds significant overhead to this method.
-        # Use at your own risk!
+        # Allows a user to specify which set of resources to pull from.
+        # Only used when download_lastest_specs is used.
+        self.resource_set = resource_set
+        if not self.resource_set in RESOURCES.keys():
+            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
+
+        # If a custom spec dict is provided then the RESOURCES dict gets updated with it.
+        # If any repeated fields are used, the RESOURCES fields are overwritten.
+        # Only works when download_latest_specs is True
+        self.custom_spec_dict = custom_spec_dict
+
+        # Type checking dictionary interior, it'll be cool to do this with typing, but that's
+        # not available or available on a high python version.
+        if self.custom_spec_dict:
+            for spec_name, spec_val in self.custom_spec_dict.items():
+                if isinstance(spec_name, str) and isinstance(spec_val, str):
+                    RESOURCES[self.resource_set].update({spec_name: spec_val})
+                else:
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
+
+        # download_latest_specs sets whether to download the latest OpenAPI v3 specs for the service. This could
+        # result in "live updates" to your code without warning. It also adds significant overhead to this method.
+        # Use it at your own risk!
         self.download_latest_specs = download_latest_specs
 
-        if self.download_latest_specs:
-            resource_specs = {resource[0]: _getspec(resource[0], resource[1], download_spec=True)
-                              for resource in RESOURCES}
+        # Allows users to relocate the folder their OpenAPI v3 specs are located on the host.
+        # Valuable so users don't overwrite their base specs.
+        self.spec_dir = spec_dir
+
+        # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs. 
+        if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'master':
+            resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
         else:
             resource_specs = RESOURCE_SPECS
 
@@ -185,6 +344,22 @@ class Tapis(object):
             if self.account_type == 'service':
                 self.x_tenant_id = self.tenant_id
                 self.x_username = self.username
+
+    def update_spec_cache(self):
+        """
+        Updates the spec cache by using the Tapis object's settings.
+        So, if object has custom dict, those will be updated, etc.
+        """
+        # Still doing error catching in case modifications have been made.
+        if not self.resource_set in RESOURCES.keys():
+            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
+        if self.custom_spec_dict:
+            for spec_name, spec_val in self.custom_spec_dict.items():
+                if isinstance(spec_name, str) and isinstance(spec_val, str):
+                    RESOURCES[self.resource_set].update({spec_name: spec_val})
+                else:
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
+        update_spec_cache(RESOURCES[self.resource_set], self.spec_dir)
 
     def update_tenant_cache(self):
         """
