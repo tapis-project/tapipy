@@ -13,10 +13,20 @@ import pickle
 import shutil
 import multiprocessing
 import copy
-import typing
+from typing import Dict, List, TypedDict, NewType, Mapping
+from atomicwrites import atomic_write
+import openapi_core
 
 import tapipy.errors
 
+# Type declarations
+ResourceName = NewType('ResourceName', str)
+ResourceUrl = NewType('ResourceUrl', str)
+SpecPath = NewType('SpecPath', str)
+OpenApiSpec = NewType('OpenApiSpec', openapi_core.schema.specs.models.Spec)
+Resources = Dict[ResourceName, ResourceUrl]
+Specs = Dict[ResourceName, OpenApiSpec]
+ResourceInfo = Mapping[ResourceName, SpecPath]
 
 def _seq_but_not_str(obj):
     """
@@ -48,77 +58,47 @@ RESOURCES = {'master': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/
                      'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'}}
 
 
-def _get_specs(resources, spec_dir: str = None, download_latest_specs: bool = False):
+def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
     """
     Gets specs requested in resources.
     Will download any spec that is not already downloaded.
-
-    Inputs: 
-    Outputs: {'spec1_name': openapi_core_spec_object1,
-              'spec2_name': openapi_core_spec_object2,
-              ...}
     """
-    # Create a new directory for specs by copy Tapipy's to new dir
-    # Useful in case you don't have write access to Tapipy install location
-    if spec_dir:
-        if not os.path.exists(spec_dir):
-            try:
-                shutil.copytree(os.path.join(os.path.dirname(__file__), 'specs'), spec_dir)
-            except PermissionError:
-                raise PermissionError(f"You do not have permission to create/write to your specifed spec_dir at '{spec_dir}.'")
-    else:
-        spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
-    
-    # Get list of specs and check if we need to download any or if they already exist
-    # We download if the file name requested does not exist
-    list_of_existing_specs = os.listdir(spec_dir)
-    resources_to_download = []
-    for resource_name, resource_url in resources.items():
-        spec_name = make_filename_from_url(resource_url)
-        full_spec_name = f'{spec_name}.pickle'
-        spec_path = f'{spec_dir}/{spec_name}.pickle'
-        if download_latest_specs:
-            resources_to_download.append([resource_name, resource_url, spec_path])
-        else:
-            if not full_spec_name in list_of_existing_specs:
-                resources_to_download.append([resource_name, resource_url, spec_path])
-
-    # Download and save requested specs if neccessary
-    if resources_to_download:
-        download_and_pickle_spec_dicts(resources_to_download)
-    
+    spec_dir = get_spec_dir(spec_dir)
+    # Download and save specs if neccessary
+    download_and_pickle_spec_dicts(resources.values(), spec_dir=spec_dir, download_latest_specs=download_latest_specs)
     # Load, unpickle, and create specs
-    specs = {}
-    for resource_name, resource_url in resources.items():
-        spec_name = make_filename_from_url(resource_url)
-        spec_path = f'{spec_dir}/{spec_name}.pickle'
-        spec = unpickle_and_create_spec(spec_path)
-        specs.update({resource_name: spec})
+    specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
     return specs
 
-def download_and_pickle_spec_dicts(resources_to_download: list):
+def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_latest_specs: bool) -> None:
     """
     Function that calls threads to download and pickle specs.
     Cuts wait time for 9 specs from 4s to 0.7s
-
-    Inputs: [resource_name: str, resource_url: str, spec_path:str]
-    Outputs: None
     """
+    # Get list of specs and check which we need to download
+    # We download if the file name requested does not exist
+    urls_to_download = []
+    for url in set(url_list):
+        _, full_spec_name, spec_path = get_file_info_from_url(url, spec_dir)
+        if download_latest_specs:
+            urls_to_download.append([url, spec_path])
+        else:
+            if not full_spec_name in os.listdir(spec_dir):
+                urls_to_download.append([url, spec_path])
+        
     POOL_SIZE = os.environ.get('POOL_SIZE', 16)
     pool = multiprocessing.Pool(processes=POOL_SIZE)
-    pool.map(_thread_download_spec_dict, resources_to_download)
+    pool.map(_thread_download_spec_dict, urls_to_download)
     pool.close()
     pool.join()
 
-def _thread_download_spec_dict(resource_info: list):
+def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     """
-    Function that multiprocessing pool calls to download and store pickled spec dicts.
-    Gets spec dict, if it's valid, stores it at 'spec_path', else it does nothing.
-
-    Inputs: [resource_name: str, resource_url: str, spec_path:str]
-    Outputs: None
+    Function that multiprocessing pool calls to download and store pickled
+    spec dicts. Gets spec dict, if it's valid, stores it at 'spec_path',
+    else it does nothing.
     """
-    resource_name, resource_url, spec_path = resource_info
+    resource_url, spec_path = resource_info
     # Attempt to get spec from url
     response = requests.get(resource_url)
     if response.status_code == 200:
@@ -126,51 +106,99 @@ def _thread_download_spec_dict(resource_info: list):
             # Loads yaml into Python dictionary
             spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
         except Exception as e:
-            print(f'Got exception when attempting to load yaml for "{resource_name}" resource; exception: {e}')
+            print(f'Got exception when attempting to load yaml for'
+                  f'"{spec_path}" resource; exception: {e}')
             return
         try:
             # Attempts to create spec from dict to ensure the spec is valid
-            # We do a deepcopy as create_spec for some reason adds fields to the dictionary that's given
+            # We do a deepcopy as create_spec for some reason adds fields
+            # to the dictionary that's given
             test_spec_dict = copy.deepcopy(spec_dict)
             create_spec(test_spec_dict)
         except Exception as e:
-            print(f'Got exception when test creating spec for "{resource_name}" resource; Spec probably not verifying; exception: {e}')
+            print(f'Got exception when test creating spec for "{spec_path}" '
+                  f'resource; Spec probably not verifying; exception: {e}')
             return
         try:
-            # Pickles and saves the spec dict to the spec_path
-            with open(f'{spec_path}', 'wb') as spec_file:
+            # Pickles and saves the spec dict to the spec_path atomically
+            with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
                 pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
         except Exception as e:
-            print(f'Got exception when attempting to pickle spec_dict for "{resource_name}" resource; exception: {e}')
+            print(f'Got exception when attempting to pickle spec_dict for'
+                  f'"{spec_path}" resource; exception: {e}')
             return
     else:
-        raise KeyError(f'Error getting "{resource_name}" resource. URL: "{url}". Did not get 200, got the following back:\n{response.text}')
+        raise KeyError(f'Error getting "{spec_path}" resource. URL: "{url}".'
+                       f'Did not get 200, got the following back:\n{response.text}')
         return
     
-def unpickle_and_create_spec(spec_path: str):
+def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     """
     Pickles loads a specifed spec_path and creates said spec.
     Can be made even faster with multiprocessing, but it's not very slow to begin with.
-    
-    Inputs: spec_path (including filename.ext)
-    Outputs: OpenAPI spec
     """
-    try:
-        with open(spec_path, 'rb') as spec_file:
-            spec_dict = pickle.load(spec_file)
-            return create_spec(spec_dict)
-    except Exception as e:
-        print(f'Got exception trying to unpickle and create spec for spec_path: "{spec_path}"; exception: {e}')
+    specs = {}
+    for resource_name, url in resources.items():
+        _, _, spec_path = get_file_info_from_url(url, spec_dir)
+        try:
+            with open(spec_path, 'rb') as spec_file:
+                spec_dict = pickle.load(spec_file)
+            specs.update({resource_name: create_spec(spec_dict)})
+        except Exception as e:
+            print(f'Got exception trying to unpickle and create spec for'
+                  f'spec_path: "{spec_path}"; exception: {e}')
+    return specs
 
-def make_filename_from_url(url_str: str):
+def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
+    """
+    Allows users to update specified specs in cache.
+    If nothing specified, all urls in "RESOURCES" are updated
+    in the Tapipy folder.
+    If a folder is specified, all urls specified are updated there.
+    """    
+    if not resources:
+        url_list = []
+        for resource_set in RESOURCES:
+            url_list.extend(list(RESOURCES[resource_set].values()))
+    else:
+        url_list = resources.values()
+
+    spec_dir = get_spec_dir(spec_dir)
+    download_and_pickle_spec_dicts(url_list, spec_dir=spec_dir, download_latest_specs=True)
+    
+def get_file_info_from_url(url: str, spec_dir: str):
     """
     Using a url string we create a file name to store said url contents.
     """
-    return url_str.replace('https://raw.githubusercontent.com/', '').replace('.yml', '').replace('.yaml', '').replace('/', '-').lower()
+    spec_name = url.replace('https://raw.githubusercontent.com/', '')\
+                   .replace('.yml', '')\
+                   .replace('.yaml', '')\
+                   .replace('/', '-')\
+                   .lower()
+    full_spec_name = f'{spec_name}.pickle'
+    spec_path = f'{spec_dir}/{spec_name}.pickle'
+    return spec_name, full_spec_name, spec_path
 
+def get_spec_dir(spec_dir: str):
+    """
+    Create a new directory for specs by copy Tapipy's to new dir
+    Useful in cases where you don't want to overwrite base specs
+    """
+    if spec_dir:
+        if not os.path.exists(spec_dir):
+            try:
+                shutil.copytree(os.path.join(os.path.dirname(__file__), 'specs'), spec_dir)
+            except PermissionError:
+                raise PermissionError(f"You do not have permission to create/write"
+                                      f"to your specifed spec_dir at '{spec_dir}.'")
+    else:
+        spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
+    return spec_dir
+    
 def get_basic_auth_header(username, password):
     """
-    Convenience function with will return a properly formatted Authorization header from a username and password.
+    Convenience function with will return a properly formatted Authorization
+    header from a username and password.
     """
     user_pass = bytes(f"{username}:{password}", 'utf-8')
     return 'Basic {}'.format(b64encode(user_pass).decode())
@@ -197,8 +225,9 @@ class Tapis(object):
                  client_id=None,
                  client_key=None,
                  resource_set: str = 'master',
-                 custom_spec_dict: typing.Dict[str, str] = None, # Type checking with typing is for >=3.8 only
-                 download_latest_specs: bool = False
+                 custom_spec_dict: Resources = None,
+                 download_latest_specs: bool = False,
+                 spec_dir: str = None
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -264,17 +293,20 @@ class Tapis(object):
                 if isinstance(spec_name, str) and isinstance(spec_val, str):
                     RESOURCES[self.resource_set].update({spec_name: spec_val})
                 else:
-                    raise KeyError(f"Custom spec should be a dict of key: str and val:str, got {spec}.")
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
 
-        # whether to download the very latest OpenAPI v3 definition files for the services -- setting this to True
-        # could result in "live updates" to your code without warning. It also adds significant overhead to this method.
-        # Use at your own risk!
+
+
+        # download_latest_specs sets whether to download the latest OpenAPI v3 specs for the service. This could
+        # result in "live updates" to your code without warning. It also adds significant overhead to this method.
+        # Use it at your own risk!
         self.download_latest_specs = download_latest_specs
 
-        if self.download_latest_specs:
-            resource_specs = _get_specs(RESOURCES[resource_set])
-        else:
-            resource_specs = _get_specs(RESOURCES[resource_set])
+        # Allows users to relocate the folder their OpenAPI v3 specs are located on the host.
+        # Valuable so users don't overwrite their base specs.
+        self.spec_dir = spec_dir
+
+        resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
 
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
@@ -298,7 +330,20 @@ class Tapis(object):
                 self.x_username = self.username
 
     def update_spec_cache(self):
-
+        """
+        Updates the spec cache by using the Tapis object's settings.
+        So, if object has custom dict, those will be updated, etc.
+        """
+        # Still doing error catching in case modifications have been made.
+        if not self.resource_set in RESOURCES.keys():
+            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
+        if self.custom_spec_dict:
+            for spec_name, spec_val in self.custom_spec_dict.items():
+                if isinstance(spec_name, str) and isinstance(spec_val, str):
+                    RESOURCES[self.resource_set].update({spec_name: spec_val})
+                else:
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")\
+        update_spec_cache(RESOURCES[self.resource_set], self.spec_dir)
 
     def update_tenant_cache(self):
         """

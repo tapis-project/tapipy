@@ -21,6 +21,7 @@ PyJWT = "1.7.1"
 openapi_core = "^0.13.0"
 requests = "*"
 cryptography = "^2.9.2"
+atomicwrites = "^1.4.0"
 
 [build-system]
 requires = ["poetry>=0.12"]
