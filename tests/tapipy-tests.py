@@ -94,6 +94,11 @@ def test_tapisresult_nested_dicts():
     assert tr_2.time_1[1].y_0 == 0
     assert tr_2.time_1[1].y_1 == 3.14
 
+def test_tapisresult_self_in_response():
+    result = [{"self": "use 'self' in the response and you know you're foobar.",
+               "a_key": "a_value"}]
+    tr_list = [TapisResult(**r) for r in result]
+    assert len(tr_list) == 1
 
 # ----------------
 # tokens API tests -
