@@ -136,7 +136,7 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
 def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     """
     Pickles loads a specifed spec_path and creates said spec.
-    Can be made even faster with multiprocessing, but it's not very slow to begin with.
+    Can't be threaded, map doesn't allow spec object to be sent back.
     """
     specs = {}
     # Get resource path to point the unpickling at.
@@ -205,6 +205,10 @@ def get_spec_dir(spec_dir: str):
         spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
     return spec_dir
     
+
+RESOURCE_SPECS = _get_specs(RESOURCES['master'])
+
+
 def get_basic_auth_header(username, password):
     """
     Convenience function with will return a properly formatted Authorization
@@ -305,8 +309,6 @@ class Tapis(object):
                 else:
                     raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
 
-
-
         # download_latest_specs sets whether to download the latest OpenAPI v3 specs for the service. This could
         # result in "live updates" to your code without warning. It also adds significant overhead to this method.
         # Use it at your own risk!
@@ -316,7 +318,11 @@ class Tapis(object):
         # Valuable so users don't overwrite their base specs.
         self.spec_dir = spec_dir
 
-        resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
+        # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs. 
+        if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'master':
+            resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
+        else:
+            resource_specs = RESOURCE_SPECS
 
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
@@ -352,7 +358,7 @@ class Tapis(object):
                 if isinstance(spec_name, str) and isinstance(spec_val, str):
                     RESOURCES[self.resource_set].update({spec_name: spec_val})
                 else:
-                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")\
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
         update_spec_cache(RESOURCES[self.resource_set], self.spec_dir)
 
     def update_tenant_cache(self):
