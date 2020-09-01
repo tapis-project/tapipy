@@ -85,7 +85,8 @@ def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_lates
         else:
             if not full_spec_name in os.listdir(spec_dir):
                 urls_to_download.append([url, spec_path])
-        
+    
+    # Set off some parallel processes cause it's quick.
     POOL_SIZE = os.environ.get('POOL_SIZE', 16)
     pool = multiprocessing.Pool(processes=POOL_SIZE)
     pool.map(_thread_download_spec_dict, urls_to_download)
@@ -138,9 +139,11 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     Can be made even faster with multiprocessing, but it's not very slow to begin with.
     """
     specs = {}
+    # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
         _, _, spec_path = get_file_info_from_url(url, spec_dir)
         try:
+            # Unpickle and create_spec
             with open(spec_path, 'rb') as spec_file:
                 spec_dict = pickle.load(spec_file)
             specs.update({resource_name: create_spec(spec_dict)})
@@ -155,12 +158,14 @@ def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None
     If nothing specified, all urls in "RESOURCES" are updated
     in the Tapipy folder.
     If a folder is specified, all urls specified are updated there.
-    """    
+    """
     if not resources:
+        # Get base resources from RESOURCES if resoruces not inputted
         url_list = []
         for resource_set in RESOURCES:
             url_list.extend(list(RESOURCES[resource_set].values()))
     else:
+        # Get just the URL's from the resources given
         url_list = resources.values()
 
     spec_dir = get_spec_dir(spec_dir)
@@ -170,11 +175,13 @@ def get_file_info_from_url(url: str, spec_dir: str):
     """
     Using a url string we create a file name to store said url contents.
     """
+    # Parse a url to create a filename
     spec_name = url.replace('https://raw.githubusercontent.com/', '')\
                    .replace('.yml', '')\
                    .replace('.yaml', '')\
                    .replace('/', '-')\
                    .lower()
+    # Get directory and full name for spec file
     full_spec_name = f'{spec_name}.pickle'
     spec_path = f'{spec_dir}/{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
@@ -185,13 +192,16 @@ def get_spec_dir(spec_dir: str):
     Useful in cases where you don't want to overwrite base specs
     """
     if spec_dir:
+        # Create folder if it doesn't exist
         if not os.path.exists(spec_dir):
             try:
+                # Copy over base specs so we don't need to redownload them
                 shutil.copytree(os.path.join(os.path.dirname(__file__), 'specs'), spec_dir)
             except PermissionError:
                 raise PermissionError(f"You do not have permission to create/write"
                                       f"to your specifed spec_dir at '{spec_dir}.'")
     else:
+        # Fallback on the spec folder from the Tapipy package directory
         spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
     return spec_dir
     
