@@ -46,7 +46,7 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
                 # Loads yaml into Python dictionary
                 spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
             except Exception as e:
-                print(f'Got exception when attempting to load yaml for'
+                print(f'Got exception when attempting to load yaml for '
                       f'"{spec_path}" resource; exception: {e}')
             try:
                 # Attempts to create spec from dict to ensure the spec is valid
@@ -62,7 +62,7 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
                 with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
                     pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
             except Exception as e:
-                print(f'Got exception when attempting to pickle spec_dict for'
+                print(f'Got exception when attempting to pickle spec_dict for '
                       f'"{spec_path}" resource; exception: {e}')
 
                 
