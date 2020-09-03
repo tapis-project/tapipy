@@ -13,7 +13,7 @@ import pickle
 import shutil
 import multiprocessing
 import copy
-from typing import Dict, List, TypedDict, NewType, Mapping
+from typing import Dict, NewType, Mapping, Optional
 from atomicwrites import atomic_write
 import openapi_core
 
@@ -28,7 +28,7 @@ Resources = Dict[ResourceName, ResourceUrl]
 Specs = Dict[ResourceName, OpenApiSpec]
 ResourceInfo = Mapping[ResourceName, SpecPath]
 
-def _seq_but_not_str(obj):
+def _seq_but_not_str(obj: object) -> bool:
     """
     Determine if an object is a Sequence, i.e., has an iteratable type, but not a string, bytearray, etc.
     :param obj: Any python object.
@@ -55,7 +55,20 @@ RESOURCES = {'master': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/
                      'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
                      'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
                      'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-                     'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'}}
+                     'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'},
+             'tapipy':{
+                 'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml',
+                 'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml',
+                 'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml',
+                 'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml',
+                 'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml',
+                 'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml',
+                 'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml',
+                 'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml',
+                 'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml',
+              }
+             }
+
 
 
 def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
@@ -206,10 +219,10 @@ def get_spec_dir(spec_dir: str):
     return spec_dir
     
 
-RESOURCE_SPECS = _get_specs(RESOURCES['master'])
+RESOURCE_SPECS = _get_specs(RESOURCES['tapipy'])
 
 
-def get_basic_auth_header(username, password):
+def get_basic_auth_header(username: str, password: str) -> str:
     """
     Convenience function with will return a properly formatted Authorization
     header from a username and password.
@@ -224,21 +237,21 @@ class Tapis(object):
     """
 
     def __init__(self,
-                 base_url=None,
-                 username=None,
-                 password=None,
-                 tenant_id=None,
-                 account_type=None,
-                 access_token=None,
-                 refresh_token=None,
-                 jwt=None,
-                 x_tenant_id=None,
-                 x_username=None,
-                 verify=True,
-                 service_password=None,
-                 client_id=None,
-                 client_key=None,
-                 resource_set: str = 'master',
+                 base_url: Optional[str]=None,
+                 username: Optional[str]=None,
+                 password: Optional[str]=None,
+                 tenant_id: Optional[str]=None,
+                 account_type: Optional[str]=None,
+                 access_token: Optional[str]=None,
+                 refresh_token: Optional[str]=None,
+                 jwt: Optional[str]=None,
+                 x_tenant_id: Optional[str]=None,
+                 x_username: Optional[str]=None,
+                 verify: Optional[bool]=True,
+                 service_password: Optional[str]=None,
+                 client_id: Optional[str]=None,
+                 client_key: Optional[str]=None,
+                 resource_set: str = 'tapipy',
                  custom_spec_dict: Resources = None,
                  download_latest_specs: bool = False,
                  spec_dir: str = None
@@ -1008,11 +1021,17 @@ class Operation(object):
                         return TapisResult(result)
                     else:
                         if debug:
-                            return [TapisResult(**x) for x in result], debug_data
-                        return [TapisResult(**x) for x in result]
+                            [TapisResult(**x) for x in result if not x == 'self'], debug_data
+                        return [TapisResult(**x) for x in result if not x == 'self']
                 # otherwise, assume it is a JSON object and return that directly as a result -
                 try:
                     if debug:
+                        # remove a key "self"
+                        try:
+                            if 'self' in result.keys():
+                                result.pop('self')
+                        except:
+                            pass
                         return TapisResult(**result), debug_data
                     return TapisResult(**result)
                 except TypeError:
@@ -1073,9 +1092,14 @@ class TapisResult(object):
                 if len([item for item in v if type(item) in TapisResult.PRIMITIVE_TYPES]) > 0:
                     setattr(self, k, v)
                 else:
-                    setattr(self, k, [TapisResult(**item) for item in v])
+                    setattr(self, k, [TapisResult(**item) for item in v if not item == 'self'])
             # for complex objects, create a TapisResult with the value
             else:
+                try:
+                    if 'self' in v.keys():
+                        v.pop('self')
+                except:
+                    pass
                 setattr(self, k, TapisResult(**v))
 
     def __str__(self):
