@@ -38,36 +38,41 @@ def _seq_but_not_str(obj: object) -> bool:
 
 
 ## currently the files spec is missing operationId's for some of its operations.
-RESOURCES = {'master': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
-                        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-                        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-                        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
-                        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
-                        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-                        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-                        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-                        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'},
-             'dev': {'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
-                     'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-                     'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-                     'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
-                     'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
-                     'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-                     'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-                     'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-                     'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'},
-             'tapipy':{
-                 'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml',
-                 'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml',
-                 'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml',
-                 'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml',
-                 'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml',
-                 'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml',
-                 'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml',
-                 'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml',
-                 'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml',
-              }
-             }
+RESOURCES = {
+    'tapipy':{
+        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml'
+    },
+    'master': {
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',               
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+    },
+    'dev': {
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+    }
+}
 
 
 
@@ -142,9 +147,8 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
                   f'"{spec_path}" resource; exception: {e}')
             return
     else:
-        raise KeyError(f'Error getting "{spec_path}" resource. URL: "{url}".'
+        raise KeyError(f'Error getting "{spec_path}" resource. URL: "{resource_url}".'
                        f'Did not get 200, got the following back:\n{response.text}')
-        return
     
 def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     """
@@ -319,8 +323,8 @@ class Tapis(object):
             for spec_name, spec_val in self.custom_spec_dict.items():
                 if isinstance(spec_name, str) and isinstance(spec_val, str):
                     RESOURCES[self.resource_set].update({spec_name: spec_val})
-                else:
-                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
+                else: 
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec_name} and {spec_val}.")
 
         # download_latest_specs sets whether to download the latest OpenAPI v3 specs for the service. This could
         # result in "live updates" to your code without warning. It also adds significant overhead to this method.
@@ -371,7 +375,7 @@ class Tapis(object):
                 if isinstance(spec_name, str) and isinstance(spec_val, str):
                     RESOURCES[self.resource_set].update({spec_name: spec_val})
                 else:
-                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec}.")
+                    raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec_name} and {spec_val}.")
         update_spec_cache(RESOURCES[self.resource_set], self.spec_dir)
 
     def update_tenant_cache(self):
@@ -466,7 +470,6 @@ class Tapis(object):
             refresh_token_ttl = 3153600000
         else:
             refresh_token_ttl = kwargs['refresh_token_ttl']
-        service_password = None
         if 'service_password' in kwargs:
             service_password = kwargs['service_password']
         elif self.service_password:
