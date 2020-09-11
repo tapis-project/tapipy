@@ -343,7 +343,7 @@ class Tapis(object):
             setattr(self, resource_name, Resource(resource_name, spec.paths, self))
 
         # we lazy-load the tenant_cache to prevent making a call to the Tenants API when not needed.
-        self.tenant_cache = None
+        self.tenant_cache = {}
         # if the user passed just base_url, try to get the list of tenants and derive the tenant_id from it.
         if base_url and not tenant_id:
             self.update_tenant_cache()
