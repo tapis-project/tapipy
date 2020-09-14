@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.2.5 - 2020-9-14 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fix to solve tenant cache not being filled initially issue.
+
+### Removed
+- No change.
+
 ## 0.2.4 - 2020-9-4 (target)
 ### Added
 - Added pickling, multithreading, additional options to download files, and speed improvements.
