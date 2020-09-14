@@ -14,16 +14,16 @@ info:
     url: "https://github.com/TACC/abaco"
 
 servers:
-- url: http://localhost:8000
+- url: http://localhost:5000
   description: Local Development
-- url: https://api.tacc.utexas.edu
-  description: Production TACC tenant.
-- url: https://api.sd2e.org
-  description: Production SD2E tenant.
-- url: https://dev.tenants.staging.tacc.cloud
-  description: Staging TACC tenant.
-- url: https://dev.tenants.develop.tacc.cloud
-  description: Develop TACC tenant.
+- url: http://{tenant_id_url}.develop.tapis.io
+  description: Tapis Develop instance
+  variables:
+    tenant_id_url:
+      default: dev
+      description: The tenant_id associated with the request.
+- url: /
+  description: catch-all server definition for other Tapis instances.
 
 security:
   - wso2jwtDevAuth: []
@@ -31,7 +31,7 @@ security:
 
 
 paths:
-  /actors:
+  /v3/actors:
     get:
       tags:
       - Actors
@@ -84,7 +84,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/Actor'
 
-  /actors/{actor_id}:
+  /v3/actors/{actor_id}:
     get:
       tags:
       - Actors
@@ -168,7 +168,7 @@ paths:
                     enum: [null]
 
 
-  /actors/{actor_id}/messages:
+  /v3/actors/{actor_id}/messages:
     get:
       tags:
       - Actors
@@ -277,7 +277,7 @@ paths:
                     enum: [null]
 
 
-  /actors/{actor_id}/executions:
+  /v3/actors/{actor_id}/executions:
     get:
       tags:
       - Actors
@@ -305,7 +305,7 @@ paths:
                     $ref: '#/components/schemas/ActorExecutionSummaries'
 
 
-  /actors/{actor_id}/nonces:
+  /v3/actors/{actor_id}/nonces:
     get:
       tags:
       - Actors
@@ -366,7 +366,7 @@ paths:
                     $ref: '#/components/schemas/ActorNonces'
 
 
-  /actors/{actor_id}/nonces/{nonce_id}:
+  /v3/actors/{actor_id}/nonces/{nonce_id}:
     get:
       tags:
       - Actors
@@ -433,7 +433,7 @@ paths:
                     enum: [null]
 
 
-  /actors/{actor_id}/state:
+  /v3/actors/{actor_id}/state:
     get:
       tags:
       - Actors
@@ -495,7 +495,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorNonces'
 
-  /actors/{actor_id}/executions/{execution_id}:
+  /v3/actors/{actor_id}/executions/{execution_id}:
     get:
       tags:
       - Actors
@@ -528,7 +528,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorExecution'
 
-  /actors/{actor_id}/executions/{execution_id}/logs:
+  /v3/actors/{actor_id}/executions/{execution_id}/logs:
     get:
       tags:
       - Actors
@@ -562,7 +562,7 @@ paths:
                     $ref: '#/components/schemas/ActorExecutionLogs'
 
 
-  /actors/{actor_id}/permissions:
+  /v3/actors/{actor_id}/permissions:
     get:
       tags:
       - Actors
@@ -622,7 +622,7 @@ paths:
                     $ref: '#/components/schemas/ActorPermissions'
 
 
-  /actors/{actor_id}/workers:
+  /v3/actors/{actor_id}/workers:
     get:
       tags:
       - Actors
@@ -694,7 +694,7 @@ paths:
               schema:
                 type: string
 
-  /actors/aliases:
+  /v3/actors/aliases:
     get:
       tags:
       - Actors
@@ -749,7 +749,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/Alias'
 
-  /actors/aliases/{alias}:
+  /v3/actors/aliases/{alias}:
     get:
       tags:
       - Actors
