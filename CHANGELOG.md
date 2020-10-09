@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.2.6 - 2020-10-9 (target)
+### Added
+- No change.
+
+### Changed
+- Updated SK spec pickled file.
+
+### Removed
+- No change.
+
 ## 0.2.5 - 2020-9-14 (target)
 ### Added
 - No change.
