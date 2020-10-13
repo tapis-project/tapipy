@@ -409,7 +409,7 @@ class Tapis(object):
         else:
             self.tenant_cache = Tenants(self)
         # if the user passed just base_url, try to get the list of tenants and derive the tenant_id from it.
-        if base_url and not tenant_id:
+        if not self.is_tapis_service and base_url and not tenant_id:
             self.tenant_cache.reload_tenants()
             for tid, t in self.tenant_cache.tenants.items():
                 if t.base_url == base_url:
@@ -486,17 +486,26 @@ class Tapis(object):
 
     def get_service_tokens(self, **kwargs):
         """
-        Calls the Tapis Tokens API (tokengen) to get access and refresh tokens for a service and set them on the client.
+        Calls the Tapis Tokens API to get access and refresh tokens for a service and set them on the client.
         :return:
         """
         if not 'username' in kwargs:
             username = self.username
         else:
             username = kwargs['username']
-        if not 'tenant_id' in kwargs:
-            tenant_id = self.tenant_id
+        # tapis services manage a set ot tokens, one for each of the tenants for which we need to interact with.
+        self.service_tokens = {}
+        # if the caller passed a tenant_id explicitly, we just use that
+        if 'tenant_id' in kwargs:
+            self.service_tokens = {kwargs['tenant_id']: {}}
+        # otherwise, we compute all the tenant's that this service could need to interact with.
         else:
-            tenant_id = kwargs['tenant_id']
+            try:
+                self.service_tokens = {t: {} for t in self.tenant_cache.get_site_master_tenants_for_service()}
+            except AttributeError:
+                raise errors.BaseTapyException("Unable to retrieve target tenants for a service. "
+                                               "Are you really a Tapis service? "
+                                               "Did you pass in your Tenants instance?")
         if not 'access_token_ttl' in kwargs:
             # default to a 24 hour access token -
             access_token_ttl = 86400
@@ -507,19 +516,23 @@ class Tapis(object):
             refresh_token_ttl = 3153600000
         else:
             refresh_token_ttl = kwargs['refresh_token_ttl']
-        if 'service_password' in kwargs:
-            service_password = kwargs['service_password']
-        elif self.service_password:
-            service_password = self.service_password
-
-        tokens = self.tokens.create_token(token_username=username,
-                                          token_tenant_id=tenant_id,
-                                          account_type=self.account_type,
-                                          access_token_ttl=access_token_ttl,
-                                          generate_refresh_token=True,
-                                          refresh_token_ttl=refresh_token_ttl)
-        self.set_access_token(tokens.access_token)
-        self.set_refresh_token(tokens.refresh_token)
+        for tenant_id in self.service_tokens.keys():
+            try:
+                target_site_id = self.tenant_cache.get_tenant_config(tenant_id=tenant_id).site_id
+            except Exception as e:
+                raise errors.BaseTapyException(f"Got exception computing target site id; e:{e}")
+            try:
+                tokens = self.tokens.create_token(token_username=username,
+                                                  token_tenant_id=self.tenant_id,
+                                                  account_type=self.account_type,
+                                                  access_token_ttl=access_token_ttl,
+                                                  generate_refresh_token=True,
+                                                  refresh_token_ttl=refresh_token_ttl,
+                                                  target_site_id=target_site_id)
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not generate tokens for tenant: {tenant_id}; exception: {e}")
+            self.service_tokens[tenant_id] = {'access_token': tokens.access_token,
+                                              'refresh_token': tokens.refresh_token}
 
     def validate_token(self, token):
         """
@@ -574,14 +587,14 @@ class Tapis(object):
         except:
             pass
 
-    def refresh_tokens(self):
+    def refresh_tokens(self ,tenant_id=None):
         """
         Use the refresh token on this client to get a new access and refresh token pair.
         """
         if not self.refresh_token:
             raise errors.TapyClientConfigurationError(msg="No refresh token found.")
         if self.account_type == 'service':
-            return self.refresh_service_tokens()
+            return self.refresh_service_tokens(tenant_id)
         else:
             return self.refresh_user_tokens()
 
@@ -600,13 +613,14 @@ class Tapis(object):
         self.set_access_token(tokens.access_token)
         self.set_refresh_token(tokens.refresh_token)
 
-    def refresh_service_tokens(self):
+    def refresh_service_tokens(self, tenant_id):
         """
         Use the refresh token operation for tokens of type "service".
         """
-        tokens = self.tokens.refresh_token(refresh_token=self.refresh_token.refresh_token)
-        self.set_access_token(tokens.access_token)
-        self.set_refresh_token(tokens.refresh_token)
+        refresh_token = self.service_tokens[tenant_id]['refresh_token'].refresh_token
+        tokens = self.tokens.refresh_token(refresh_token=refresh_token)
+        self.service_tokens[tenant_id]['access_token'] = tokens.refresh_token
+        self.service_tokens[tenant_id]['refresh_token'] = tokens.refresh_token
 
     def set_refresh_token(self, token):
         """
@@ -887,7 +901,9 @@ class Operation(object):
                     tenant_id = getattr(g, 'request_tenant_id', None)
                 if not tenant_id:
                     tenant_id = getattr(g, 'x_tapis_tenant', None)
-            except:
+            # note that flask will throw a RuntimeError if attempting to access the thread local object, j, outside
+            # of an application context.
+            except (ImportError, RuntimeError):
                 pass
             # check the headers to see if X-Tapis-Tenant is being set; if so, use that:
             if not tenant_id and 'headers' in kwargs:
@@ -898,7 +914,7 @@ class Operation(object):
             # if we couldn't get it from the tenant id, look for it in the parameters
             if not tenant_id:
                 try:
-                    tenant_id = kwargs.get('_tapis_tenand_id')
+                    tenant_id = kwargs.get('_tapis_tenant_id')
                 except:
                     pass
             # if we got a tenant_id, use it to look up the base_url:
@@ -955,14 +971,28 @@ class Operation(object):
 
         # construct the http headers -
         headers = {}
-
+        access_token = None
         # set the X-Tapis-Token header using the client
-        if self.tapis_client.get_access_jwt():
+        if self.tapis_client.is_tapis_service and hasattr(self.tapis_client, 'service_tokens'):
+            # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
+            # the service's first set of tokens.
+            if tenant_id in self.tapis_client.service_tokens.keys() \
+                    and 'access_token' in self.tapis_client.service_tokens[tenant_id].keys():
+                try:
+                    access_token = self.tapis_client.service_tokens[tenant_id]['access_token']
+                except KeyError:
+                    raise errors.BaseTapyException(f"Did not find service tokens for tenant {tenant_id}; "
+                                                   f"service_tokens for tenant: {self.tapis_client.service_tokens[tenant_id]}")
+            else:
+                pass
+        elif self.tapis_client.get_access_jwt():
+            access_token = self.tapis_client.get_access_jwt()
+        if access_token:
             # check for a token about to expire in the next 5 seconds; assume by default we have a token with
             # plenty of time remaining.
             time_remaining = datetime.timedelta(days=10)
             try:
-                time_remaining = self.tapis_client.access_token.expires_in()
+                time_remaining = access_token.expires_in()
             except:
                 # it is possible the access_token does not have an expires_in attribute and/or that it is not
                 # callable. we just pass on these exceptions and do not try to refresh the token.
@@ -979,7 +1009,14 @@ class Operation(object):
                         # for now, if we get an error trying to refresh the tokens,s, we ignore it and try the
                         # request anyway.
                         pass
-            headers = {'X-Tapis-Token': self.tapis_client.get_access_jwt(), }
+            if self.tapis_client.is_tapis_service:
+                try:
+                    jwt = self.tapis_client.service_tokens[tenant_id]['access_token'].access_token
+                except KeyError:
+                    raise errors.BaseTapyException(f"No service tokens found for tenant {tenant_id} after refresh.")
+            else:
+                jwt = self.tapis_client.get_access_jwt()
+            headers = {'X-Tapis-Token':  jwt}
 
         # the X-Tapis-Tenant and X-Tapis-Username headers can be set when the token represents a service account and the
         # service is making a request on behalf of another user/tenant.
