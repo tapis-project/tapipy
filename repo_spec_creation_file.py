@@ -90,14 +90,14 @@ RESOURCES = {
     },
     'dev': {
         'actors': 'https://github.com/TACC/abaco/blob/dev-v3/docs/specs/openapi_v3.yml',
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/meta/service/resources/openapi_v3.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/meta/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/meta/api/src/main/resources/openapi.yaml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/meta/security-client/src/main/resources/SKAuthorizationAPI.yaml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/meta/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/meta/systems-client/SystemsAPI.yaml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/meta/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/meta/service/resources/openapi_v3.yml'
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/dev/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml'
     }
 }
 
