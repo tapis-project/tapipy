@@ -65,29 +65,41 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
                 print(f'Got exception when attempting to pickle spec_dict for '
                       f'"{spec_path}" resource; exception: {e}')
 
-
-
-# These are all the URLS in the RESOURCES['tapipy'] dict in tapipy.py
-actor_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml'
-authenticator_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml'
-meta_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml'
-files_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml'
-sk_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml'
-streams_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml'
-systems_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml'
-tenants_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml'
-tokens_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml'
-                
-# These are all the URLS in the RESOURCES['master'] dict in tapipy.py
-actor_master_url = 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml'
-authenticator_master_url = 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml'
-meta_master_url = 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml'
-files_master_url = 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml'
-sk_master_url = 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml'
-streams_master_url = 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml'
-systems_master_url = 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml'
-tenants_master_url = 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml'
-tokens_master_url = 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+RESOURCES = {
+    'tapipy':{
+        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-authenticator.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-meta.yml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-files.yml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-sk.yml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-streams.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml'
+    },
+    'prod': {
+        'actors': 'https://github.com/TACC/abaco/blob/dev-v3/docs/specs/openapi_v3.yml',               
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/prod/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/prod/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml'
+    },
+    'dev': {
+        'actors': 'https://github.com/TACC/abaco/blob/dev-v3/docs/specs/openapi_v3.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/meta/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/meta/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/meta/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/meta/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/meta/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/meta/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/meta/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/meta/service/resources/openapi_v3.yml'
+    }
+}
 
 # Spec/Key is the url to download and copy the spec dict from.
 # Alias/Val is the file to save the spec dict to.
@@ -96,27 +108,27 @@ spec_and_alias = {'source_spec_url': 'destination_spec_url'}
 
 # Set 1 updates all tapipy pickle files with the specs contained
 # in the tapipy resource directory. So what users have opted to update.
-spec_and_alias_set_1 = {actor_tapipy_url: actor_tapipy_url,
-                        authenticator_tapipy_url: authenticator_tapipy_url,
-                        meta_tapipy_url: meta_tapipy_url,
-                        files_tapipy_url: files_tapipy_url,
-                        sk_tapipy_url: sk_tapipy_url,
-                        streams_tapipy_url: streams_tapipy_url,
-                        systems_tapipy_url: systems_tapipy_url,
-                        tenants_tapipy_url: tenants_tapipy_url,
-                        tokens_tapipy_url: tokens_tapipy_url}
+spec_and_alias_set_1 = {RESOURCES['tapipy']['actors']: RESOURCES['tapipy']['actors'],
+                        RESOURCES['tapipy']['authenticator']: RESOURCES['tapipy']['authenticator'],
+                        RESOURCES['tapipy']['meta']: RESOURCES['tapipy']['meta'],
+                        RESOURCES['tapipy']['files']: RESOURCES['tapipy']['files'],
+                        RESOURCES['tapipy']['sk']: RESOURCES['tapipy']['sk'],
+                        RESOURCES['tapipy']['streams']: RESOURCES['tapipy']['streams'],
+                        RESOURCES['tapipy']['systems']: RESOURCES['tapipy']['systems'],
+                        RESOURCES['tapipy']['tenants']: RESOURCES['tapipy']['tenants'],
+                        RESOURCES['tapipy']['tokens']: RESOURCES['tapipy']['tokens']}
 
 # Set 2 updates all tapipy pickle files with the specs contained
-# in each specs source master branch. So updating them completely.
-spec_and_alias_set_2 = {actor_master_url: actor_tapipy_url,
-                        authenticator_master_url: authenticator_tapipy_url,
-                        meta_master_url: meta_tapipy_url,
-                        files_master_url: files_tapipy_url,
-                        sk_master_url: sk_tapipy_url,
-                        streams_master_url: streams_tapipy_url,
-                        systems_master_url: systems_tapipy_url,
-                        tenants_tapipy_url: tenants_tapipy_url,
-                        tokens_master_url: tokens_tapipy_url}
+# in each specs source's prod branch. So updating them completely.
+spec_and_alias_set_2 = {RESOURCES['prod']['actors']: RESOURCES['tapipy']['actors'],
+                        RESOURCES['prod']['authenticator']: RESOURCES['tapipy']['authenticator'],
+                        RESOURCES['prod']['meta']: RESOURCES['tapipy']['meta'],
+                        RESOURCES['prod']['files']: RESOURCES['tapipy']['files'],
+                        RESOURCES['prod']['sk']: RESOURCES['tapipy']['sk'],
+                        RESOURCES['prod']['streams']: RESOURCES['tapipy']['streams'],
+                        RESOURCES['prod']['systems']: RESOURCES['tapipy']['systems'],
+                        RESOURCES['prod']['tenants']: RESOURCES['tapipy']['tenants'],
+                        RESOURCES['prod']['tokens']: RESOURCES['tapipy']['tokens']}
  
 # Specify where you want the specs to be saved, to get ready for a release
 # specify the github/tapipy/tapipy/specs folder to overwrite old specs.
