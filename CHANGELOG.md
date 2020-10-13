@@ -6,6 +6,16 @@ All notable changes to this project will be documented in this file.
 - No change.
 
 ### Changed
+- Bug fix, making custom pickled files use protocol 4 as well.
+
+### Removed
+- No change.
+
+## 0.2.8 - 2020-10-13 (target)
+### Added
+- No change.
+
+### Changed
 - All pickled files will now use pickle.protocol 4.
 
 ### Removed
