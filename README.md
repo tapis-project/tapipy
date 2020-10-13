@@ -66,6 +66,9 @@ The Tapipy package allows for spec file customization in Tapis object initializa
 		* e.g. I can add a new resource named "test" with a  custom url.
 		* Important that know that any new specs will be downloaded and added to the cache
 			* No need to specify download_latest_specs or update spec files.
+	* ALLOWS LOCAL RESOURCES!
+		* Specify an absolute path in the dict with `local:` prefixing it and tapipy will load in a local OpenAPI v3 yml spec file.
+		* `custom_spec_dict={'cactus': 'local: /home/tapis/myfolder/cactusSpec.yml'}`
 * download_latest_specs: bool
 	* Allows users to re-download all specs regardless on if they already exist in the cache. Defaulted to False
 	* This will happen every time the Tapis object is initialized, it's a tad slower, and can cause live updates to specs.
@@ -85,7 +88,8 @@ t = Tapis(base_url='https://master.develop.tapis.io',
           password='password',
           resource_set='master',
           custom_spec_dict={'abaco': 'URL#1',
-                            'longhorn': 'URL#2'},
+                            'longhorn': 'URL#2',
+							'cactus': 'local: /home/tapis/myfolder/cactusSpec.yml'},
           spec_dir='/home/username/tapipy_specs')
 t.get_tokens()
 ```

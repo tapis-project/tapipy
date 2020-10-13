@@ -97,6 +97,8 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
     # We download if the file name requested does not exist
     urls_to_download = []
     for resource_name, url in resources.items():
+        if "local:" in url:
+            continue 
         _, full_spec_name, spec_path = get_file_info_from_url(url, spec_dir)
         if download_latest_specs:
             urls_to_download.append([resource_name, url, spec_path])
@@ -158,6 +160,16 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     specs = {}
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
+        if "local:" in url:
+            try:
+                spec_path = url.replace('local:', '')
+                with open(spec_path, 'rb') as spec_file:
+                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
+                specs.update({resource_name: create_spec(spec_dict)})
+            except Exception as e:
+                print(f'Error reading local "{resource_name}" resource. '
+                      f'Ensure path is absolute. e:{e}')
+            continue
         _, _, spec_path = get_file_info_from_url(url, spec_dir)
         try:
             # Unpickle and create_spec

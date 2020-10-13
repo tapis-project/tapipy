@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.2.11 - 2020-10-13 (target)
+### Added
+- Adding the ability to load local spec files.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
 ## 0.2.10 - 2020-10-13 (target)
 ### Added
 - Adding default falling back to prod spec if there was an error reading in other spec.
