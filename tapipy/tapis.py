@@ -40,37 +40,37 @@ def _seq_but_not_str(obj: object) -> bool:
 ## currently the files spec is missing operationId's for some of its operations.
 RESOURCES = {
     'tapipy':{
-        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml',
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml'
+        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-authenticator.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-meta.yml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-files.yml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-sk.yml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-streams.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml'
     },
-    'master': {
-        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',               
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+    'prod': {
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/prod/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/prod/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml'
     },
     'dev': {
-        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/dev/api/src/main/resources/openapi.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml'
     }
 }
 
@@ -83,12 +83,12 @@ def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs
     """
     spec_dir = get_spec_dir(spec_dir)
     # Download and save specs if neccessary
-    download_and_pickle_spec_dicts(resources.values(), spec_dir=spec_dir, download_latest_specs=download_latest_specs)
+    download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=download_latest_specs)
     # Load, unpickle, and create specs
     specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
     return specs
 
-def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_latest_specs: bool) -> None:
+def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download_latest_specs: bool) -> None:
     """
     Function that calls threads to download and pickle specs.
     Cuts wait time for 9 specs from 4s to 0.7s
@@ -96,13 +96,13 @@ def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_lates
     # Get list of specs and check which we need to download
     # We download if the file name requested does not exist
     urls_to_download = []
-    for url in set(url_list):
+    for resource_name, url in resources.items():
         _, full_spec_name, spec_path = get_file_info_from_url(url, spec_dir)
         if download_latest_specs:
-            urls_to_download.append([url, spec_path])
+            urls_to_download.append([resource_name, url, spec_path])
         else:
             if not full_spec_name in os.listdir(spec_dir):
-                urls_to_download.append([url, spec_path])
+                urls_to_download.append([resource_name, url, spec_path])
     
     # Set off some parallel processes cause it's quick.
     POOL_SIZE = os.environ.get('POOL_SIZE', 16)
@@ -117,7 +117,7 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     spec dicts. Gets spec dict, if it's valid, stores it at 'spec_path',
     else it does nothing.
     """
-    resource_url, spec_path = resource_info
+    resource_name, resource_url, spec_path = resource_info
     # Attempt to get spec from url
     response = requests.get(resource_url)
     if response.status_code == 200:
@@ -125,8 +125,8 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
             # Loads yaml into Python dictionary
             spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
         except Exception as e:
-            print(f'Got exception when attempting to load yaml for'
-                  f'"{spec_path}" resource; exception: {e}')
+            print(f'Got exception when attempting to load yaml for '
+                  f'"{resource_name}" resource; exception: {e}')
             return
         try:
             # Attempts to create spec from dict to ensure the spec is valid
@@ -135,19 +135,19 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
             test_spec_dict = copy.deepcopy(spec_dict)
             create_spec(test_spec_dict)
         except Exception as e:
-            print(f'Got exception when test creating spec for "{spec_path}" '
+            print(f'Got exception when test creating spec for "{resource_name}" '
                   f'resource; Spec probably not verifying; exception: {e}')
             return
         try:
             # Pickles and saves the spec dict to the spec_path atomically
             with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
-                pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump(spec_dict, spec_file, protocol=4)
         except Exception as e:
-            print(f'Got exception when attempting to pickle spec_dict for'
-                  f'"{spec_path}" resource; exception: {e}')
+            print(f'Got exception when attempting to pickle spec_dict for '
+                  f'"{resource_name}" resource; exception: {e}')
             return
     else:
-        raise KeyError(f'Error getting "{spec_path}" resource. URL: "{resource_url}".'
+        raise KeyError(f'Error getting "{resource_name}" resource. URL: "{resource_url}".'
                        f'Did not get 200, got the following back:\n{response.text}')
     
 def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
@@ -165,8 +165,24 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                 spec_dict = pickle.load(spec_file)
             specs.update({resource_name: create_spec(spec_dict)})
         except Exception as e:
-            print(f'Got exception trying to unpickle and create spec for'
-                  f'spec_path: "{spec_path}"; exception: {e}')
+            print(f'Got exception trying to unpickle and create spec for '
+                  f'spec_path: "{resource_name}"; exception: {e}')
+            # Using resource name to look if the resource exists in the
+            # tapipy prod resources. If it is found, we fall back and use that!
+            # If it isn't we just skip it.
+            print(f'Falling back to prod spec for "{resource_name}" resource')
+            if resource_name in RESOURCES['tapipy']:
+                url = RESOURCES['tapipy'][resource_name]
+                _, _, spec_path = get_file_info_from_url(url, spec_dir)
+                try:
+                    # Unpickle and create_spec
+                    with open(spec_path, 'rb') as spec_file:
+                        spec_dict = pickle.load(spec_file)
+                    specs.update({resource_name: create_spec(spec_dict)})
+                except Exception as e:
+                    print('Error opening tapipy prod spec. This is bad.')
+            else:
+                print(f'No "{resource_name}" spec was found to fallback on')
     return specs
 
 def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
@@ -336,7 +352,7 @@ class Tapis(object):
         self.spec_dir = spec_dir
 
         # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs. 
-        if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'master':
+        if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'tapipy':
             resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
         else:
             resource_specs = RESOURCE_SPECS

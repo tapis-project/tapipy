@@ -1,6 +1,68 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.2.10 - 2020-10-13 (target)
+### Added
+- Adding default falling back to prod spec if there was an error reading in other spec.
+
+### Changed
+- Bug fixes.
+- Changed logs to be much more readable.
+
+### Removed
+- No change.
+
+## 0.2.9 - 2020-10-13 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fixes.
+
+### Removed
+- No change.
+
+## 0.2.8 - 2020-10-13 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fix, making custom pickled files use protocol 4 as well.
+
+### Removed
+- No change.
+
+## 0.2.8 - 2020-10-13 (target)
+### Added
+- No change.
+
+### Changed
+- All pickled files will now use pickle.protocol 4.
+
+### Removed
+- No change.
+
+## 0.2.7 - 2020-10-13 (target)
+### Added
+- No change.
+
+### Changed
+- Updated SK spec pickled file (again).
+- Modified script to create pickled files.
+
+### Removed
+- No change.
+
+## 0.2.6 - 2020-10-9 (target)
+### Added
+- No change.
+
+### Changed
+- Updated SK spec pickled file.
+
+### Removed
+- No change.
+
 ## 0.2.5 - 2020-9-14 (target)
 ### Added
 - No change.
