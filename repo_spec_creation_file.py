@@ -65,6 +65,18 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
                 print(f'Got exception when attempting to pickle spec_dict for '
                       f'"{spec_path}" resource; exception: {e}')
 
+
+
+# These are all the URLS in the RESOURCES['tapipy'] dict in tapipy.py
+actor_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml'
+authenticator_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml'
+meta_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml'
+files_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml'
+sk_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml'
+streams_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml'
+systems_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml'
+tenants_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml'
+tokens_tapipy_url = 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml'
                 
 # These are all the URLS in the RESOURCES['master'] dict in tapipy.py
 actor_master_url = 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml'
@@ -79,16 +91,33 @@ tokens_master_url = 'https://raw.githubusercontent.com/tapis-project/tokens-api/
 
 # Spec/Key is the url to download and copy the spec dict from.
 # Alias/Val is the file to save the spec dict to.
-spec_and_alias = {actor_master_url: actor_master_url,
-                  authenticator_master_url: authenticator_master_url,
-                  meta_master_url: meta_master_url,
-                  files_master_url: files_master_url,
-                  sk_master_url: sk_master_url,
-                  streams_master_url: streams_master_url,
-                  systems_master_url: systems_master_url,
-                  tenants_master_url: tenants_master_url,
-                  tokens_master_url: tokens_master_url}
 
+spec_and_alias = {'source_spec_url': 'destination_spec_url'}
+
+# Set 1 updates all tapipy pickle files with the specs contained
+# in the tapipy resource directory. So what users have opted to update.
+spec_and_alias_set_1 = {actor_tapipy_url: actor_tapipy_url,
+                        authenticator_tapipy_url: authenticator_tapipy_url,
+                        meta_tapipy_url: meta_tapipy_url,
+                        files_tapipy_url: files_tapipy_url,
+                        sk_tapipy_url: sk_tapipy_url,
+                        streams_tapipy_url: streams_tapipy_url,
+                        systems_tapipy_url: systems_tapipy_url,
+                        tenants_tapipy_url: tenants_tapipy_url,
+                        tokens_tapipy_url: tokens_tapipy_url}
+
+# Set 2 updates all tapipy pickle files with the specs contained
+# in each specs source master branch. So updating them completely.
+spec_and_alias_set_2 = {actor_master_url: actor_tapipy_url,
+                        authenticator_master_url: authenticator_tapipy_url,
+                        meta_master_url: meta_tapipy_url,
+                        files_master_url: files_tapipy_url,
+                        sk_master_url: sk_tapipy_url,
+                        streams_master_url: streams_tapipy_url,
+                        systems_master_url: systems_tapipy_url,
+                        tenants_tapipy_url: tenants_tapipy_url,
+                        tokens_master_url: tokens_tapipy_url}
+ 
 # Specify where you want the specs to be saved, to get ready for a release
 # specify the github/tapipy/tapipy/specs folder to overwrite old specs.
 # Don't forget to delete any specs that are no longer needed.
