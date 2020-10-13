@@ -60,7 +60,7 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
             try:
                 # Pickles and saves the spec dict to the spec_path atomically
                 with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
-                    pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(spec_dict, spec_file, protocol=4)
             except Exception as e:
                 print(f'Got exception when attempting to pickle spec_dict for '
                       f'"{spec_path}" resource; exception: {e}')
