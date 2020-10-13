@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.2.8 - 2020-10-13 (target)
+### Added
+- No change.
+
+### Changed
+- All pickled files will now use pickle.protocol 4.
+
+### Removed
+- No change.
+
 ## 0.2.7 - 2020-10-13 (target)
 ### Added
 - No change.
@@ -11,7 +21,6 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - No change.
-
 
 ## 0.2.6 - 2020-10-9 (target)
 ### Added
