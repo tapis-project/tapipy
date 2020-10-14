@@ -872,6 +872,85 @@ class Operation(object):
         self.query_parameters = [p for _, p in op_desc.parameters.items() if p.location == ParameterLocation.QUERY]
         self.request_body = op_desc.request_body
 
+    def determine_tenant_id_for_service_request(self, **kwargs):
+        """
+        Determines the tenant_id for a service request from the kwargs to said
+        request and the application context (flask thread-local), if available.
+        """
+        # we need to determine the tenant id for the request.
+        tenant_id = None
+        # to begin, look for it in the parameters. if the caller explicitly set
+        # it, always use that.
+        try:
+            tenant_id = kwargs.get('_tapis_tenant_id')
+        except:
+            pass
+        # if the caller did not explicitly set the _tapis_tenant_id variable,
+        # we can look on the flask thread local for data about the request.
+        if not tenant_id:
+            try:
+                from flask import g
+                # g.x_tapis_tenant corresponds to the X-Tapis-Tenant OBO header. if this
+                # is set, it is always the tenant_id of the request.
+                tenant_id = getattr(g, 'x_tapis_tenant', None)
+                # g.request_tenant_id, if set, incorporates the tenant_id claim from
+                # the token and the OBO headers.
+                if not tenant_id:
+                    tenant_id = getattr(g, 'request_tenant_id', None)
+                # finally, the g.tenant_id represents the tenant_id claim in the access token.
+                # we should only use this if nothing else is set.
+                if not tenant_id:
+                    tenant_id = getattr(g, 'tenant_id', None)
+            # note that flask will throw a RuntimeError if attempting to access the thread local object, j, outside
+            # of an application context.
+            except (ImportError, RuntimeError):
+                pass
+        # check the headers to see if X-Tapis-Tenant is being set; if so, use that:
+        if not tenant_id and 'headers' in kwargs:
+            try:
+                tenant_id = kwargs['headers']['X-Tapis-Tenant']
+            except:
+                pass
+        # finally, look for a tenant_id on the tapis client itself
+        if not tenant_id:
+            tenant_id = self.tapis_client.tenant_id
+        return tenant_id
+
+    def determine_user_for_service_request(self, **kwargs):
+        """
+        Determines the username for a service request from the kwargs to said
+        request and the application context (flask thread-local), if available.
+        """
+        # we need to determine the user for the request.
+        user = None
+        # to begin, look for it in the parameters. if the caller explicitly set
+        # it, always use that.
+        try:
+            user = kwargs.get('_tapis_user')
+        except:
+            pass
+        # if the caller did not explicitly set the _tapis_user variable,
+        # we can look on the flask thread local for data about the request.
+        if not user:
+            try:
+                from flask import g
+                # g.x_tapis_user corresponds to the X-Tapis-User OBO header. if this
+                # is set, it is always the user of the request.
+                user = getattr(g, 'x_tapis_user', None)
+
+                # the g.username corresponds to the tapis/username claim in the access token.
+                # we should only use this if x_tapis_user was not set.
+                if not user:
+                    user = getattr(g, 'username', None)
+            # note that flask will throw a RuntimeError if attempting to access attributes on the thread local object,
+            # g, outside of an application context.
+            except (ImportError, RuntimeError):
+                pass
+        # finally, look a username on the tapis client itself
+        if not user:
+            user = self.tapis_client.username
+        return user
+
     def __call__(self, **kwargs):
         """
         Turns the operation object into a callable. Arguments must be passed as kwargs, where the name of each kwarg
@@ -890,33 +969,7 @@ class Operation(object):
         # if this call is coming from another tapis service,
         # we must determine base_url for a service to service request.
         if self.tapis_client.is_tapis_service:
-            # we need to determine the tenant id for the request.
-            tenant_id = None
-            # this could be on the
-            # flask thread local, so we'll look for that first
-            try:
-                from flask import g
-                tenant_id = getattr(g, 'tenant_id', None)
-                if not tenant_id:
-                    tenant_id = getattr(g, 'request_tenant_id', None)
-                if not tenant_id:
-                    tenant_id = getattr(g, 'x_tapis_tenant', None)
-            # note that flask will throw a RuntimeError if attempting to access the thread local object, j, outside
-            # of an application context.
-            except (ImportError, RuntimeError):
-                pass
-            # check the headers to see if X-Tapis-Tenant is being set; if so, use that:
-            if not tenant_id and 'headers' in kwargs:
-                try:
-                    tenant_id = kwargs['headers']['X-Tapis-Tenant']
-                except:
-                    pass
-            # if we couldn't get it from the tenant id, look for it in the parameters
-            if not tenant_id:
-                try:
-                    tenant_id = kwargs.get('_tapis_tenant_id')
-                except:
-                    pass
+            tenant_id = self.determine_tenant_id_for_service_request(**kwargs)
             # if we got a tenant_id, use it to look up the base_url:
             if tenant_id:
                 try:
@@ -931,7 +984,8 @@ class Operation(object):
         else:
             base_url = self.tapis_client.base_url
         # construct the http path -
-        # some API definitions, such as SK, chose to not include the "/v3/" at the beginning of their paths, so we add it in:
+        # some API definitions, such as SK, chose to not include the "/v3/" at the beginning of their paths,
+        # so we add it in:
         if not self.op_desc.path_name.startswith('/v3/'):
             self.url = f'{base_url}/v3{self.op_desc.path_name}'  # base url
         else:
@@ -1018,10 +1072,15 @@ class Operation(object):
                 jwt = self.tapis_client.get_access_jwt()
             headers = {'X-Tapis-Token':  jwt}
 
-        # the X-Tapis-Tenant and X-Tapis-Username headers can be set when the token represents a service account and the
-        # service is making a request on behalf of another user/tenant.
-        if self.tapis_client.x_tenant_id:
-            headers['X-Tapis-Tenant'] = self.tapis_client.x_tenant_id
+        # the X-Tapis-Tenant and X-Tapis-Username headers must be set when the token represents a service account.
+        # if this is a tapis service, we should have derived the correct tenant_id when we determined the tenant_id
+        # for the request, above.
+        if self.tapis_client.is_tapis_service:
+            if tenant_id:
+                headers['X-Tapis-Tenant'] = tenant_id
+        # similarly for username, we first look in the request content:
+        if self.tapis_client.is_tapis_service:
+            x_isername = self.determine_user_for_service_request(**kwargs)
         if self.tapis_client.x_username:
             headers['X-Tapis-User'] = self.tapis_client.x_username
 
@@ -1047,8 +1106,8 @@ class Operation(object):
                     data = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.op_desc.request_body.content[
-                        'application/json'].schema.properties.items():
+                    for p_name, p_desc in \
+                            self.op_desc.request_body.content['application/json'].schema.properties.items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
@@ -1115,16 +1174,7 @@ class Operation(object):
         # resp.headers is a case-insensitive dict
         resp_content_type = resp.headers.get('content-type')
         if hasattr(resp_content_type, 'lower') and resp_content_type.lower() == 'application/json':
-            try:
-                json_content = resp.json()
-            except Exception as e:
-                msg = f'Requests could not produce JSON from the response even though the content-type was ' \
-                      f'application/json. Exception: {e}'
-                # TODO -- should this not be an error if the API has described the content-type as application/json?
-                #         what valid use cases do we still have for passing raw content in this case?
-                if debug:
-                    return resp.content, debug_data
-                return resp.content
+            json_content = resp.json()
             # get the Tapis result object which could be a JSON object or list.
             try:
                 result = json_content.get('result')
@@ -1132,7 +1182,7 @@ class Operation(object):
                 # some Tapis APIs, such as the Meta API, do not return "result" objects and/or do not return the
                 # standard Tapis stanzas but rather "raw" JSON documents
                 return resp.content
-            if result:
+            if result or result == [] or result == {}:
                 # if it is a list we should return a list of TapisResult objects:
                 if _seq_but_not_str(result):
                     if len([item for item in result if type(item) in TapisResult.PRIMITIVE_TYPES]) > 0:
@@ -1141,7 +1191,7 @@ class Operation(object):
                         return TapisResult(result)
                     else:
                         if debug:
-                            [TapisResult(**x) for x in result if not x == 'self'], debug_data
+                            return [TapisResult(**x) for x in result if not x == 'self'], debug_data
                         return [TapisResult(**x) for x in result if not x == 'self']
                 # otherwise, assume it is a JSON object and return that directly as a result -
                 try:
