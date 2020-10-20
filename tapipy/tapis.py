@@ -951,11 +951,8 @@ class Operation(object):
             # 'else' would overwrite those if the spec specifies one of the following content-types.
             # In the case of custom headers, we just pass whatever in (Christian's decision, probably 
             # should improve).
-            print(headers)
-            print(self.op_desc.request_body.content.keys())
             if 'Content-Type' in headers:
                 data = kwargs['request_body']
-                print(headers)
             # We go back to the old methods if there is not custom headers.
             # Note: If an operation has many possible content-types, this just kind of breaks because
             # all of the ifs return as true. e.g. sendMessage in Actors w/json, binary, and strings.
