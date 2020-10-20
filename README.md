@@ -89,7 +89,7 @@ t = Tapis(base_url='https://master.develop.tapis.io',
           resource_set='master',
           custom_spec_dict={'abaco': 'URL#1',
                             'longhorn': 'URL#2',
-							'cactus': 'local: /home/tapis/myfolder/cactusSpec.yml'},
+			    'cactus': 'local: /home/tapis/myfolder/cactusSpec.yml'},
           spec_dir='/home/username/tapipy_specs')
 t.get_tokens()
 ```
