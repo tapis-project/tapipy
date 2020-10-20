@@ -947,29 +947,46 @@ class Operation(object):
         data = None
         # these are the list of allowable request body content types; ex., 'application/json'.
         if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
-            if 'application/json' in self.op_desc.request_body.content.keys() \
-                    or '*/*' in self.op_desc.request_body.content.keys():
-                headers['Content-Type'] = 'application/json'
-                required_fields = self.op_desc.request_body.content['application/json'].schema.required
-                data = {}
-                # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.op_desc.request_body.content['application/json'].schema.properties == {}:
-                    # choice of "request_body" is arbitrary, as the property name is not provided by the openapi spec in this case
+            # Before we go by spec headers, we first check if the user specifed any because the 
+            # 'else' would overwrite those if the spec specifies one of the following content-types.
+            # In the case of custom headers, we just pass whatever in (Christian's decision, probably 
+            # should improve).
+            print(headers)
+            print(self.op_desc.request_body.content.keys())
+            if 'Content-Type' in headers:
+                data = kwargs['request_body']
+                print(headers)
+            # We go back to the old methods if there is not custom headers.
+            # Note: If an operation has many possible content-types, this just kind of breaks because
+            # all of the ifs return as true. e.g. sendMessage in Actors w/json, binary, and strings.
+            # In that case, these are more of order of which headers should be used. e.g. JSON headers
+            # would be used primarily unless it's not in the operation spec.
+            else:
+                if 'application/json' in self.op_desc.request_body.content.keys():
+                    headers['Content-Type'] = 'application/json'
+                    required_fields = self.op_desc.request_body.content['application/json'].schema.required
+                    data = {}
+                    # if the request body has no defined properties, look for a single "request_body" parameter.ma
+                    if self.op_desc.request_body.content['application/json'].schema.properties == {}:
+                        # choice of "request_body" is arbitrary, as the property name is not provided by the openapi spec in this case
+                        data = kwargs['request_body']
+                    else:
+                        # otherwise, the request body has defined properties, so look for each one in the function kwargs
+                        for p_name, p_desc in self.op_desc.request_body.content[
+                            'application/json'].schema.properties.items():
+                            if p_name in kwargs:
+                                data[p_name] = kwargs[p_name]
+                            elif p_name in required_fields:
+                                raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
+                        # serialize data before passing it to the request
+                    data = json.dumps(data)
+                elif 'application/octet-stream' in self.op_desc.request_body.content.keys():
+                    headers['Content-Type'] = 'application/octet-stream'
                     data = kwargs['request_body']
-                else:
-                    # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.op_desc.request_body.content[
-                        'application/json'].schema.properties.items():
-                        if p_name in kwargs:
-                            data[p_name] = kwargs[p_name]
-                        elif p_name in required_fields:
-                            raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
-                    # serialize data before passing it to the request
-                data = json.dumps(data)
-            if 'multipart/form-data' in self.op_desc.request_body.content.keys():
-                # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
-                raise NotImplementedError
-        # todo - handle other body content types..
+                elif 'multipart/form-data' in self.op_desc.request_body.content.keys():
+                    # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
+                    raise NotImplementedError
+                # todo - handle other body content types..
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects
