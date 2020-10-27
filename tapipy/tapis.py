@@ -28,6 +28,7 @@ Resources = Dict[ResourceName, ResourceUrl]
 Specs = Dict[ResourceName, OpenApiSpec]
 ResourceInfo = Mapping[ResourceName, SpecPath]
 
+
 def _seq_but_not_str(obj: object) -> bool:
     """
     Determine if an object is a Sequence, i.e., has an iteratable type, but not a string, bytearray, etc.
@@ -37,7 +38,7 @@ def _seq_but_not_str(obj: object) -> bool:
     return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))
 
 
-## currently the files spec is missing operationId's for some of its operations.
+# currently the files spec is missing operationId's for some of its operations.
 RESOURCES = {
     'local': ['actors','authenticator', 'meta', 'files', 'sk', 'streams', 'systems', 'tenants','tokens'],
     'tapipy':{
@@ -106,6 +107,7 @@ def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs
     specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
     return specs
 
+
 def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_latest_specs: bool) -> None:
     """
     Function that calls threads to download and pickle specs.
@@ -128,6 +130,7 @@ def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_lates
     pool.map(_thread_download_spec_dict, urls_to_download)
     pool.close()
     pool.join()
+
 
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     """
@@ -167,7 +170,8 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     else:
         raise KeyError(f'Error getting "{spec_path}" resource. URL: "{resource_url}".'
                        f'Did not get 200, got the following back:\n{response.text}')
-    
+
+
 def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     """
     Pickles loads a specifed spec_path and creates said spec.
@@ -187,6 +191,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                   f'spec_path: "{spec_path}"; exception: {e}')
     return specs
 
+
 def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
     """
     Allows users to update specified specs in cache.
@@ -205,7 +210,8 @@ def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None
 
     spec_dir = get_spec_dir(spec_dir)
     download_and_pickle_spec_dicts(url_list, spec_dir=spec_dir, download_latest_specs=True)
-    
+
+
 def get_file_info_from_url(url: str, spec_dir: str):
     """
     Using a url string we create a file name to store said url contents.
@@ -220,6 +226,7 @@ def get_file_info_from_url(url: str, spec_dir: str):
     full_spec_name = f'{spec_name}.pickle'
     spec_path = f'{spec_dir}/{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
+
 
 def get_spec_dir(spec_dir: str):
     """
@@ -583,20 +590,19 @@ class Tapis(object):
             self.access_token.original_ttl = self.access_token.expires_in
             self.access_token.expires_in = _expires_in
             self.access_token.expires_at = datetime.datetime.fromtimestamp(self.access_token.claims['exp'],
-                                                                           datetime.timezone.utc)
+                                                         datetime.timezone.utc)
         except:
             pass
 
-    def refresh_tokens(self ,tenant_id=None):
+    def refresh_tokens(self, tenant_id=None):
         """
         Use the refresh token on this client to get a new access and refresh token pair.
         """
-        if not self.refresh_token:
-            raise errors.TapyClientConfigurationError(msg="No refresh token found.")
         if self.account_type == 'service':
             return self.refresh_service_tokens(tenant_id)
-        else:
-            return self.refresh_user_tokens()
+        if not self.refresh_token:
+            raise errors.TapyClientConfigurationError(msg="No refresh token found.")
+        return self.refresh_user_tokens()
 
     def refresh_user_tokens(self):
         """
@@ -619,7 +625,7 @@ class Tapis(object):
         """
         refresh_token = self.service_tokens[tenant_id]['refresh_token'].refresh_token
         tokens = self.tokens.refresh_token(refresh_token=refresh_token)
-        self.service_tokens[tenant_id]['access_token'] = tokens.refresh_token
+        self.service_tokens[tenant_id]['access_token'] = tokens.access_token
         self.service_tokens[tenant_id]['refresh_token'] = tokens.refresh_token
 
     def set_refresh_token(self, token):
@@ -948,6 +954,7 @@ class Operation(object):
                 pass
         # finally, look a username on the tapis client itself
         if not user:
+            print(f"no user object, returning username on the tapis_client...")
             user = self.tapis_client.username
         return user
 
@@ -973,7 +980,7 @@ class Operation(object):
             # if we got a tenant_id, use it to look up the base_url:
             if tenant_id:
                 try:
-                    base_url = self.tapis_client.tenants.get_base_url_for_service_request(tenant_id, self.resource_name)
+                    base_url = self.tapis_client.tenant_cache.get_base_url_for_service_request(tenant_id, self.resource_name)
                 except:
                     pass
             # if all else fails, use the base_url for the client
@@ -1025,22 +1032,42 @@ class Operation(object):
 
         # construct the http headers -
         headers = {}
-        access_token = None
+
         # set the X-Tapis-Token header using the client
+        access_token = None
+        request_site_master_tenant_id = None    # used for looking up the service token
         if self.tapis_client.is_tapis_service and hasattr(self.tapis_client, 'service_tokens'):
+            # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
+            # service tokens are stored by master tenant, so we need to get the master tenant for the
+            # owning site of the tenant.
+            try:
+                request_tenant = self.tapis_client.tenant_cache.get_tenant_config(tenant_id=tenant_id)
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not lookup the request tenant for tenant {tenant_id}; e: {e}")
+            try:
+                request_site = request_tenant.site
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not lookup the request site for tenant {tenant_id}; e: {e}")
+            try:
+                request_site_master_tenant_id = request_site.site_master_tenant_id
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not lookup the request site_master tenant for "
+                                               f"tenant {tenant_id}; e: {e}")
+
             # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
             # the service's first set of tokens.
-            if tenant_id in self.tapis_client.service_tokens.keys() \
-                    and 'access_token' in self.tapis_client.service_tokens[tenant_id].keys():
+            if request_site_master_tenant_id in self.tapis_client.service_tokens.keys() \
+                    and 'access_token' in self.tapis_client.service_tokens[request_site_master_tenant_id].keys():
                 try:
-                    access_token = self.tapis_client.service_tokens[tenant_id]['access_token']
+                    access_token = self.tapis_client.service_tokens[request_site_master_tenant_id]['access_token']
                 except KeyError:
-                    raise errors.BaseTapyException(f"Did not find service tokens for tenant {tenant_id}; "
-                                                   f"service_tokens for tenant: {self.tapis_client.service_tokens[tenant_id]}")
+                    raise errors.BaseTapyException(f"Did not find service tokens for "
+                                                   f"tenant {request_site_master_tenant_id};")
             else:
                 pass
         elif self.tapis_client.get_access_jwt():
             access_token = self.tapis_client.get_access_jwt()
+        # if we got an access token, check if we need to refresh it
         if access_token:
             # check for a token about to expire in the next 5 seconds; assume by default we have a token with
             # plenty of time remaining.
@@ -1058,18 +1085,24 @@ class Operation(object):
                     pass
                 else:
                     try:
-                        self.tapis_client.refresh_tokens()
+                        self.tapis_client.refresh_tokens(tenant_id=request_site_master_tenant_id)
                     except:
                         # for now, if we get an error trying to refresh the tokens,s, we ignore it and try the
                         # request anyway.
                         pass
-            if self.tapis_client.is_tapis_service:
-                try:
-                    jwt = self.tapis_client.service_tokens[tenant_id]['access_token'].access_token
-                except KeyError:
-                    raise errors.BaseTapyException(f"No service tokens found for tenant {tenant_id} after refresh.")
-            else:
-                jwt = self.tapis_client.get_access_jwt()
+        # we may have refreshed the token, so we get it one more time --
+        if self.tapis_client.is_tapis_service \
+                and hasattr(self.tapis_client, 'service_tokens') \
+                and request_site_master_tenant_id \
+                and 'access_token' in self.tapis_client.service_tokens[request_site_master_tenant_id].keys():
+            try:
+                jwt = self.tapis_client.service_tokens[request_site_master_tenant_id]['access_token'].access_token
+            except Exception as e:
+                msg = f"Could not get JWT from access_token; e: {e}"
+                raise errors.BaseTapyException(msg)
+        else:
+            jwt = self.tapis_client.get_access_jwt()
+        if jwt:
             headers = {'X-Tapis-Token':  jwt}
 
         # the X-Tapis-Tenant and X-Tapis-Username headers must be set when the token represents a service account.
@@ -1078,11 +1111,10 @@ class Operation(object):
         if self.tapis_client.is_tapis_service:
             if tenant_id:
                 headers['X-Tapis-Tenant'] = tenant_id
-        # similarly for username, we first look in the request content:
-        if self.tapis_client.is_tapis_service:
-            x_isername = self.determine_user_for_service_request(**kwargs)
-        if self.tapis_client.x_username:
-            headers['X-Tapis-User'] = self.tapis_client.x_username
+            # similarly for username, we first look in the request content:
+            x_username = self.determine_user_for_service_request(**kwargs)
+            if x_username:
+                headers['X-Tapis-User'] = x_username
 
         # allow arbitrary headers to be passed in via the special "headers" kwarg -
         try:
@@ -1102,7 +1134,8 @@ class Operation(object):
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
                 if self.op_desc.request_body.content['application/json'].schema.properties == {}:
-                    # choice of "request_body" is arbitrary, as the property name is not provided by the openapi spec in this case
+                    # choice of "request_body" is arbitrary, as the property name is not provided by the
+                    # openapi spec in this case
                     data = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
