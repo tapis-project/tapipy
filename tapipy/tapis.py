@@ -42,26 +42,15 @@ def _seq_but_not_str(obj: object) -> bool:
 RESOURCES = {
     'local': ['actors','authenticator', 'meta', 'files', 'sk', 'streams', 'systems', 'tenants','tokens'],
     'tapipy':{
-        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml',
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml'
-    },
-    'master': {
-        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',               
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-authenticator.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-meta.yml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-files.yml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-sk.yml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-streams.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
@@ -370,8 +359,14 @@ class Tapis(object):
         # Allows a user to specify which set of resources to pull from.
         # Only used when download_lastest_specs is used.
         self.resource_set = resource_set
+        if resource_set == 'prod':
+            self.resource_set = 'tapipy'
+        if self.resource_set == 'master':
+            raise errors.TapyClientConfigurationError("the master branch has been removed from tapis-project "
+                                                      "repositories; use 'prod' or 'tapipy' instead.")
         if not self.resource_set in RESOURCES.keys():
-            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
+            raise errors.TapyClientConfigurationError(f"'resource_set' must be one of {RESOURCES.keys()}, "
+                                                      f"not {self.resource_set}.")
 
         # If a custom spec dict is provided then the RESOURCES dict gets updated with it.
         # If any repeated fields are used, the RESOURCES fields are overwritten.
@@ -538,7 +533,7 @@ class Tapis(object):
                                                   target_site_id=target_site_id)
             except Exception as e:
                 raise errors.BaseTapyException(f"Could not generate tokens for tenant: {tenant_id}; exception: {e}")
-            self.service_tokens[tenant_id] = {'access_token': tokens.access_token,
+            self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
                                               'refresh_token': tokens.refresh_token}
 
     def validate_token(self, token):
@@ -574,25 +569,34 @@ class Tapis(object):
         except Exception as e:
             raise errors.TokenInvalidError("Invalid Tapis token.")
 
+
+    def add_claims_to_token(self, token):
+        """
+        Adds claims and a callable expires_in() function to a Tapis token object.
+        :param tokne: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
+        """
+        def _expires_in():
+            return access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
+
+        access_token = token
+        access_token.claims = self.validate_token(access_token.access_token)
+        access_token.original_ttl = access_token.expires_in
+        access_token.expires_at = datetime.datetime.fromtimestamp(access_token.claims['exp'],
+                                                                  datetime.timezone.utc)
+        access_token.expires_in = _expires_in
+        return access_token
+
     def set_access_token(self, token):
         """
         Set the access token to be used in this session.
         :param token: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
         :return:
         """
-
-        def _expires_in():
-            return self.access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
-
-        self.access_token = token
         try:
-            self.access_token.claims = self.validate_token(self.access_token.access_token)
-            self.access_token.original_ttl = self.access_token.expires_in
-            self.access_token.expires_in = _expires_in
-            self.access_token.expires_at = datetime.datetime.fromtimestamp(self.access_token.claims['exp'],
-                                                         datetime.timezone.utc)
+            self.access_token = self.add_claims_to_token(token=token)
         except:
             pass
+
 
     def refresh_tokens(self, tenant_id=None):
         """
@@ -625,7 +629,7 @@ class Tapis(object):
         """
         refresh_token = self.service_tokens[tenant_id]['refresh_token'].refresh_token
         tokens = self.tokens.refresh_token(refresh_token=refresh_token)
-        self.service_tokens[tenant_id]['access_token'] = tokens.access_token
+        self.service_tokens[tenant_id]['access_token'] = self.add_claims_to_token(tokens.access_token)
         self.service_tokens[tenant_id]['refresh_token'] = tokens.refresh_token
 
     def set_refresh_token(self, token):
@@ -1207,13 +1211,15 @@ class Operation(object):
         # resp.headers is a case-insensitive dict
         resp_content_type = resp.headers.get('content-type')
         if hasattr(resp_content_type, 'lower') and resp_content_type.lower() == 'application/json':
-            json_content = resp.json()
             # get the Tapis result object which could be a JSON object or list.
             try:
+                json_content = resp.json()
                 result = json_content.get('result')
             except Exception as e:
                 # some Tapis APIs, such as the Meta API, do not return "result" objects and/or do not return the
                 # standard Tapis stanzas but rather "raw" JSON documents
+                if debug:
+                    return resp.content, debug_data
                 return resp.content
             if result or result == [] or result == {}:
                 # if it is a list we should return a list of TapisResult objects:
