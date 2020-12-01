@@ -23,8 +23,116 @@ servers:
 #  - wso2jwtDevAuth: []
 #  - nonce: []
 
-
 paths:
+  /v3/sites:
+    get:
+      tags:
+        - Sites
+      summary: List sites.
+      description: List sites.
+      operationId: list_sites
+      x-swagger-router-controller: connexContr
+      parameters:
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: index (offset) to start list.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/arrayOfSites'
+    post:
+      tags:
+        - Sites
+      summary: Create a site.
+      description: Create a site.
+      operationId: create_site
+      x-swagger-router-controller: connexContr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSite'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Site'
+
+  /v3/sites/{site_id}:
+    get:
+      tags:
+        - Sites
+      summary: Get site details
+      description: Get details of a specific site by its id.
+      operationId: get_site
+      parameters:
+        - name: site_id
+          in: path
+          description: Unique ID of the site
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Site'
+    delete:
+      tags:
+        - Sites
+      summary: Delete a site
+      description: Permenantly delete a site.
+      operationId: delete_site
+      parameters:
+        - name: site_id
+          in: path
+          description: Unique ID of the site
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: string
+                    nullable: true
+                    enum: [null]
+
+
   /v3/tenants:
     get:
       tags:
@@ -455,15 +563,9 @@ components:
         base_url:
           type: string
           description: The base URL for the tenant.
-        is_owned_by_associate_site:
-          type: boolean
-          description: Whether the tenant is hosted by an associate site.
-        allowable_x_tenant_ids:
-          type: array
-          items:
-            type: string
-            pattern: "^[a-zA-Z0-9-]*$"
-          description: The list of tenant_ids that services can use to set the X-Tapis-Tenant header.
+        site_id:
+          type: string
+          description: The site for which the tenant belongs.
         token_service:
           type: string
           description: The resolvable location of the token service for the tenant.
@@ -476,6 +578,15 @@ components:
         owner:
           type: string
           description: The email address of the primary owner and contact for the tenant.
+        admin_user:
+          type: string
+          description: The username of the user that is automatically assigned the tenant_admin role by the Security Kernel.
+        token_gen_services:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-zA-Z0-9-]*$"
+          description: The list of services that are automatically granted the token_generator role for this tenant by the Security Kernel.
         service_ldap_connection_id:
           type: string
           description: The unique identifier for the LDAP object for service accounts in the tenant.
@@ -485,7 +596,7 @@ components:
         description:
           type: string
           description: A description of the tenant.
-      required: [tenant_id, base_url, is_owned_by_associate_site, allowable_x_tenant_ids, token_service, security_kernel, authenticator, owner]
+      required: [tenant_id, base_url, site_id, token_service, security_kernel, authenticator, owner, admin_user, token_gen_services]
 
     Tenant:
       type: object
@@ -500,12 +611,9 @@ components:
         is_owned_by_associate_site:
           type: boolean
           description: Whether the tenant is hosted by an associate site.
-        allowable_x_tenant_ids:
-          type: array
-          items:
-            type: string
-            pattern: "^[a-zA-Z0-9-]*$"
-          description: The list of tenant_ids that services can use to set the X-Tapis-Tenant header.
+        site_id:
+          type: string
+          description: The site for which the tenant belongs.
         token_service:
           type: string
           description: The resolvable location of the token service for the tenant.
@@ -518,6 +626,15 @@ components:
         owner:
           type: string
           description: The email address of the primary owner and contact for the tenant.
+        admin_user:
+          type: string
+          description: The username of the user that is automatically assigned the tenant_admin role by the Security Kernel.
+        token_gen_services:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-zA-Z0-9-]*$"
+          description: The list of services that are automatically granted the token_generator role for this tenant by the Security Kernel.
         service_ldap_connection_id:
           type: string
           description: The unique identifier for the LDAP object for service accounts in the tenant.
@@ -536,12 +653,71 @@ components:
         last_update_time:
           type: string
           description: The time the client was last updated.
-      required: [tenant_id, base_url, is_owned_by_associate_site, allowable_x_tenant_ids, token_service, security_kernel, authenticator, owner]
+      required: [tenant_id, base_url, is_owned_by_associate_site, site_id, token_service, security_kernel, authenticator, owner]
 
     arrayOfTenants:
       type: array
       items:
         $ref: '#/components/schemas/Tenant'
+
+    NewSite:
+      type: object
+      properties:
+        site_id:
+          type: string
+          description: The unique identifier for the site.
+        base_url:
+          type: string
+          description: The base URL for the site.
+        primary:
+          type: boolean
+          description: Whether the site is the primary site.
+        services:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-zA-Z0-9-]*$"
+          description: The list of services for this site.
+        tenant_base_url_template:
+          type: string
+          description: For primary site only; The template string represening the base URL for a tenant.
+        site_master_tenant_id:
+          type: string
+          description: Tenant ID of this site's tenant.
+      required: [site_id, base_url, primary, services, site_master_tenant_id]
+
+    Site:
+      type: object
+      properties:
+        site_id:
+          type: string
+          pattern: (\w)*
+          description: The unique identifier for the site.
+        base_url:
+          type: string
+          description: The base URL for the site.
+        primary:
+          type: boolean
+          description: Whether the site is the primary site.
+        services:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-zA-Z0-9-]*$"
+          description: The list of services for this site.
+        tenant_base_url_template:
+          type: string
+          description: The tenant base url template.
+        site_master_tenant_id:
+          type: string
+          description: Tenant ID of this site's tenant.
+      required: [site_id, services, site_master_tenant_id]
+
+    arrayOfSites:
+      type: array
+      items:
+        $ref: '#/components/schemas/Site'
+
 
     Owner:
       type: object

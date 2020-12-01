@@ -220,11 +220,10 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/JSONMessage'
           application/octet-stream:
             schema:
-              type: string
-              format: binary
+              $ref: '#/components/schemas/BinaryMessage'
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Message'
@@ -1077,6 +1076,21 @@ components:
         message:
           type: string
           description: Text string message to send to actor
+
+    JSONMessage:
+      type: object
+      properties:
+        message:
+          type: object
+          description: a JSON object
+
+    BinaryMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          format: binary
+          description: A binary object
 
     MessageJsonResponse:
       type: object

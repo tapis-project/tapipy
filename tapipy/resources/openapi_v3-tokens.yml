@@ -18,11 +18,15 @@ servers:
   description: Local Development
 - url: http://localhost:5001
   description: Local Development II
+- url: http://tokens:5000
+  description: Local Development III
 
 
 paths:
   /v3/tokens:
     post:
+      security:
+        - basicAuth: []
       tags:
       - Tokens
       summary: Generate a token.
@@ -74,6 +78,11 @@ paths:
 
 
 components:
+  securitySchemes:
+    basicAuth:     # <-- arbitrary name for the security scheme
+      type: http
+      scheme: basic
+
   schemas:
     BasicResponse:
       type: object
@@ -87,7 +96,7 @@ components:
         status:
           type: string
           description: Whether the request was a success or failure.
-          enum: [success, failure]
+          enum: [success, error]
 
     NewTokenRequest:
       type: object
@@ -102,6 +111,9 @@ components:
         token_username:
           type: string
           description: The username associated with the token to be generated.
+        target_site_id:
+          type: string
+          description: The site_id for the site where this token will be used. Only used when account_type is "service". If not provided, the site_id for the token_tenant_id will be used.
         delegation_token:
           type: boolean
           description: Whether the generated token should be a delegation token.
@@ -156,7 +168,7 @@ components:
     NewRefreshTokenResponse:
       type: object
       properties:
-        access_token:
+        refresh_token:
           type: string
           description: The generated refresh token.
         expires_at:
@@ -165,4 +177,3 @@ components:
         expires_in:
           type: integer
           description: The time, in seconds, when the generated refresh token expires.
-
