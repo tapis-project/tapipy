@@ -40,7 +40,17 @@ def _seq_but_not_str(obj: object) -> bool:
 
 # currently the files spec is missing operationId's for some of its operations.
 RESOURCES = {
-    'local': ['actors','authenticator', 'meta', 'files', 'sk', 'streams', 'systems', 'tenants','tokens'],
+    'local':{
+        'actors': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-actors.yml",
+        'authenticator': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-authenticator.yml",
+        'meta': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-meta.yml",
+        'files': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-files.yml",
+        'sk': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-sk.yml",
+        'streams': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-streams.yml",
+        'systems': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-systems.yml",
+        'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tenants.yml",
+        'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tokens.yml",
+    },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-authenticator.yml',
@@ -77,29 +87,11 @@ RESOURCES = {
 }
 
 
-def get_specs_from_local_resource_defs(resources):
-    specs = {}
-    resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
-    for r in resources:
-        try:
-            # for now, hardcode the paths; we could look these up based on a canonical URL once that is
-            # established.
-            spec_path = f'{resources_dir}/openapi_v3-{r}.yml'
-            spec_dict = yaml.load(open(spec_path, 'r'), Loader=yaml.FullLoader)
-            specs[r] = create_spec(spec_dict)
-        except:
-            pass
-    return specs
-
-
 def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
     """
     Gets specs requested in resources.
     Will download any spec that is not already downloaded.
     """
-    # if no resources passed, return the specs corresponding to the resource folder --
-    if type(resources) == list:
-        return get_specs_from_local_resource_defs(resources)
     spec_dir = get_spec_dir(spec_dir)
     # Download and save specs if neccessary
     download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=download_latest_specs)
@@ -117,6 +109,8 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
     # We download if the file name requested does not exist
     urls_to_download = []
     for resource_name, url in resources.items():
+        if "local:" in url:
+            continue 
         _, full_spec_name, spec_path = get_file_info_from_url(url, spec_dir)
         if download_latest_specs:
             urls_to_download.append([resource_name, url, spec_path])
@@ -180,6 +174,16 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     specs = {}
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
+        if "local:" in url:
+            try:
+                spec_path = url.replace('local:', '').strip()
+                with open(spec_path, 'rb') as spec_file:
+                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
+                specs.update({resource_name: create_spec(spec_dict)})
+            except Exception as e:
+                print(f'Error reading local "{resource_name}" resource. '
+                      f'Ensure path is absolute. e:{e}')
+            continue
         _, _, spec_path = get_file_info_from_url(url, spec_dir)
         try:
             # Unpickle and create_spec
@@ -1158,30 +1162,43 @@ class Operation(object):
         data = None
         # these are the list of allowable request body content types; ex., 'application/json'.
         if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
-            if 'application/json' in self.op_desc.request_body.content.keys() \
-                    or '*/*' in self.op_desc.request_body.content.keys():
-                headers['Content-Type'] = 'application/json'
-                required_fields = self.op_desc.request_body.content['application/json'].schema.required
-                data = {}
-                # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.op_desc.request_body.content['application/json'].schema.properties == {}:
-                    # choice of "request_body" is arbitrary, as the property name is not provided by the
-                    # openapi spec in this case
+            # Before we go by spec headers, we first check if the user specifed any because the 
+            # 'else' would overwrite those if the spec specifies one of the following content-types.
+            # In the case of custom headers, we just pass whatever in (Christian's decision, probably 
+            # should improve).
+            if 'Content-Type' in headers:
+                data = kwargs['request_body']
+            # We go back to the old methods if there is not custom headers.
+            # Note: If an operation has many possible content-types, this just kind of breaks because
+            # all of the ifs return as true. e.g. sendMessage in Actors w/json, binary, and strings.
+            # In that case, these are more of order of which headers should be used. e.g. JSON headers
+            # would be used primarily unless it's not in the operation spec.
+            else:
+                if 'application/json' in self.op_desc.request_body.content.keys():
+                    headers['Content-Type'] = 'application/json'
+                    required_fields = self.op_desc.request_body.content['application/json'].schema.required
+                    data = {}
+                    # if the request body has no defined properties, look for a single "request_body" parameter.
+                    if self.op_desc.request_body.content['application/json'].schema.properties == {}:
+                        # choice of "request_body" is arbitrary, as the property name is not provided by the
+                        # openapi spec in this case
+                        data = kwargs['request_body']
+                    else:
+                        # otherwise, the request body has defined properties, so look for each one in the function kwargs
+                        for p_name, p_desc in self.op_desc.request_body.content['application/json'].schema.properties.items():
+                            if p_name in kwargs:
+                                data[p_name] = kwargs[p_name]
+                            elif p_name in required_fields:
+                                raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
+                        # serialize data before passing it to the request
+                    data = json.dumps(data)
+                elif 'application/octet-stream' in self.op_desc.request_body.content.keys():
+                    headers['Content-Type'] = 'application/octet-stream'
                     data = kwargs['request_body']
-                else:
-                    # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in \
-                            self.op_desc.request_body.content['application/json'].schema.properties.items():
-                        if p_name in kwargs:
-                            data[p_name] = kwargs[p_name]
-                        elif p_name in required_fields:
-                            raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
-                    # serialize data before passing it to the request
-                data = json.dumps(data)
-            if 'multipart/form-data' in self.op_desc.request_body.content.keys():
-                # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
-                raise NotImplementedError
-        # todo - handle other body content types..
+                elif 'multipart/form-data' in self.op_desc.request_body.content.keys():
+                    # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
+                    raise NotImplementedError
+                # todo - handle other body content types..
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects

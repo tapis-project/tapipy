@@ -48,6 +48,7 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
             except Exception as e:
                 print(f'Got exception when attempting to load yaml for '
                       f'"{spec_path}" resource; exception: {e}')
+                continue
             try:
                 # Attempts to create spec from dict to ensure the spec is valid
                 # We do a deepcopy as create_spec for some reason adds fields
@@ -57,6 +58,7 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
             except Exception as e:
                 print(f'Got exception when test creating spec for "{spec_path}" '
                       f'resource; Spec probably not verifying; exception: {e}')
+                continue
             try:
                 # Pickles and saves the spec dict to the spec_path atomically
                 with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
@@ -64,6 +66,7 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
             except Exception as e:
                 print(f'Got exception when attempting to pickle spec_dict for '
                       f'"{spec_path}" resource; exception: {e}')
+                continue
 
 RESOURCES = {
     'tapipy':{
@@ -107,7 +110,7 @@ RESOURCES = {
 spec_and_alias = {'source_spec_url': 'destination_spec_url'}
 
 # Set 1 updates all tapipy pickle files with the specs contained
-# in the tapipy resource directory. So what users have opted to update.
+# in the tapipy resource directory. So what users have opted to update in the tapipy repo.
 spec_and_alias_set_1 = {RESOURCES['tapipy']['actors']: RESOURCES['tapipy']['actors'],
                         RESOURCES['tapipy']['authenticator']: RESOURCES['tapipy']['authenticator'],
                         RESOURCES['tapipy']['meta']: RESOURCES['tapipy']['meta'],
@@ -136,4 +139,4 @@ spec_and_alias_set_2 = {RESOURCES['prod']['actors']: RESOURCES['tapipy']['actors
 spec_dir = 'tapipy/specs'
 
 # Run the saver
-save_url_as_other_url(spec_and_alias, spec_dir)
+save_url_as_other_url(spec_and_alias_set_2, spec_dir)
