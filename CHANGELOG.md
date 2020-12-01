@@ -1,6 +1,21 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.0 - 2020-12-1 (target)
+### Added
+- Added sites integration for Tapis v3.
+- Added tests for sites integreation.
+- Added a set of local specs under 'local'
+- Many helper functions added for sites ease-of-use.
+
+### Changed
+- Update to certifi version to alleviate ssl issues.
+- Updatetd some resources in the resources folder.
+- Updated pickled specs to the most up to date prod specs.
+
+### Removed
+- No change.
+
 ## 0.2.11 - 2020-10-13 (target)
 ### Added
 - Adding the ability to load local spec files.
