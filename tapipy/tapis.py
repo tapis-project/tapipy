@@ -534,7 +534,7 @@ class Tapis(object):
         # otherwise, we compute all the tenant's that this service could need to interact with.
         else:
             try:
-                self.service_tokens = {t: {} for t in self.tenant_cache.get_site_master_tenants_for_service()}
+                self.service_tokens = {t: {} for t in self.tenant_cache.get_site_admin_tenants_for_service()}
             except AttributeError:
                 raise errors.BaseTapyException("Unable to retrieve target tenants for a service. "
                                                "Are you really a Tapis service? "
@@ -1070,10 +1070,10 @@ class Operation(object):
 
         # set the X-Tapis-Token header using the client
         access_token = None
-        request_site_master_tenant_id = None    # used for looking up the service token
+        request_site_admin_tenant_id = None    # used for looking up the service token
         if self.tapis_client.is_tapis_service and hasattr(self.tapis_client, 'service_tokens'):
             # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
-            # service tokens are stored by master tenant, so we need to get the master tenant for the
+            # service tokens are stored by admin tenant, so we need to get the admin tenant for the
             # owning site of the tenant.
             try:
                 request_tenant = self.tapis_client.tenant_cache.get_tenant_config(tenant_id=tenant_id)
@@ -1084,20 +1084,20 @@ class Operation(object):
             except Exception as e:
                 raise errors.BaseTapyException(f"Could not lookup the request site for tenant {tenant_id}; e: {e}")
             try:
-                request_site_master_tenant_id = request_site.site_master_tenant_id
+                request_site_admin_tenant_id = request_site.site_admin_tenant_id
             except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request site_master tenant for "
+                raise errors.BaseTapyException(f"Could not lookup the request site_admin tenant for "
                                                f"tenant {tenant_id}; e: {e}")
 
             # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
             # the service's first set of tokens.
-            if request_site_master_tenant_id in self.tapis_client.service_tokens.keys() \
-                    and 'access_token' in self.tapis_client.service_tokens[request_site_master_tenant_id].keys():
+            if request_site_admin_tenant_id in self.tapis_client.service_tokens.keys() \
+                    and 'access_token' in self.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
                 try:
-                    access_token = self.tapis_client.service_tokens[request_site_master_tenant_id]['access_token']
+                    access_token = self.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token']
                 except KeyError:
                     raise errors.BaseTapyException(f"Did not find service tokens for "
-                                                   f"tenant {request_site_master_tenant_id};")
+                                                   f"tenant {request_site_admin_tenant_id};")
             else:
                 pass
         elif self.tapis_client.get_access_jwt():
@@ -1120,7 +1120,7 @@ class Operation(object):
                     pass
                 else:
                     try:
-                        self.tapis_client.refresh_tokens(tenant_id=request_site_master_tenant_id)
+                        self.tapis_client.refresh_tokens(tenant_id=request_site_admin_tenant_id)
                     except:
                         # for now, if we get an error trying to refresh the tokens,s, we ignore it and try the
                         # request anyway.
@@ -1128,10 +1128,10 @@ class Operation(object):
         # we may have refreshed the token, so we get it one more time --
         if self.tapis_client.is_tapis_service \
                 and hasattr(self.tapis_client, 'service_tokens') \
-                and request_site_master_tenant_id \
-                and 'access_token' in self.tapis_client.service_tokens[request_site_master_tenant_id].keys():
+                and request_site_admin_tenant_id \
+                and 'access_token' in self.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
             try:
-                jwt = self.tapis_client.service_tokens[request_site_master_tenant_id]['access_token'].access_token
+                jwt = self.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token'].access_token
             except Exception as e:
                 msg = f"Could not get JWT from access_token; e: {e}"
                 raise errors.BaseTapyException(msg)
