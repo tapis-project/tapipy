@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.1 - 2020-12-11 (target)
+### Added
+- No change.
+
+### Changed
+- Updated tapipy to work with 'admin' tenant at primary site rather than 'master'.
+- Also updated tests.
+
+### Removed
+- No change.
+
 ## 0.3.0 - 2020-12-1 (target)
 ### Added
 - Added sites integration for Tapis v3.
