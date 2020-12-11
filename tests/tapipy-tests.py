@@ -13,14 +13,13 @@ def client():
     base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
     username = getattr(conf, 'username', 'pysdk')
     account_type = getattr(conf, 'account_type', 'service')
-    tenant_id = getattr(conf, 'tenant_id', 'master')
+    tenant_id = getattr(conf, 'tenant_id', 'admin')
     service_password = getattr(conf, 'service_password', None)
     t = Tapis(base_url=base_url,
               username=username,
               account_type=account_type,
               tenant_id=tenant_id,
               service_password=service_password,
-              resource_set='local',
               tenants=tenants,
               is_tapis_service=True)
     t.get_tokens()
@@ -207,7 +206,7 @@ def test_get_owner(client):
 # ---------------------
 
 def test_list_roles(client):
-    roles = client.sk.getRoleNames(tenant='master')
+    roles = client.sk.getRoleNames(tenant='admin')
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     if len(roles.names) > 0:
@@ -216,48 +215,48 @@ def test_list_roles(client):
 def test_create_role(client):
     # first, make sure role is not there -
     try:
-        client.sk.deleteRoleByName(tenant='master', roleName='pysdk_test_role', user='tenants')
+        client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants')
     except:
         pass
     # create the test role -
-    role = client.sk.createRole(roleTenant='master', roleName='pysdk_test_role',
+    role = client.sk.createRole(roleTenant='admin', roleName='pysdk_test_role',
                                 description='test role created by pysdk', user='tenants')
     assert hasattr(role, 'url')
 
 def test_role_user_list_initially_empty(client):
-    users = client.sk.getUsersWithRole(tenant='master', roleName='pysdk_test_role')
+    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role')
     assert users.names == []
 
 def test_add_user_to_role(client):
-    result = client.sk.grantRole(tenant='master', roleName='pysdk_test_role', user='tenants')
+    result = client.sk.grantRole(tenant='admin', roleName='pysdk_test_role', user='tenants')
     assert hasattr(result, 'changes')
     assert result.changes == 1
 
 def test_user_has_role(client):
-    roles = client.sk.getUserRoles(tenant='master', user='tenants')
+    roles = client.sk.getUserRoles(tenant='admin', user='tenants')
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     assert 'pysdk_test_role' in roles.names
 
 def test_user_in_role_user_list(client):
-    users = client.sk.getUsersWithRole(tenant='master', roleName='pysdk_test_role')
+    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role')
     assert hasattr(users, 'names')
     assert type(users.names) == list
     assert 'tenants' in users.names
 
 def test_revoke_user_from_role(client):
-    result = client.sk.revokeUserRole(tenant='master', roleName='pysdk_test_role', user='tenants')
+    result = client.sk.revokeUserRole(tenant='admin', roleName='pysdk_test_role', user='tenants')
     assert hasattr(result, 'changes')
     assert result.changes == 1
 
 def test_user_no_longer_in_role(client):
-    roles = client.sk.getUserRoles(tenant='master', user='tenants')
+    roles = client.sk.getUserRoles(tenant='admin', user='tenants')
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     assert 'tenants' not in roles.names
 
 def test_delete_role(client):
-    result = client.sk.deleteRoleByName(tenant='master', roleName='pysdk_test_role', user='tenants')
+    result = client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants')
     assert hasattr(result, 'changes')
     assert result.changes == 1
 

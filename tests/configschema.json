@@ -5,7 +5,7 @@
     "tenant_id": {
       "type": "string",
       "description": "Tenant id to run the tests in.",
-      "default": "master"
+      "default": "admin"
     },
     "username": {
       "type": "string",
