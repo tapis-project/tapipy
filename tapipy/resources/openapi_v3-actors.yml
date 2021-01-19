@@ -560,6 +560,36 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorExecutionLogs'
 
+  /v3/actors/{actor_id}/executions/{execution_id}/results:
+    get:
+      tags:
+      - Actors
+      - Executions
+      summary: Get an execution's result.
+      description: Get an execution's result.
+      operationId: getExecutionResult
+      parameters:
+      - name: actor_id
+        in: path
+        description: Unique ID of the actor
+        required: true
+        schema:
+          type: string
+      - name: execution_id
+        in: path
+        description: Unique ID of the execution
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
 
   /v3/actors/{actor_id}/permissions:
     get:

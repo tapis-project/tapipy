@@ -1162,12 +1162,14 @@ class Operation(object):
         data = None
         # these are the list of allowable request body content types; ex., 'application/json'.
         if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
-            # Before we go by spec headers, we first check if the user specifed any because the 
+            # Before we go by spec headers, we first check if the user specified any because the
             # 'else' would overwrite those if the spec specifies one of the following content-types.
             # In the case of custom headers, we just pass whatever in (Christian's decision, probably 
             # should improve).
             if 'Content-Type' in headers:
-                data = kwargs['request_body']
+                # TODO -- this assumes the kwarg is called "message", which is true in the case of the
+                # sendMessage() function in Abaco but it not a general solution.
+                data = kwargs['message']
             # We go back to the old methods if there is not custom headers.
             # Note: If an operation has many possible content-types, this just kind of breaks because
             # all of the ifs return as true. e.g. sendMessage in Actors w/json, binary, and strings.
@@ -1194,7 +1196,7 @@ class Operation(object):
                     data = json.dumps(data)
                 elif 'application/octet-stream' in self.op_desc.request_body.content.keys():
                     headers['Content-Type'] = 'application/octet-stream'
-                    data = kwargs['request_body']
+                    data = kwargs['message']
                 elif 'multipart/form-data' in self.op_desc.request_body.content.keys():
                     # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
                     raise NotImplementedError
