@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tapipy"
-version = "0.3.1"
+version = "0.3.3"
 description = "Python lib for interacting with an instance of the Tapis API Framework"
 license = "BSD-4-Clause"
 authors = ["Joe Stubbs <jstubbs@tacc.utexas.edu>"]
@@ -19,7 +19,7 @@ python_dateutil = "^2.5.3"
 setuptools = "^21.0.0"
 urllib3 = "^1.15.1"
 PyJWT = "1.7.1"
-openapi_core = "^0.13.0"
+openapi_core = "^0.11.1"
 requests = "*"
 cryptography = "^2.9.2"
 atomicwrites = "^1.4.0"

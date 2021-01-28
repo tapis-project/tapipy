@@ -1,6 +1,27 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.3 - 2021-01-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updated files spec yaml and pickled files.
+
+### Removed
+- No change.
+
+## 0.3.2 - 2021-01-12 (target)
+### Added
+- No change.
+
+### Changed
+- Up'ed compatibility with older version of openapi_core.
+
+### Removed
+- No change.
+
+
 ## 0.3.1 - 2020-12-11 (target)
 ### Added
 - No change.
