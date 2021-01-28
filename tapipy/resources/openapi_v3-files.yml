@@ -17,8 +17,6 @@ servers:
 - url: https://dev.develop.tapis.io
   description: development
   variables: {}
-security:
-- Bearer: []
 tags:
 - name: file operations
 - name: share
