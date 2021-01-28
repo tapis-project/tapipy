@@ -61,8 +61,14 @@ paths:
           type: integer
           format: int64
       responses:
-        '200':
+        200:
           description: OK
+        401:
+          description: Not Authenticated
+        404:
+          description: Not Found
+        403:
+          description: Not Authorized
   /v3/files/healthcheck:
     get:
       tags:
@@ -71,7 +77,7 @@ paths:
       description: Health check
       operationId: healthCheck
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -105,6 +111,7 @@ paths:
         schema:
           type: integer
           format: int32
+          default: 1000
         example: 100
       - name: offset
         in: query
@@ -112,6 +119,7 @@ paths:
         schema:
           type: integer
           format: int64
+          default: 0
         example: 1000
       - name: meta
         in: query
@@ -119,12 +127,36 @@ paths:
         schema:
           type: boolean
       responses:
-        '200':
+        200:
           description: A list of files
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileListingResponse'
+        401:
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        403:
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        500:
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
     put:
       tags:
       - file operations
@@ -151,8 +183,32 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        401:
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        403:
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        500:
+          description: Internal Error
           content:
             application/json:
               schema:
@@ -177,25 +233,40 @@ paths:
         required: true
         schema:
           type: string
-      - name: x-meta
-        in: header
-        description: String dump of a valid JSON object to be associated with the
-          file
-        schema:
-          type: string
       requestBody:
         content:
           multipart/form-data:
             schema:
+              required:
+              - file
               type: object
               properties:
                 file:
-                  $ref: '#/components/schemas/FormDataContentDisposition'
+                  type: string
+                  format: binary
       responses:
-        '200':
+        200:
           description: OK
           content:
-            '*/*':
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        401:
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        403:
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        500:
+          description: Internal Error
+          content:
+            application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
     delete:
@@ -218,8 +289,77 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        401:
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        403:
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        404:
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        500:
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+  /v3/files/ops/{systemId}:
+    post:
+      tags:
+      - file operations
+      summary: Create a directory
+      description: Create a directory in the system at path the given path
+      operationId: mkdir
+      parameters:
+      - name: systemId
+        in: path
+        description: System ID
+        required: true
+        schema:
+          type: string
+      - name: path
+        in: query
+        description: Path
+        required: true
+        schema:
+          type: string
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        401:
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        403:
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        500:
+          description: Internal Error
           content:
             application/json:
               schema:
@@ -228,9 +368,8 @@ paths:
     get:
       tags:
       - permissions
-      summary: List permissions on an file/folder
-      description: 'Returns a list of roles/users that can access the file QUESTION:
-        Who should be able to see access this? Only the owner of the system? '
+      summary: Get the API user's permissions on a file or folder.
+      description: Get the permissions for the API user for the system and path.
       operationId: permissionsSystemIdPathGet
       parameters:
       - name: systemId
@@ -245,8 +384,14 @@ paths:
         required: true
         schema:
           type: string
+      - name: username
+        in: query
+        description: Username to remove
+        required: true
+        schema:
+          type: string
       responses:
-        '200':
+        200:
           description: FilePermission
           content:
             application/json:
@@ -258,8 +403,7 @@ paths:
       tags:
       - permissions
       summary: 'Add permissions on an object. '
-      description: 'Add a user to a file/folder. QUESTION - who should be able to
-        add permissions? Only the owner? '
+      description: Add a user to a file/folder.
       operationId: permissionsSystemIdPathPost
       parameters:
       - name: systemId
@@ -274,8 +418,14 @@ paths:
         required: true
         schema:
           type: string
+      - name: username
+        in: query
+        description: Username to remove
+        required: true
+        schema:
+          type: string
       responses:
-        '200':
+        200:
           description: FilePermission
           content:
             application/json:
@@ -285,8 +435,7 @@ paths:
       tags:
       - permissions
       summary: 'Remove permissions on an object for a user. '
-      description: 'Remove user permissions to a file/folder. QUESTION - who should
-        be able to delete permissions? Only the owner? '
+      description: Remove user permissions to a file/folder.
       operationId: permissionsSystemIdPathDelete
       parameters:
       - name: systemId
@@ -308,12 +457,12 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: FilePermission
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FilePermissionResponse'
+                $ref: '#/components/schemas/FilePermissionStringResponse'
   /v3/files/share/{systemId}/{path}:
     get:
       tags:
@@ -335,7 +484,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: List of shares
           content:
             application/json:
@@ -369,7 +518,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ShareFileRequest'
       responses:
-        '200':
+        200:
           description: Shared file object
           content:
             application/json:
@@ -395,7 +544,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: Shared file object
           content:
             application/json:
@@ -416,7 +565,7 @@ paths:
           type: string
         example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -436,12 +585,34 @@ paths:
           type: string
         example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/TapisResponse'
+  /v3/files/transfers/{transferTaskId}/history:
+    get:
+      tags:
+      - transfers
+      summary: Get history of a transfer task
+      operationId: getTransferTaskHistory
+      parameters:
+      - name: transferTaskId
+        in: path
+        description: Transfer task ID
+        required: true
+        schema:
+          type: string
+          format: uuid
+        example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferTaskResponse'
   /v3/files/transfers:
     post:
       tags:
@@ -457,28 +628,7 @@ paths:
               $ref: '#/components/schemas/TransferTaskRequest'
         required: true
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransferTaskResponse'
-  /v3/files/transfers/{transferTaskId}/history:
-    get:
-      tags:
-      - transfers
-      summary: Get history of a transfer task
-      operationId: getTransferTaskHistory
-      parameters:
-      - name: transferTaskId
-        in: path
-        description: Transfer task ID
-        required: true
-        schema:
-          type: string
-        example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
-      responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -521,8 +671,8 @@ components:
       type: object
       properties:
         lastModified:
-          type: integer
-          format: int64
+          type: string
+          format: date-time
         name:
           type: string
         path:
@@ -544,38 +694,34 @@ components:
             $ref: '#/components/schemas/FileInfo'
         version:
           type: string
-    FormDataContentDisposition:
+    FilePermissionStringResponse:
       type: object
       properties:
-        type:
+        status:
           type: string
-        parameters:
-          type: object
-          additionalProperties:
-            type: string
-        fileName:
+        message:
           type: string
-        creationDate:
+        result:
           type: string
-          format: date-time
-        modificationDate:
-          type: string
-          format: date-time
-        readDate:
-          type: string
-          format: date-time
-        size:
-          type: integer
-          format: int64
-        name:
+        version:
           type: string
     FilePermission:
       type: object
       properties:
+        tenantId:
+          type: string
         username:
           type: string
-        created:
+        systemId:
           type: string
+        path:
+          type: string
+        permissions:
+          type: string
+          enum:
+          - READ
+          - READWRITE
+          - ALL
     FilePermissionResponse:
       type: object
       properties:
@@ -628,22 +774,57 @@ components:
         id:
           type: integer
           format: int32
+        username:
+          type: string
+        tenantId:
+          type: string
+        tag:
+          type: string
+        created:
+          type: integer
+          format: int64
+        uuid:
+          type: string
+          format: uuid
+        startTime:
+          type: integer
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+        status:
+          type: string
+        parentTasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskParent'
+    TransferTaskParent:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
         tenantId:
           type: string
         username:
           type: string
-        sourceSystemId:
+        sourceURI:
           type: string
-        sourcePath:
-          type: string
-        destinationSystemId:
-          type: string
-        destinationPath:
+        destinationURI:
           type: string
         totalBytes:
           type: integer
           format: int64
         bytesTransferred:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+          format: int32
+        startTime:
+          type: integer
+          format: int64
+        endTime:
           type: integer
           format: int64
         uuid:
@@ -652,14 +833,9 @@ components:
           format: uuid
         status:
           type: string
-          description: The status of the task, such as PENDING, IN_PROGRESS, COMPLETED,
+          description: The status of the task, such as ACCEPTED, IN_PROGRESS, COMPLETED,
             CANCELLED
           example: PENDING
-          enum:
-          - ACCEPTED
-          - IN_PROGRESS
-          - COMPLETED
-          - CANCELLED
         created:
           type: integer
           description: Timestamp in UTC of task creation.
@@ -675,26 +851,6 @@ components:
           $ref: '#/components/schemas/TransferTask'
         version:
           type: string
-    TransferTaskRequest:
-      required:
-      - destinationPath
-      - destinationSystemId
-      - sourcePath
-      - sourceSystemId
-      type: object
-      properties:
-        sourceSystemId:
-          type: string
-          description: ID of source system
-        sourcePath:
-          type: string
-          description: Path to file/folder in source system
-        destinationSystemId:
-          type: string
-          description: ID of destination system
-        destinationPath:
-          type: string
-          description: Path to file/folder in destination system
     TapisResponse:
       type: object
       properties:
@@ -706,3 +862,26 @@ components:
           type: object
         version:
           type: string
+    TransferTaskRequest:
+      required:
+      - elements
+      type: object
+      properties:
+        tag:
+          type: string
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskRequestElement'
+    TransferTaskRequestElement:
+      required:
+      - destinationURI
+      - sourceURI
+      type: object
+      properties:
+        sourceURI:
+          type: string
+          description: Fully qualified URI, such as tapis://{systemID}/{path} or https://myserver.com/path/to/inputs/
+        destinationURI:
+          type: string
+          description: Fully qualified URI to a tapis system, such as tapis://{systemID}/{path}
