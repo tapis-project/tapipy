@@ -17,6 +17,8 @@ servers:
 - url: https://dev.develop.tapis.io
   description: development
   variables: {}
+security:
+- Bearer: []
 tags:
 - name: file operations
 - name: share
@@ -59,13 +61,13 @@ paths:
           type: integer
           format: int64
       responses:
-        200:
+        '200':
           description: OK
-        401:
+        '401':
           description: Not Authenticated
-        404:
+        '404':
           description: Not Found
-        403:
+        '403':
           description: Not Authorized
   /v3/files/healthcheck:
     get:
@@ -75,7 +77,7 @@ paths:
       description: Health check
       operationId: healthCheck
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -125,31 +127,31 @@ paths:
         schema:
           type: boolean
       responses:
-        200:
+        '200':
           description: A list of files
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileListingResponse'
-        401:
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        403:
+        '403':
           description: Not Authorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        404:
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        500:
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -181,31 +183,31 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        401:
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        403:
+        '403':
           description: Not Authorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        404:
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        500:
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -243,25 +245,25 @@ paths:
                   type: string
                   format: binary
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        401:
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        403:
+        '403':
           description: Not Authorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        500:
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -287,31 +289,31 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        401:
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        403:
+        '403':
           description: Not Authorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        404:
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        500:
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -338,25 +340,25 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        401:
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        403:
+        '403':
           description: Not Authorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        500:
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -389,7 +391,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: FilePermission
           content:
             application/json:
@@ -423,7 +425,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: FilePermission
           content:
             application/json:
@@ -455,7 +457,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: FilePermission
           content:
             application/json:
@@ -482,7 +484,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: List of shares
           content:
             application/json:
@@ -516,7 +518,7 @@ paths:
             schema:
               $ref: '#/components/schemas/ShareFileRequest'
       responses:
-        200:
+        '200':
           description: Shared file object
           content:
             application/json:
@@ -542,7 +544,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: Shared file object
           content:
             application/json:
@@ -563,7 +565,7 @@ paths:
           type: string
         example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -583,7 +585,7 @@ paths:
           type: string
         example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -605,7 +607,7 @@ paths:
           format: uuid
         example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -626,7 +628,7 @@ paths:
               $ref: '#/components/schemas/TransferTaskRequest'
         required: true
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
