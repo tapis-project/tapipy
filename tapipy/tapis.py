@@ -563,7 +563,12 @@ class Tapis(object):
                                                   refresh_token_ttl=refresh_token_ttl,
                                                   target_site_id=target_site_id)
             except Exception as e:
-                raise errors.BaseTapyException(f"Could not generate tokens for tenant: {tenant_id}; exception: {e}")
+                raise errors.BaseTapyException(f"Could not generate service tokens for service: {username}; "
+                                               f"exception: {e};"
+                                               f"function args:"
+                                               f"token_usermame: {self.username}; "
+                                               f"account_type: {self.account_type}; "
+                                               f"target_site_id: {target_site_id}; ")
             self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
                                               'refresh_token': tokens.refresh_token}
 
@@ -920,6 +925,17 @@ class Operation(object):
         """
         # we need to determine the tenant id for the request.
         tenant_id = None
+        # first, requests to the Tenants API always go to the primary site.
+        if self.resource_name == 'tenants':
+            # in this case, we would ideally set it to the admin tenant of the primary site, however,
+            # to use get_base_url_admin_tenant_primary_site() we require a fully formed service tenant_cache (i.e.,
+            # the tenant_cache from flaskbase that has been initialized. if that function is not available, then
+            # we return None here. in most cases this should be fine. the tenant_id is not actually used when
+            # determining other aspects of a service request to tenants (such as the base URL).
+            try:
+                return self.tapis_client.tenant_cache.primary_site.site_admin_tenant_id
+            except:
+                return None
         # to begin, look for it in the parameters. if the caller explicitly set
         # it, always use that.
         try:
@@ -989,7 +1005,7 @@ class Operation(object):
                 pass
         # finally, look a username on the tapis client itself
         if not user:
-            print(f"no user object, returning username on the tapis_client...")
+            print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
             user = self.tapis_client.username
         return user
 
@@ -1012,6 +1028,11 @@ class Operation(object):
         # we must determine base_url for a service to service request.
         if self.tapis_client.is_tapis_service:
             tenant_id = self.determine_tenant_id_for_service_request(**kwargs)
+            try:
+                site_id, base_url = self.tapis_client.tenant_cache.get_site_and_base_url_for_service_request(tenant_id,
+                                                                                                             self.resource_name)
+            except:
+                pass
             # if we got a tenant_id, use it to look up the base_url:
             if tenant_id:
                 try:
