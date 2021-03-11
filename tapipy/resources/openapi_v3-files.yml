@@ -17,8 +17,6 @@ servers:
 - url: https://dev.develop.tapis.io
   description: development
   variables: {}
-security:
-- Bearer: []
 tags:
 - name: file operations
 - name: share
@@ -53,6 +51,12 @@ paths:
         schema:
           $ref: '#/components/schemas/HeaderByteRange'
         example: range=0,999
+      - name: zip
+        in: query
+        description: Zip the contents of folder?
+        schema:
+          type: boolean
+        example: false
       - name: more
         in: header
         description: Send 1k of UTF-8 encoded string back starting at 'page' 1, ex
@@ -160,9 +164,9 @@ paths:
     put:
       tags:
       - file operations
-      summary: Rename a file or folder
+      summary: Move/copy/rename a file or folder
       description: Move/Rename a file in {systemID} at path {path}.
-      operationId: rename
+      operationId: moveCopyRename
       parameters:
       - name: systemId
         in: path
@@ -176,12 +180,11 @@ paths:
         required: true
         schema:
           type: string
-      - name: newName
-        in: query
-        description: The new name of the file/folder
-        required: true
-        schema:
-          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveCopyRenameRequest'
       responses:
         '200':
           description: OK
@@ -333,12 +336,11 @@ paths:
         required: true
         schema:
           type: string
-      - name: path
-        in: query
-        description: Path
-        required: true
-        schema:
-          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MkdirRequest'
       responses:
         '200':
           description: OK
@@ -386,8 +388,7 @@ paths:
           type: string
       - name: username
         in: query
-        description: Username to remove
-        required: true
+        description: Username to list
         schema:
           type: string
       responses:
@@ -418,12 +419,12 @@ paths:
         required: true
         schema:
           type: string
-      - name: username
-        in: query
-        description: Username to remove
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermissionRequest'
         required: true
-        schema:
-          type: string
       responses:
         '200':
           description: FilePermission
@@ -614,6 +615,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/TransferTaskResponse'
   /v3/files/transfers:
+    get:
+      tags:
+      - transfers
+      summary: Get a list of recent transfer tasks starting with the most recent
+      description: Get a list of recent transfer tasks starting with the most recent
+      operationId: getRecentTransferTasks
+      parameters:
+      - name: limit
+        in: query
+        description: pagination limit
+        schema:
+          type: integer
+          format: int32
+          default: 1000
+        example: 100
+      - name: offset
+        in: query
+        description: pagination offset
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        example: 1000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferTaskListResponse'
     post:
       tags:
       - transfers
@@ -667,6 +698,14 @@ components:
           type: string
         version:
           type: string
+    MkdirRequest:
+      required:
+      - path
+      type: object
+      properties:
+        path:
+          pattern: ^(?!.*\.).+
+          type: string
     FileInfo:
       type: object
       properties:
@@ -694,6 +733,21 @@ components:
             $ref: '#/components/schemas/FileInfo'
         version:
           type: string
+    MoveCopyRenameRequest:
+      required:
+      - newPath
+      - operation
+      type: object
+      properties:
+        operation:
+          type: string
+          enum:
+          - MOVE
+          - COPY
+          - RENAME
+        newPath:
+          type: string
+          description: Paths must be absolute, ../.. is not allowed
     FilePermissionStringResponse:
       type: object
       properties:
@@ -733,6 +787,20 @@ components:
           $ref: '#/components/schemas/FilePermission'
         version:
           type: string
+    CreatePermissionRequest:
+      required:
+      - permission
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        permission:
+          type: string
+          enum:
+          - READ
+          - READWRITE
+          - ALL
     SharedFileObject:
       type: object
       properties:
@@ -780,24 +848,90 @@ components:
           type: string
         tag:
           type: string
-        created:
-          type: integer
-          format: int64
         uuid:
           type: string
           format: uuid
+        created:
+          type: string
+          format: date-time
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - ACCEPTED
+          - STAGING
+          - STAGED
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          - FAILED
+          - PAUSED
+        parentTasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskParent'
+    TransferTaskChild:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        tenantId:
+          type: string
+        username:
+          type: string
+        sourceURI:
+          type: string
+        destinationURI:
+          type: string
+        totalBytes:
+          type: integer
+          format: int64
+        bytesTransferred:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+          format: int32
         startTime:
           type: integer
           format: int64
         endTime:
           type: integer
           format: int64
+        parentTaskId:
+          type: integer
+          format: int32
+        retries:
+          type: integer
+          format: int32
+        uuid:
+          type: string
+          description: Unique ID of the task.
+          format: uuid
         status:
           type: string
-        parentTasks:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferTaskParent'
+          description: The status of the task, such as ACCEPTED, IN_PROGRESS, COMPLETED,
+            CANCELLED
+          example: PENDING
+          enum:
+          - ACCEPTED
+          - STAGING
+          - STAGED
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          - FAILED
+          - PAUSED
+        created:
+          type: integer
+          description: Timestamp in UTC of task creation.
+          format: int64
     TransferTaskParent:
       type: object
       properties:
@@ -827,6 +961,10 @@ components:
         endTime:
           type: integer
           format: int64
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskChild'
         uuid:
           type: string
           description: Unique ID of the task.
@@ -836,6 +974,15 @@ components:
           description: The status of the task, such as ACCEPTED, IN_PROGRESS, COMPLETED,
             CANCELLED
           example: PENDING
+          enum:
+          - ACCEPTED
+          - STAGING
+          - STAGED
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          - FAILED
+          - PAUSED
         created:
           type: integer
           description: Timestamp in UTC of task creation.
@@ -885,3 +1032,20 @@ components:
         destinationURI:
           type: string
           description: Fully qualified URI to a tapis system, such as tapis://{systemID}/{path}
+        optional:
+          type: boolean
+          description: Allow the full transfer to succeed even if this portion fails?
+            Default is false
+    TransferTaskListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTask'
+        version:
+          type: string
