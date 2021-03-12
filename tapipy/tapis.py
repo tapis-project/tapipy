@@ -1218,10 +1218,14 @@ class Operation(object):
                 elif 'application/octet-stream' in self.op_desc.request_body.content.keys():
                     headers['Content-Type'] = 'application/octet-stream'
                     data = kwargs['message']
+                # x-www-form-urlencoded
+                elif 'application/x-www-form-urlencoded' in self.op_desc.request_body.content.keys():
+                    headers['Content-Type'] = 'application/x-www-form-urlencoded'
+                    data = f"message={kwargs['message']}"
                 elif 'multipart/form-data' in self.op_desc.request_body.content.keys():
                     # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
                     raise NotImplementedError
-                # todo - handle other body content types..
+            # todo - handle other body content types..
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects

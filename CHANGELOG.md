@@ -1,6 +1,58 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.5 - 2021-01-28 (target)
+### Added
+- No change.
+
+### Changed
+- Support for x-www-form-urlencoded
+
+### Removed
+- No change.
+
+## 0.3.4 - 2021-XX-XX (target)
+### Added
+- No change.
+
+### Changed
+- Updated files spec yaml and pickled files.
+
+### Removed
+- No change.
+
+## 0.3.3 - 2021-01-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updated files spec yaml and pickled files.
+
+### Removed
+- No change.
+
+## 0.3.2 - 2021-01-12 (target)
+### Added
+- No change.
+
+### Changed
+- Up'ed compatibility with older version of openapi_core.
+
+### Removed
+- No change.
+
+
+## 0.3.1 - 2020-12-11 (target)
+### Added
+- No change.
+
+### Changed
+- Updated tapipy to work with 'admin' tenant at primary site rather than 'master'.
+- Also updated tests.
+
+### Removed
+- No change.
+
 ## 0.3.0 - 2020-12-1 (target)
 ### Added
 - Added sites integration for Tapis v3.
