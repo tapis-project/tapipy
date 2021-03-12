@@ -25,8 +25,8 @@ A basic example of logging in with a user account is below.
 from tapipy import Tapis
 
 # Log into you the Tapis service by providing user/pass and url.
-t = Tapis(base_url='https://master.tapis.io',
-          tenant_id='master',
+t = Tapis(base_url='https://admin.tapis.io',
+          tenant_id='admin',
 	  account_type=account_type,
           username='myuser',
           password='mypass')
@@ -81,12 +81,12 @@ The following is an example of some custom parameter setting. As you can see, th
 ```
 from tapipy.tapis import Tapis
 
-t = Tapis(base_url='https://master.develop.tapis.io',
-          tenant_id='master',
+t = Tapis(base_url='https://admin.develop.tapis.io',
+          tenant_id='admin',
           username='username',
           account_type='user',
           password='password',
-          resource_set='master',
+          resource_set='admin',
           custom_spec_dict={'abaco': 'URL#1',
                             'longhorn': 'URL#2'},
                             'cactus': 'local: /home/tapis/myfolder/cactusSpec.yml'},

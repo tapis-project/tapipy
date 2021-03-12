@@ -681,10 +681,10 @@ components:
         tenant_base_url_template:
           type: string
           description: For primary site only; The template string represening the base URL for a tenant.
-        site_master_tenant_id:
+        site_admin_tenant_id:
           type: string
           description: Tenant ID of this site's tenant.
-      required: [site_id, base_url, primary, services, site_master_tenant_id]
+      required: [site_id, base_url, primary, services, site_admin_tenant_id]
 
     Site:
       type: object
@@ -708,10 +708,10 @@ components:
         tenant_base_url_template:
           type: string
           description: The tenant base url template.
-        site_master_tenant_id:
+        site_admin_tenant_id:
           type: string
           description: Tenant ID of this site's tenant.
-      required: [site_id, services, site_master_tenant_id]
+      required: [site_id, services, site_admin_tenant_id]
 
     arrayOfSites:
       type: array
