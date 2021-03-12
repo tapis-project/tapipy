@@ -14,16 +14,16 @@ info:
     url: "https://github.com/TACC/abaco"
 
 servers:
-- url: http://localhost:8000
+- url: http://localhost:5000
   description: Local Development
-- url: https://api.tacc.utexas.edu
-  description: Production TACC tenant.
-- url: https://api.sd2e.org
-  description: Production SD2E tenant.
-- url: https://dev.tenants.staging.tacc.cloud
-  description: Staging TACC tenant.
-- url: https://dev.tenants.develop.tacc.cloud
-  description: Develop TACC tenant.
+- url: http://{tenant_id_url}.develop.tapis.io
+  description: Tapis Develop instance
+  variables:
+    tenant_id_url:
+      default: dev
+      description: The tenant_id associated with the request.
+- url: /
+  description: catch-all server definition for other Tapis instances.
 
 security:
   - wso2jwtDevAuth: []
@@ -31,31 +31,26 @@ security:
 
 
 paths:
-  /actors:
+  /v3/actors:
     get:
       tags:
       - Actors
-      summary: List actors
+      summary: listActors
       description: List summary of all actors owned by user
       operationId: listActors
       parameters:
-      - name: search
-        in: query
-        description: The query to perform when using DB search.
-        schema:
-          type: string
       - name: limit
         in: query
-        description: limit the number of search records returned.
+        description: limit the number of actors returned.
         schema:
           type: integer
-      - name: skip
+      - name: offset
         in: query
-        description: index (skip) to start list.
+        description: index (offset) to start list.
         schema:
           type: integer
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -68,7 +63,7 @@ paths:
     post:
       tags:
       - Actors
-      summary: Register an actor
+      summary: createActor
       description: Register an actor
       operationId: createActor
       requestBody:
@@ -78,7 +73,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewActor'
       responses:
-        201:
+        '201':
           description: Created
           content:
             application/json:
@@ -89,11 +84,11 @@ paths:
                   result:
                     $ref: '#/components/schemas/Actor'
 
-  /actors/{actor_id}:
+  /v3/actors/{actor_id}:
     get:
       tags:
       - Actors
-      summary: Get actor details
+      summary: getActor
       description: Get details of a specific actor by its id.
       operationId: getActor
       parameters:
@@ -104,7 +99,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -117,7 +112,7 @@ paths:
     put:
       tags:
       - Actors
-      summary: Update an actor
+      summary: updateActor
       description: Update an actor's definition.
       operationId: updateActor
       parameters:
@@ -134,7 +129,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewActor'
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -147,7 +142,7 @@ paths:
     delete:
       tags:
       - Actors
-      summary: Delete actor
+      summary: deleteActor
       description: Permenantly delete an actor.
       operationId: deleteActor
       parameters:
@@ -159,7 +154,7 @@ paths:
           type: string
 
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -173,12 +168,11 @@ paths:
                     enum: [null]
 
 
-  /actors/{actor_id}/messages:
+  /v3/actors/{actor_id}/messages:
     get:
       tags:
-      - Actors
       - Messages
-      summary: Get number of pending messages for an actor.
+      summary: getMessages
       description: Get number of pending messages for an actor.
       operationId: getMessages
       parameters:
@@ -189,7 +183,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -199,11 +193,38 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/ActorMessages'
+    delete:
+      tags:
+      - Messages
+      summary: deletePendingMessages
+      description: Delete all pending messages actor's inbox.
+      operationId: deletePendingMessages
+      parameters:
+      - name: actor_id
+        in: path
+        description: Unique ID of the actor
+        required: true
+        schema:
+          type: string
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: string
+                    nullable: true
+                    enum: [null]
+
     post:
       tags:
-      - Actors
       - Messages
-      summary: Send a message
+      summary: sendMessage
       description: Send an actor a message
       operationId: sendMessage
       parameters:
@@ -225,17 +246,16 @@ paths:
         content:
           application/json:
             schema:
-              type: object
+              $ref: '#/components/schemas/JSONMessage'
           application/octet-stream:
             schema:
-              type: string
-              format: binary
+              $ref: '#/components/schemas/BinaryMessage'
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Message'
 
       responses:
-        200:
+        '200':
           description: Message receieved
           content:
             application/json:
@@ -245,20 +265,14 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/MessageJsonResponse'
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
-            text/html:
-              schema:
-                type: string
-    delete:
+
+  /actors/{actor_id}//messages:
+    post:
       tags:
-      - Actors
       - Messages
-      summary: Delete all pending messages.
-      description: Delete all pending messages actor's inbox.
-      operationId: deletePendingMessages
+      summary: sendBinaryMessage
+      description: Send an actor a binary message
+      operationId: sendBinaryMessage
       parameters:
       - name: actor_id
         in: path
@@ -266,10 +280,22 @@ paths:
         required: true
         schema:
           type: string
+      - name: _abaco_synchronous
+        in: query
+        description: Whether to use a synchronous execution
+        schema:
+          type: string
+          enum: [true, false]
 
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              $ref: '#/components/schemas/BinaryMessage'
       responses:
-        200:
-          description: OK
+        '200':
+          description: Binary message receieved
           content:
             application/json:
               schema:
@@ -277,17 +303,53 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                   result:
-                    type: string
-                    nullable: true
-                    enum: [null]
+                    $ref: '#/components/schemas/MessageJsonResponse'
 
 
-  /actors/{actor_id}/executions:
+  /actors/{actor_id}///messages:
+    post:
+      tags:
+      - Messages
+      summary: sendJSONMessage
+      description: Send an actor a JSON message
+      operationId: sendJSONMessage
+      parameters:
+      - name: actor_id
+        in: path
+        description: Unique ID of the actor
+        required: true
+        schema:
+          type: string
+      - name: _abaco_synchronous
+        in: query
+        description: Whether to use a synchronous execution
+        schema:
+          type: string
+          enum: [true, false]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JSONMessage'
+      responses:
+        '200':
+          description: Message receieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/MessageJsonResponse'
+
+
+  /v3/actors/{actor_id}/executions:
     get:
       tags:
-      - Actors
       - Executions
-      summary: List executions for an actor.
+      summary: listExecutions
       description: List executions for an actor.
       operationId: listExecutions
       parameters:
@@ -297,23 +359,8 @@ paths:
         required: true
         schema:
           type: string
-      - name: search
-        in: query
-        description: The query to perform when using DB search.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of search records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -325,12 +372,11 @@ paths:
                     $ref: '#/components/schemas/ActorExecutionSummaries'
 
 
-  /actors/{actor_id}/nonces:
+  /v3/actors/{actor_id}/nonces:
     get:
       tags:
-      - Actors
       - Nonces
-      summary: List nonces for an actor.
+      summary: listNonces
       description: List nonces for an actor.
       operationId: listNonces
       parameters:
@@ -341,7 +387,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -354,9 +400,8 @@ paths:
 
     post:
       tags:
-      - Actors
       - Nonces
-      summary: Create a nonce for an actor.
+      summary: createNonce
       description: Create a nonce for an actor.
       operationId: createNonce
       parameters:
@@ -374,7 +419,7 @@ paths:
               $ref: '#/components/schemas/NewActorNonce'
 
       responses:
-        200:
+        '200':
           description: Request successful
           content:
             application/json:
@@ -386,12 +431,11 @@ paths:
                     $ref: '#/components/schemas/ActorNonces'
 
 
-  /actors/{actor_id}/nonces/{nonce_id}:
+  /v3/actors/{actor_id}/nonces/{nonce_id}:
     get:
       tags:
-      - Actors
       - Nonces
-      summary: Get details about a nonce for an actor.
+      summary: getNonce
       description: Get details about a nonce for an actor.
       operationId: getNonce
       parameters:
@@ -408,7 +452,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -420,9 +464,8 @@ paths:
                     $ref: '#/components/schemas/ActorNonce'
     delete:
       tags:
-      - Actors
       - Nonces
-      summary: Delete a nonce.
+      summary: deleteNonce
       description: Delete a nonce.
       operationId: deleteNonce
       parameters:
@@ -439,7 +482,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -453,13 +496,12 @@ paths:
                     enum: [null]
 
 
-  /actors/{actor_id}/state:
+  /v3/actors/{actor_id}/state:
     get:
       tags:
-      - Actors
       - State
-      summary: Retrieve the state for an actor.
-      description: List nonces for an actor.
+      summary: getState
+      description: Get state for an actor.
       operationId: getState
       parameters:
       - name: actor_id
@@ -469,7 +511,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -483,9 +525,8 @@ paths:
 
     post:
       tags:
-      - Actors
       - State
-      summary: Update state for an actor.
+      summary: updateState
       description: Update state for an actor.
       operationId: updateState
       parameters:
@@ -504,7 +545,7 @@ paths:
               description: An arbitrary JSON-serializable object.
 
       responses:
-        200:
+        '200':
           description: Request successful
           content:
             application/json:
@@ -515,12 +556,11 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorNonces'
 
-  /actors/{actor_id}/executions/{execution_id}:
+  /v3/actors/{actor_id}/executions/{execution_id}:
     get:
       tags:
-      - Actors
       - Executions
-      summary: Get details about an execution.
+      summary: getExecution
       description: Get details about an execution.
       operationId: getExecution
       parameters:
@@ -537,7 +577,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -548,12 +588,11 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorExecution'
 
-  /actors/{actor_id}/executions/{execution_id}/logs:
+  /v3/actors/{actor_id}/executions/{execution_id}/logs:
     get:
       tags:
-      - Actors
       - Executions
-      summary: Get an execution's logs.
+      summary: getExecutionLogs
       description: Get an execution's logs.
       operationId: getExecutionLogs
       parameters:
@@ -569,23 +608,8 @@ paths:
         required: true
         schema:
           type: string
-      - name: search
-        in: query
-        description: The query to perform when using DB search.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of search records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -596,13 +620,42 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorExecutionLogs'
 
-
-  /actors/{actor_id}/permissions:
+  /v3/actors/{actor_id}/executions/{execution_id}/results:
     get:
       tags:
       - Actors
+      - Executions
+      summary: Get an execution's result.
+      description: Get an execution's result.
+      operationId: getExecutionResult
+      parameters:
+      - name: actor_id
+        in: path
+        description: Unique ID of the actor
+        required: true
+        schema:
+          type: string
+      - name: execution_id
+        in: path
+        description: Unique ID of the execution
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+
+  /v3/actors/{actor_id}/permissions:
+    get:
+      tags:
       - Permissions
-      summary: List permissions for an actor.
+      summary: listPermissions
       description: List permissions for an actor.
       operationId: listPermissions
       parameters:
@@ -613,7 +666,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -625,9 +678,8 @@ paths:
                     $ref: '#/components/schemas/ActorPermissions'
     post:
       tags:
-      - Actors
       - Permissions
-      summary: Add or update permissions for an actor.
+      summary: updatePermissions
       description: Add or update permissions for an actor.
       operationId: updatePermissions
       parameters:
@@ -645,7 +697,7 @@ paths:
               $ref: '#/components/schemas/ActorPermission'
 
       responses:
-        200:
+        '200':
           description: Request successful
           content:
             application/json:
@@ -657,12 +709,11 @@ paths:
                     $ref: '#/components/schemas/ActorPermissions'
 
 
-  /actors/{actor_id}/workers:
+  /v3/actors/{actor_id}/workers:
     get:
       tags:
-      - Actors
       - Workers
-      summary: List workers for an actor.
+      summary: listWorkers
       description: List workers for an actor.
       operationId: listWorkers
       parameters:
@@ -672,23 +723,8 @@ paths:
         required: true
         schema:
           type: string
-      - name: search
-        in: query
-        description: The query to perform when using DB search.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of search records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -702,9 +738,8 @@ paths:
                 #     $ref: '#/components/schemas/ActorWorkers'
     post:
       tags:
-      - Actors
       - Workers
-      summary: Manage number of workers in actor's worker pool
+      summary: manageWorkerPoolSize
       description: Manage number of workers in actor's worker pool. Pool size will not decrease as a result of this action.
       operationId: manageWorkerPoolSize
       parameters:
@@ -726,7 +761,7 @@ paths:
                   description: Ensures the size of the pool is at least this number.
 
       responses:
-        200:
+        '200':
           description: Request successful
           content:
             application/json:
@@ -744,12 +779,11 @@ paths:
               schema:
                 type: string
 
-  /actors/aliases:
+  /v3/actors/aliases:
     get:
       tags:
-      - Actors
       - Aliases
-      summary: List actor aliases
+      summary: listAliases
       description: List all actor aliases available to user
       operationId: listAliases
       parameters:
@@ -764,7 +798,7 @@ paths:
         schema:
           type: integer
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -776,9 +810,8 @@ paths:
                     $ref: '#/components/schemas/ArrayOfAliases'
     post:
       tags:
-      - Actors
       - Aliases
-      summary: Register an alias
+      summary: createAlias
       description: Register an actor alias
       operationId: createAlias
       requestBody:
@@ -788,7 +821,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewAlias'
       responses:
-        201:
+        '201':
           description: Created
           content:
             application/json:
@@ -799,12 +832,11 @@ paths:
                   result:
                     $ref: '#/components/schemas/Alias'
 
-  /actors/aliases/{alias}:
+  /v3/actors/aliases/{alias}:
     get:
       tags:
-      - Actors
       - Aliases
-      summary: Get alias details
+      summary: getAlias
       description: Get details of a specific actor alias.
       operationId: getAlias
       parameters:
@@ -815,7 +847,7 @@ paths:
         schema:
           type: string
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -827,9 +859,8 @@ paths:
                     $ref: '#/components/schemas/Alias'
     put:
       tags:
-      - Actors
       - Aliases
-      summary: Update an actor alias
+      summary: updateActorAlias
       description: Update an alias definition.
       operationId: updateActorAlias
       parameters:
@@ -846,7 +877,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewAlias'
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -858,9 +889,8 @@ paths:
                     $ref: '#/components/schemas/Alias'
     delete:
       tags:
-      - Actors
       - Aliases
-      summary: Delete actor alias
+      summary: deleteAlias
       description: Permenantly delete an actor alias.
       operationId: deleteAlias
       parameters:
@@ -872,7 +902,7 @@ paths:
           type: string
 
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -889,11 +919,8 @@ paths:
   /actors/search/{search_type}:
     get:
       tags:
-      - Actors
-      - Executions
-      - Workers
-      - Logs
-      summary: Search a specified Abaco database
+      - Search
+      summary: searchDatabase
       description: Return db records that match query
       operationId: searchDatabase
       parameters:
@@ -920,7 +947,7 @@ paths:
         schema:
           type: integer
       responses:
-        200:
+        '200':
           description: OK
           content:
             application/json:
@@ -1048,17 +1075,10 @@ components:
           description: Actor identifier of actor to link this actor's events too. May be an actor id or an alias. Cycles not permitted.
           nullable: true
           default: null
-        webhook:
-          type: string
-          description: URL to publish this actor's events too.
-          nullable: true
-          default: null
       required: [image]
 
     Actor:
       type: object
-#      allOf:
-#        - $ref: '#/components/schemas/ArrayOfActorMounts'
       properties:
         id:
           type: string
@@ -1111,9 +1131,6 @@ components:
           type: string
           description: Return type (none, bin, json) for this actor. Default is none.
           enum: [none, bin, json]
-        webhook:
-          type: string
-          description: URL to publish this actor's events too.
 
     ArrayOfActors:
       type: array
@@ -1180,6 +1197,21 @@ components:
         message:
           type: string
           description: Text string message to send to actor
+
+    JSONMessage:
+      type: object
+      properties:
+        message:
+          type: object
+          description: a JSON object
+
+    BinaryMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          format: binary
+          description: A binary object
 
     MessageJsonResponse:
       type: object
