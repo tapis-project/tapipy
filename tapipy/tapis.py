@@ -28,6 +28,7 @@ Resources = Dict[ResourceName, ResourceUrl]
 Specs = Dict[ResourceName, OpenApiSpec]
 ResourceInfo = Mapping[ResourceName, SpecPath]
 
+
 def _seq_but_not_str(obj: object) -> bool:
     """
     Determine if an object is a Sequence, i.e., has an iteratable type, but not a string, bytearray, etc.
@@ -37,43 +38,53 @@ def _seq_but_not_str(obj: object) -> bool:
     return isinstance(obj, Sequence) and not isinstance(obj, (str, bytes, bytearray))
 
 
-## currently the files spec is missing operationId's for some of its operations.
+# currently the files spec is missing operationId's for some of its operations.
 RESOURCES = {
-    'tapipy':{
-        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-actors.yml',
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-authenticator.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-meta.yml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-files.yml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-sk.yml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-streams.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-systems.yml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tenants.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/master/tapipy/resources/openapi_v3-tokens.yml'
+    'local':{
+        'actors': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-actors.yml",
+        'authenticator': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-authenticator.yml",
+        'meta': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-meta.yml",
+        'files': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-files.yml",
+        'sk': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-sk.yml",
+        'streams': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-streams.yml",
+        'systems': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-systems.yml",
+        'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tenants.yml",
+        'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tokens.yml",
     },
-    'master': {
-        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',               
-        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
-        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/security-client/src/main/resources/SKAuthorizationAPI.yaml',
-        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+    'tapipy':{
+        'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-authenticator.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-meta.yml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-files.yml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-sk.yml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-streams.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml'
+    },
+    'prod': {
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/prod/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/prod/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml'
     },
     'dev': {
-        'actors': 'https://raw.githubusercontent.com/TACC/abaco/master/docs/specs/openapi_v3.yml',
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
-        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/master/api/src/main/resources/openapi.yaml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/dev/api/src/main/resources/openapi.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/master/systems-client/SystemsAPI.yaml',
-        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/master/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/master/service/resources/openapi_v3.yml'
+        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/systems-client/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml'
     }
 }
-
 
 
 def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
@@ -83,12 +94,13 @@ def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs
     """
     spec_dir = get_spec_dir(spec_dir)
     # Download and save specs if neccessary
-    download_and_pickle_spec_dicts(resources.values(), spec_dir=spec_dir, download_latest_specs=download_latest_specs)
+    download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=download_latest_specs)
     # Load, unpickle, and create specs
     specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
     return specs
 
-def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_latest_specs: bool) -> None:
+
+def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download_latest_specs: bool) -> None:
     """
     Function that calls threads to download and pickle specs.
     Cuts wait time for 9 specs from 4s to 0.7s
@@ -96,13 +108,15 @@ def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_lates
     # Get list of specs and check which we need to download
     # We download if the file name requested does not exist
     urls_to_download = []
-    for url in set(url_list):
+    for resource_name, url in resources.items():
+        if "local:" in url:
+            continue 
         _, full_spec_name, spec_path = get_file_info_from_url(url, spec_dir)
         if download_latest_specs:
-            urls_to_download.append([url, spec_path])
+            urls_to_download.append([resource_name, url, spec_path])
         else:
             if not full_spec_name in os.listdir(spec_dir):
-                urls_to_download.append([url, spec_path])
+                urls_to_download.append([resource_name, url, spec_path])
     
     # Set off some parallel processes cause it's quick.
     POOL_SIZE = os.environ.get('POOL_SIZE', 16)
@@ -111,13 +125,14 @@ def download_and_pickle_spec_dicts(url_list: list, spec_dir: str, download_lates
     pool.close()
     pool.join()
 
+
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     """
     Function that multiprocessing pool calls to download and store pickled
     spec dicts. Gets spec dict, if it's valid, stores it at 'spec_path',
     else it does nothing.
     """
-    resource_url, spec_path = resource_info
+    resource_name, resource_url, spec_path = resource_info
     # Attempt to get spec from url
     response = requests.get(resource_url)
     if response.status_code == 200:
@@ -125,8 +140,8 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
             # Loads yaml into Python dictionary
             spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
         except Exception as e:
-            print(f'Got exception when attempting to load yaml for'
-                  f'"{spec_path}" resource; exception: {e}')
+            print(f'Got exception when attempting to load yaml for '
+                  f'"{resource_name}" resource; exception: {e}')
             return
         try:
             # Attempts to create spec from dict to ensure the spec is valid
@@ -135,21 +150,22 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
             test_spec_dict = copy.deepcopy(spec_dict)
             create_spec(test_spec_dict)
         except Exception as e:
-            print(f'Got exception when test creating spec for "{spec_path}" '
+            print(f'Got exception when test creating spec for "{resource_name}" '
                   f'resource; Spec probably not verifying; exception: {e}')
             return
         try:
             # Pickles and saves the spec dict to the spec_path atomically
             with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
-                pickle.dump(spec_dict, spec_file, protocol=pickle.HIGHEST_PROTOCOL)
+                pickle.dump(spec_dict, spec_file, protocol=4)
         except Exception as e:
-            print(f'Got exception when attempting to pickle spec_dict for'
-                  f'"{spec_path}" resource; exception: {e}')
+            print(f'Got exception when attempting to pickle spec_dict for '
+                  f'"{resource_name}" resource; exception: {e}')
             return
     else:
-        raise KeyError(f'Error getting "{spec_path}" resource. URL: "{resource_url}".'
+        raise KeyError(f'Error getting "{resource_name}" resource. URL: "{resource_url}".'
                        f'Did not get 200, got the following back:\n{response.text}')
-    
+
+
 def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     """
     Pickles loads a specifed spec_path and creates said spec.
@@ -158,6 +174,16 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     specs = {}
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
+        if "local:" in url:
+            try:
+                spec_path = url.replace('local:', '').strip()
+                with open(spec_path, 'rb') as spec_file:
+                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
+                specs.update({resource_name: create_spec(spec_dict)})
+            except Exception as e:
+                print(f'Error reading local "{resource_name}" resource. '
+                      f'Ensure path is absolute. e:{e}')
+            continue
         _, _, spec_path = get_file_info_from_url(url, spec_dir)
         try:
             # Unpickle and create_spec
@@ -165,9 +191,26 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                 spec_dict = pickle.load(spec_file)
             specs.update({resource_name: create_spec(spec_dict)})
         except Exception as e:
-            print(f'Got exception trying to unpickle and create spec for'
-                  f'spec_path: "{spec_path}"; exception: {e}')
+            print(f'Got exception trying to unpickle and create spec for '
+                  f'spec_path: "{resource_name}"; exception: {e}')
+            # Using resource name to look if the resource exists in the
+            # tapipy prod resources. If it is found, we fall back and use that!
+            # If it isn't we just skip it.
+            print(f'Falling back to prod spec for "{resource_name}" resource')
+            if resource_name in RESOURCES['tapipy']:
+                url = RESOURCES['tapipy'][resource_name]
+                _, _, spec_path = get_file_info_from_url(url, spec_dir)
+                try:
+                    # Unpickle and create_spec
+                    with open(spec_path, 'rb') as spec_file:
+                        spec_dict = pickle.load(spec_file)
+                    specs.update({resource_name: create_spec(spec_dict)})
+                except Exception as e:
+                    print('Error opening tapipy prod spec. This is bad.')
+            else:
+                print(f'No "{resource_name}" spec was found to fallback on')
     return specs
+
 
 def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
     """
@@ -187,7 +230,8 @@ def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None
 
     spec_dir = get_spec_dir(spec_dir)
     download_and_pickle_spec_dicts(url_list, spec_dir=spec_dir, download_latest_specs=True)
-    
+
+
 def get_file_info_from_url(url: str, spec_dir: str):
     """
     Using a url string we create a file name to store said url contents.
@@ -202,6 +246,7 @@ def get_file_info_from_url(url: str, spec_dir: str):
     full_spec_name = f'{spec_name}.pickle'
     spec_path = f'{spec_dir}/{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
+
 
 def get_spec_dir(spec_dir: str):
     """
@@ -235,6 +280,40 @@ def get_basic_auth_header(username: str, password: str) -> str:
     return 'Basic {}'.format(b64encode(user_pass).decode())
 
 
+class Tenants(object):
+    """
+    Basic tenancy manager for Tapipy clients.
+    """
+
+    def __init__(self, tapi_client):
+        self.tapi_client = tapi_client
+        self.tenants = {}
+
+    def reload_tenants(self):
+        try:
+            sites = self.tapi_client.tenants.list_sites()
+            tenants = self.tapi_client.tenants.list_tenants()
+        except Exception as e:
+            raise errors.BaseTapyException(f"Unable to retrieve sites and tenants from the Tenants API. e: {e}")
+        for t in tenants:
+            for s in sites:
+                if s.site_id == t.site_id:
+                    t.site = s
+
+        self.tenants = {tn.tenant_id: tn for tn in tenants}
+
+    def get_tenant_config(self, tenant_id):
+        try:
+            return self.tenants[tenant_id]
+        except KeyError:
+            # update the cache and try again, but let the KeyError bubble up this time:
+            self.reload_tenants()
+            try:
+                return self.tenants[tenant_id]
+            except KeyError:
+                raise errors.BaseTapyException("Tenant not found.")
+
+
 class Tapis(object):
     """
     A client for the Tapis API.
@@ -258,7 +337,9 @@ class Tapis(object):
                  resource_set: str = 'tapipy',
                  custom_spec_dict: Resources = None,
                  download_latest_specs: bool = False,
-                 spec_dir: str = None
+                 spec_dir: str = None,
+                 tenants: Tenants = None,
+                 is_tapis_service: bool = False
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -309,8 +390,14 @@ class Tapis(object):
         # Allows a user to specify which set of resources to pull from.
         # Only used when download_lastest_specs is used.
         self.resource_set = resource_set
+        if resource_set == 'prod':
+            self.resource_set = 'tapipy'
+        if self.resource_set == 'master':
+            raise errors.TapyClientConfigurationError("the master branch has been removed from tapis-project "
+                                                      "repositories; use 'prod' or 'tapipy' instead.")
         if not self.resource_set in RESOURCES.keys():
-            raise KeyError(f"'resource_set' must be one of {RESOURCES.keys()}, not {self.resource_set}.")
+            raise errors.TapyClientConfigurationError(f"'resource_set' must be one of {RESOURCES.keys()}, "
+                                                      f"not {self.resource_set}.")
 
         # If a custom spec dict is provided then the RESOURCES dict gets updated with it.
         # If any repeated fields are used, the RESOURCES fields are overwritten.
@@ -336,7 +423,7 @@ class Tapis(object):
         self.spec_dir = spec_dir
 
         # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs. 
-        if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'master':
+        if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'tapipy':
             resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
         else:
             resource_specs = RESOURCE_SPECS
@@ -346,12 +433,18 @@ class Tapis(object):
             # each API is a top-level attribute on the DynaTapy object, a Resource object constructed as follows:
             setattr(self, resource_name, Resource(resource_name, spec.paths, self))
 
+        # whether or not this tapis client is running inside a Tapis service.
+        self.is_tapis_service = is_tapis_service
+
         # we lazy-load the tenant_cache to prevent making a call to the Tenants API when not needed.
-        self.tenant_cache = {}
+        if tenants:
+            self.tenant_cache = tenants
+        else:
+            self.tenant_cache = Tenants(self)
         # if the user passed just base_url, try to get the list of tenants and derive the tenant_id from it.
-        if base_url and not tenant_id:
-            self.update_tenant_cache()
-            for tid, t in self.tenant_cache.items():
+        if not self.is_tapis_service and base_url and not tenant_id:
+            self.tenant_cache.reload_tenants()
+            for tid, t in self.tenant_cache.tenants.items():
                 if t.base_url == base_url:
                     self.tenant_id = t.tenant_id
 
@@ -361,6 +454,7 @@ class Tapis(object):
             if self.account_type == 'service':
                 self.x_tenant_id = self.tenant_id
                 self.x_username = self.username
+
 
     def update_spec_cache(self):
         """
@@ -377,30 +471,6 @@ class Tapis(object):
                 else:
                     raise KeyError(f"Custom spec should be a dict of key: str and val: str, got {spec_name} and {spec_val}.")
         update_spec_cache(RESOURCES[self.resource_set], self.spec_dir)
-
-    def update_tenant_cache(self):
-        """
-        Update the local cache of tenant objects.
-        :return:
-        """
-        self.tenant_cache = {tn.tenant_id:tn for tn in self.tenants.list_tenants()}
-
-    def get_tenant_config(self, tenant_id):
-        """
-        Retrieve the configuration for a tenant. Uses the cache
-        :param tenant_id:
-        :return:
-        """
-        try:
-            return self.tenant_cache[tenant_id]
-        except KeyError:
-            # update the cache and try again, but let the KeyError bubble up this time:
-            self.update_tenant_cache()
-            try:
-                return self.tenant_cache[tenant_id]
-            except KeyError:
-                raise errors.BaseTapyException("Tenant not found.")
-
 
     def get_tokens(self, **kwargs):
         """
@@ -449,17 +519,26 @@ class Tapis(object):
 
     def get_service_tokens(self, **kwargs):
         """
-        Calls the Tapis Tokens API (tokengen) to get access and refresh tokens for a service and set them on the client.
+        Calls the Tapis Tokens API to get access and refresh tokens for a service and set them on the client.
         :return:
         """
         if not 'username' in kwargs:
             username = self.username
         else:
             username = kwargs['username']
-        if not 'tenant_id' in kwargs:
-            tenant_id = self.tenant_id
+        # tapis services manage a set ot tokens, one for each of the tenants for which we need to interact with.
+        self.service_tokens = {}
+        # if the caller passed a tenant_id explicitly, we just use that
+        if 'tenant_id' in kwargs:
+            self.service_tokens = {kwargs['tenant_id']: {}}
+        # otherwise, we compute all the tenant's that this service could need to interact with.
         else:
-            tenant_id = kwargs['tenant_id']
+            try:
+                self.service_tokens = {t: {} for t in self.tenant_cache.get_site_admin_tenants_for_service()}
+            except AttributeError:
+                raise errors.BaseTapyException("Unable to retrieve target tenants for a service. "
+                                               "Are you really a Tapis service? "
+                                               "Did you pass in your Tenants instance?")
         if not 'access_token_ttl' in kwargs:
             # default to a 24 hour access token -
             access_token_ttl = 86400
@@ -470,19 +549,28 @@ class Tapis(object):
             refresh_token_ttl = 3153600000
         else:
             refresh_token_ttl = kwargs['refresh_token_ttl']
-        if 'service_password' in kwargs:
-            service_password = kwargs['service_password']
-        elif self.service_password:
-            service_password = self.service_password
-
-        tokens = self.tokens.create_token(token_username=username,
-                                          token_tenant_id=tenant_id,
-                                          account_type=self.account_type,
-                                          access_token_ttl=access_token_ttl,
-                                          generate_refresh_token=True,
-                                          refresh_token_ttl=refresh_token_ttl)
-        self.set_access_token(tokens.access_token)
-        self.set_refresh_token(tokens.refresh_token)
+        for tenant_id in self.service_tokens.keys():
+            try:
+                target_site_id = self.tenant_cache.get_tenant_config(tenant_id=tenant_id).site_id
+            except Exception as e:
+                raise errors.BaseTapyException(f"Got exception computing target site id; e:{e}")
+            try:
+                tokens = self.tokens.create_token(token_username=username,
+                                                  token_tenant_id=self.tenant_id,
+                                                  account_type=self.account_type,
+                                                  access_token_ttl=access_token_ttl,
+                                                  generate_refresh_token=True,
+                                                  refresh_token_ttl=refresh_token_ttl,
+                                                  target_site_id=target_site_id)
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not generate service tokens for service: {username}; "
+                                               f"exception: {e};"
+                                               f"function args:"
+                                               f"token_usermame: {self.username}; "
+                                               f"account_type: {self.account_type}; "
+                                               f"target_site_id: {target_site_id}; ")
+            self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
+                                              'refresh_token': tokens.refresh_token}
 
     def validate_token(self, token):
         """
@@ -506,7 +594,7 @@ class Tapis(object):
                 "Unable to process Tapis token; could not parse the tenant_id. It is possible "
                 "the token is in a format no longer supported by the platform.")
         try:
-            public_key_str = self.get_tenant_config(tenant_id=token_tenant_id).public_key
+            public_key_str = self.tenant_cache.get_tenant_config(tenant_id=token_tenant_id).public_key
         except errors.BaseTapyException:
             raise errors.TokenInvalidError("Unable to process Tapis token; unexpected tenant_id.")
         except KeyError:
@@ -517,36 +605,44 @@ class Tapis(object):
         except Exception as e:
             raise errors.TokenInvalidError("Invalid Tapis token.")
 
+
+    def add_claims_to_token(self, token):
+        """
+        Adds claims and a callable expires_in() function to a Tapis token object.
+        :param tokne: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
+        """
+        def _expires_in():
+            return access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
+
+        access_token = token
+        access_token.claims = self.validate_token(access_token.access_token)
+        access_token.original_ttl = access_token.expires_in
+        access_token.expires_at = datetime.datetime.fromtimestamp(access_token.claims['exp'],
+                                                                  datetime.timezone.utc)
+        access_token.expires_in = _expires_in
+        return access_token
+
     def set_access_token(self, token):
         """
         Set the access token to be used in this session.
         :param token: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
         :return:
         """
-
-        def _expires_in():
-            return self.access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
-
-        self.access_token = token
         try:
-            self.access_token.claims = self.validate_token(self.access_token.access_token)
-            self.access_token.original_ttl = self.access_token.expires_in
-            self.access_token.expires_in = _expires_in
-            self.access_token.expires_at = datetime.datetime.fromtimestamp(self.access_token.claims['exp'],
-                                                                           datetime.timezone.utc)
+            self.access_token = self.add_claims_to_token(token=token)
         except:
             pass
 
-    def refresh_tokens(self):
+
+    def refresh_tokens(self, tenant_id=None):
         """
         Use the refresh token on this client to get a new access and refresh token pair.
         """
+        if self.account_type == 'service':
+            return self.refresh_service_tokens(tenant_id)
         if not self.refresh_token:
             raise errors.TapyClientConfigurationError(msg="No refresh token found.")
-        if self.account_type == 'service':
-            return self.refresh_service_tokens()
-        else:
-            return self.refresh_user_tokens()
+        return self.refresh_user_tokens()
 
     def refresh_user_tokens(self):
         """
@@ -563,13 +659,14 @@ class Tapis(object):
         self.set_access_token(tokens.access_token)
         self.set_refresh_token(tokens.refresh_token)
 
-    def refresh_service_tokens(self):
+    def refresh_service_tokens(self, tenant_id):
         """
         Use the refresh token operation for tokens of type "service".
         """
-        tokens = self.tokens.refresh_token(refresh_token=self.refresh_token.refresh_token)
-        self.set_access_token(tokens.access_token)
-        self.set_refresh_token(tokens.refresh_token)
+        refresh_token = self.service_tokens[tenant_id]['refresh_token'].refresh_token
+        tokens = self.tokens.refresh_token(refresh_token=refresh_token)
+        self.service_tokens[tenant_id]['access_token'] = self.add_claims_to_token(tokens.access_token)
+        self.service_tokens[tenant_id]['refresh_token'] = tokens.refresh_token
 
     def set_refresh_token(self, token):
         """
@@ -821,6 +918,97 @@ class Operation(object):
         self.query_parameters = [p for _, p in op_desc.parameters.items() if p.location == ParameterLocation.QUERY]
         self.request_body = op_desc.request_body
 
+    def determine_tenant_id_for_service_request(self, **kwargs):
+        """
+        Determines the tenant_id for a service request from the kwargs to said
+        request and the application context (flask thread-local), if available.
+        """
+        # we need to determine the tenant id for the request.
+        tenant_id = None
+        # first, requests to the Tenants API always go to the primary site.
+        if self.resource_name == 'tenants':
+            # in this case, we would ideally set it to the admin tenant of the primary site, however,
+            # to use get_base_url_admin_tenant_primary_site() we require a fully formed service tenant_cache (i.e.,
+            # the tenant_cache from flaskbase that has been initialized. if that function is not available, then
+            # we return None here. in most cases this should be fine. the tenant_id is not actually used when
+            # determining other aspects of a service request to tenants (such as the base URL).
+            try:
+                return self.tapis_client.tenant_cache.primary_site.site_admin_tenant_id
+            except:
+                return None
+        # to begin, look for it in the parameters. if the caller explicitly set
+        # it, always use that.
+        try:
+            tenant_id = kwargs.get('_tapis_tenant_id')
+        except:
+            pass
+        # if the caller did not explicitly set the _tapis_tenant_id variable,
+        # we can look on the flask thread local for data about the request.
+        if not tenant_id:
+            try:
+                from flask import g
+                # g.x_tapis_tenant corresponds to the X-Tapis-Tenant OBO header. if this
+                # is set, it is always the tenant_id of the request.
+                tenant_id = getattr(g, 'x_tapis_tenant', None)
+                # g.request_tenant_id, if set, incorporates the tenant_id claim from
+                # the token and the OBO headers.
+                if not tenant_id:
+                    tenant_id = getattr(g, 'request_tenant_id', None)
+                # finally, the g.tenant_id represents the tenant_id claim in the access token.
+                # we should only use this if nothing else is set.
+                if not tenant_id:
+                    tenant_id = getattr(g, 'tenant_id', None)
+            # note that flask will throw a RuntimeError if attempting to access the thread local object, j, outside
+            # of an application context.
+            except (ImportError, RuntimeError):
+                pass
+        # check the headers to see if X-Tapis-Tenant is being set; if so, use that:
+        if not tenant_id and 'headers' in kwargs:
+            try:
+                tenant_id = kwargs['headers']['X-Tapis-Tenant']
+            except:
+                pass
+        # finally, look for a tenant_id on the tapis client itself
+        if not tenant_id:
+            tenant_id = self.tapis_client.tenant_id
+        return tenant_id
+
+    def determine_user_for_service_request(self, **kwargs):
+        """
+        Determines the username for a service request from the kwargs to said
+        request and the application context (flask thread-local), if available.
+        """
+        # we need to determine the user for the request.
+        user = None
+        # to begin, look for it in the parameters. if the caller explicitly set
+        # it, always use that.
+        try:
+            user = kwargs.get('_tapis_user')
+        except:
+            pass
+        # if the caller did not explicitly set the _tapis_user variable,
+        # we can look on the flask thread local for data about the request.
+        if not user:
+            try:
+                from flask import g
+                # g.x_tapis_user corresponds to the X-Tapis-User OBO header. if this
+                # is set, it is always the user of the request.
+                user = getattr(g, 'x_tapis_user', None)
+
+                # the g.username corresponds to the tapis/username claim in the access token.
+                # we should only use this if x_tapis_user was not set.
+                if not user:
+                    user = getattr(g, 'username', None)
+            # note that flask will throw a RuntimeError if attempting to access attributes on the thread local object,
+            # g, outside of an application context.
+            except (ImportError, RuntimeError):
+                pass
+        # finally, look a username on the tapis client itself
+        if not user:
+            print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
+            user = self.tapis_client.username
+        return user
+
     def __call__(self, **kwargs):
         """
         Turns the operation object into a callable. Arguments must be passed as kwargs, where the name of each kwarg
@@ -834,12 +1022,37 @@ class Operation(object):
         # the http method is defined by the operation -
         http_method = self.http_method.upper()
 
-        # construct the http path -
-        # some API definitions, such as SK, chose to not include the "/v3/" at the beginning of their paths, so we add it in:
-        if not self.op_desc.path_name.startswith('/v3/'):
-            self.url = f'{self.tapis_client.base_url}/v3{self.op_desc.path_name}'  # base url
+        # determine base_url --
+        base_url = None
+        # if this call is coming from another tapis service,
+        # we must determine base_url for a service to service request.
+        if self.tapis_client.is_tapis_service:
+            tenant_id = self.determine_tenant_id_for_service_request(**kwargs)
+            try:
+                site_id, base_url = self.tapis_client.tenant_cache.get_site_and_base_url_for_service_request(tenant_id,
+                                                                                                             self.resource_name)
+            except:
+                pass
+            # if we got a tenant_id, use it to look up the base_url:
+            if tenant_id:
+                try:
+                    base_url = self.tapis_client.tenant_cache.get_base_url_for_service_request(tenant_id, self.resource_name)
+                except:
+                    pass
+            # if all else fails, use the base_url for the client
+            if not base_url:
+                base_url = self.tapis_client.base_url
+
+        # otherwise, just use the base_url passed into the tapis client --
         else:
-            self.url = f'{self.tapis_client.base_url}{self.op_desc.path_name}'  # base url
+            base_url = self.tapis_client.base_url
+        # construct the http path -
+        # some API definitions, such as SK, chose to not include the "/v3/" at the beginning of their paths,
+        # so we add it in:
+        if not self.op_desc.path_name.startswith('/v3/'):
+            self.url = f'{base_url}/v3{self.op_desc.path_name}'  # base url
+        else:
+            self.url = f'{base_url}{self.op_desc.path_name}'  # base url
         url = self.url
         for param in self.path_parameters:
             # look for the name in the kwargs
@@ -877,12 +1090,46 @@ class Operation(object):
         headers = {}
 
         # set the X-Tapis-Token header using the client
-        if self.tapis_client.get_access_jwt():
+        access_token = None
+        request_site_admin_tenant_id = None    # used for looking up the service token
+        if self.tapis_client.is_tapis_service and hasattr(self.tapis_client, 'service_tokens'):
+            # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
+            # service tokens are stored by admin tenant, so we need to get the admin tenant for the
+            # owning site of the tenant.
+            try:
+                request_tenant = self.tapis_client.tenant_cache.get_tenant_config(tenant_id=tenant_id)
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not lookup the request tenant for tenant {tenant_id}; e: {e}")
+            try:
+                request_site = request_tenant.site
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not lookup the request site for tenant {tenant_id}; e: {e}")
+            try:
+                request_site_admin_tenant_id = request_site.site_admin_tenant_id
+            except Exception as e:
+                raise errors.BaseTapyException(f"Could not lookup the request site_admin tenant for "
+                                               f"tenant {tenant_id}; e: {e}")
+
+            # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
+            # the service's first set of tokens.
+            if request_site_admin_tenant_id in self.tapis_client.service_tokens.keys() \
+                    and 'access_token' in self.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
+                try:
+                    access_token = self.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token']
+                except KeyError:
+                    raise errors.BaseTapyException(f"Did not find service tokens for "
+                                                   f"tenant {request_site_admin_tenant_id};")
+            else:
+                pass
+        elif self.tapis_client.get_access_jwt():
+            access_token = self.tapis_client.get_access_jwt()
+        # if we got an access token, check if we need to refresh it
+        if access_token:
             # check for a token about to expire in the next 5 seconds; assume by default we have a token with
             # plenty of time remaining.
             time_remaining = datetime.timedelta(days=10)
             try:
-                time_remaining = self.tapis_client.access_token.expires_in()
+                time_remaining = access_token.expires_in()
             except:
                 # it is possible the access_token does not have an expires_in attribute and/or that it is not
                 # callable. we just pass on these exceptions and do not try to refresh the token.
@@ -894,19 +1141,36 @@ class Operation(object):
                     pass
                 else:
                     try:
-                        self.tapis_client.refresh_tokens()
+                        self.tapis_client.refresh_tokens(tenant_id=request_site_admin_tenant_id)
                     except:
                         # for now, if we get an error trying to refresh the tokens,s, we ignore it and try the
                         # request anyway.
                         pass
-            headers = {'X-Tapis-Token': self.tapis_client.get_access_jwt(), }
+        # we may have refreshed the token, so we get it one more time --
+        if self.tapis_client.is_tapis_service \
+                and hasattr(self.tapis_client, 'service_tokens') \
+                and request_site_admin_tenant_id \
+                and 'access_token' in self.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
+            try:
+                jwt = self.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token'].access_token
+            except Exception as e:
+                msg = f"Could not get JWT from access_token; e: {e}"
+                raise errors.BaseTapyException(msg)
+        else:
+            jwt = self.tapis_client.get_access_jwt()
+        if jwt:
+            headers = {'X-Tapis-Token':  jwt}
 
-        # the X-Tapis-Tenant and X-Tapis-Username headers can be set when the token represents a service account and the
-        # service is making a request on behalf of another user/tenant.
-        if self.tapis_client.x_tenant_id:
-            headers['X-Tapis-Tenant'] = self.tapis_client.x_tenant_id
-        if self.tapis_client.x_username:
-            headers['X-Tapis-User'] = self.tapis_client.x_username
+        # the X-Tapis-Tenant and X-Tapis-Username headers must be set when the token represents a service account.
+        # if this is a tapis service, we should have derived the correct tenant_id when we determined the tenant_id
+        # for the request, above.
+        if self.tapis_client.is_tapis_service:
+            if tenant_id:
+                headers['X-Tapis-Tenant'] = tenant_id
+            # similarly for username, we first look in the request content:
+            x_username = self.determine_user_for_service_request(**kwargs)
+            if x_username:
+                headers['X-Tapis-User'] = x_username
 
         # allow arbitrary headers to be passed in via the special "headers" kwarg -
         try:
@@ -919,29 +1183,47 @@ class Operation(object):
         data = None
         # these are the list of allowable request body content types; ex., 'application/json'.
         if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
-            if 'application/json' in self.op_desc.request_body.content.keys() \
-                    or '*/*' in self.op_desc.request_body.content.keys():
+            # Find possible headers, user specified
+            # headers override spec's possibilities.
+            if 'Content-Type' in headers:
+                requestContentTypes = headers['Content-Type']
+            else:
+                requestContentTypes = self.op_desc.request_body.content.keys()
+
+            # Note: If multiple content types, we use first content type we have code for
+            if 'application/json' in requestContentTypes:
                 headers['Content-Type'] = 'application/json'
                 required_fields = self.op_desc.request_body.content['application/json'].schema.required
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
                 if self.op_desc.request_body.content['application/json'].schema.properties == {}:
-                    # choice of "request_body" is arbitrary, as the property name is not provided by the openapi spec in this case
+                    # choice of "request_body" is arbitrary, as the property name is not provided by the
+                    # openapi spec in this case
                     data = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.op_desc.request_body.content[
-                        'application/json'].schema.properties.items():
+                    for p_name, p_desc in self.op_desc.request_body.content['application/json'].schema.properties.items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
                             raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
                     # serialize data before passing it to the request
                 data = json.dumps(data)
-            if 'multipart/form-data' in self.op_desc.request_body.content.keys():
+            elif 'application/octet-stream' in requestContentTypes:
+                headers['Content-Type'] = 'application/octet-stream'
+                data = kwargs['message']
+            # x-www-form-urlencoded
+            elif 'application/x-www-form-urlencoded' in requestContentTypes:
+                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+                data = f"message={kwargs['message']}"
+            elif 'multipart/form-data' in requestContentTypes:
                 # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
                 raise NotImplementedError
-        # todo - handle other body content types..
+            else:
+                # We could default to providing message field
+                # Error seems better
+                # data = kwargs['message']
+                raise NotImplementedError(f'Content type/s specified have not been implemented. Types: {requestContentTypes}')
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects
@@ -998,24 +1280,17 @@ class Operation(object):
         # resp.headers is a case-insensitive dict
         resp_content_type = resp.headers.get('content-type')
         if hasattr(resp_content_type, 'lower') and resp_content_type.lower() == 'application/json':
-            try:
-                json_content = resp.json()
-            except Exception as e:
-                msg = f'Requests could not produce JSON from the response even though the content-type was ' \
-                      f'application/json. Exception: {e}'
-                # TODO -- should this not be an error if the API has described the content-type as application/json?
-                #         what valid use cases do we still have for passing raw content in this case?
-                if debug:
-                    return resp.content, debug_data
-                return resp.content
             # get the Tapis result object which could be a JSON object or list.
             try:
+                json_content = resp.json()
                 result = json_content.get('result')
             except Exception as e:
                 # some Tapis APIs, such as the Meta API, do not return "result" objects and/or do not return the
                 # standard Tapis stanzas but rather "raw" JSON documents
+                if debug:
+                    return resp.content, debug_data
                 return resp.content
-            if result:
+            if result or result == [] or result == {}:
                 # if it is a list we should return a list of TapisResult objects:
                 if _seq_but_not_str(result):
                     if len([item for item in result if type(item) in TapisResult.PRIMITIVE_TYPES]) > 0:
@@ -1024,7 +1299,7 @@ class Operation(object):
                         return TapisResult(result)
                     else:
                         if debug:
-                            [TapisResult(**x) for x in result if not x == 'self'], debug_data
+                            return [TapisResult(**x) for x in result if not x == 'self'], debug_data
                         return [TapisResult(**x) for x in result if not x == 'self']
                 # otherwise, assume it is a JSON object and return that directly as a result -
                 try:
@@ -1107,11 +1382,18 @@ class TapisResult(object):
 
     def __str__(self):
         attrs = '\n'.join([f'{str(a)}: {getattr(self, a)}' for a in dir(self) if
-                           not a.startswith('__') and not a.startswith('PRIMITIVE_TYPES')])
+                           not a == 'get' and not a.startswith('__') and not a.startswith('PRIMITIVE_TYPES')])
         return f'\n{attrs}'
 
     def __repr__(self):
         return str(self)
+
+    def get(self, attr, default=None):
+        """Provide a dictionary-like get() syntax """
+        try:
+            return getattr(self, attr)
+        except:
+            return default
 
 
 class Debug(object):

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tapipy"
-version = "0.2.5"
+version = "0.3.9"
 description = "Python lib for interacting with an instance of the Tapis API Framework"
 license = "BSD-4-Clause"
 authors = ["Joe Stubbs <jstubbs@tacc.utexas.edu>"]
@@ -8,17 +8,18 @@ maintainers = ["Joe Stubbs <jstubbs@tacc.utexas.edu>",
 			   "Christian Garcia <cgarcia@tacc.utexas.edu>"]
 readme = "README.md"
 repository = "https://github.com/tapis-project/tapipy"
-include = ["tapipy/specs"]
+include = ["tapipy/specs",
+           "tapipy/resources"]
 
 [tool.poetry.dependencies]
 python = "^3.6"
-certifi = "^14.05.14"
+certifi = "^2020.11.8"
 six = "^1.10"
 python_dateutil = "^2.5.3"
 setuptools = "^21.0.0"
 urllib3 = "^1.15.1"
 PyJWT = "1.7.1"
-openapi_core = "^0.13.0"
+openapi_core = "^0.11.1"
 requests = "*"
 cryptography = "^2.9.2"
 atomicwrites = "^1.4.0"

@@ -17,8 +17,6 @@ servers:
 - url: https://dev.develop.tapis.io
   description: development
   variables: {}
-security:
-- Bearer: []
 tags:
 - name: file operations
 - name: share
@@ -53,6 +51,12 @@ paths:
         schema:
           $ref: '#/components/schemas/HeaderByteRange'
         example: range=0,999
+      - name: zip
+        in: query
+        description: Zip the contents of folder?
+        schema:
+          type: boolean
+        example: false
       - name: more
         in: header
         description: Send 1k of UTF-8 encoded string back starting at 'page' 1, ex
@@ -63,6 +67,12 @@ paths:
       responses:
         '200':
           description: OK
+        '401':
+          description: Not Authenticated
+        '404':
+          description: Not Found
+        '403':
+          description: Not Authorized
   /v3/files/healthcheck:
     get:
       tags:
@@ -105,6 +115,7 @@ paths:
         schema:
           type: integer
           format: int32
+          default: 1000
         example: 100
       - name: offset
         in: query
@@ -112,6 +123,7 @@ paths:
         schema:
           type: integer
           format: int64
+          default: 0
         example: 1000
       - name: meta
         in: query
@@ -125,12 +137,36 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileListingResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
     put:
       tags:
       - file operations
-      summary: Rename a file or folder
+      summary: Move/copy/rename a file or folder
       description: Move/Rename a file in {systemID} at path {path}.
-      operationId: rename
+      operationId: moveCopyRename
       parameters:
       - name: systemId
         in: path
@@ -144,15 +180,38 @@ paths:
         required: true
         schema:
           type: string
-      - name: newName
-        in: query
-        description: The new name of the file/folder
-        required: true
-        schema:
-          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveCopyRenameRequest'
       responses:
         '200':
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
           content:
             application/json:
               schema:
@@ -177,25 +236,40 @@ paths:
         required: true
         schema:
           type: string
-      - name: x-meta
-        in: header
-        description: String dump of a valid JSON object to be associated with the
-          file
-        schema:
-          type: string
       requestBody:
         content:
           multipart/form-data:
             schema:
+              required:
+              - file
               type: object
               properties:
                 file:
-                  $ref: '#/components/schemas/FormDataContentDisposition'
+                  type: string
+                  format: binary
       responses:
         '200':
           description: OK
           content:
-            '*/*':
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
     delete:
@@ -224,13 +298,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+  /v3/files/ops/{systemId}:
+    post:
+      tags:
+      - file operations
+      summary: Create a directory
+      description: Create a directory in the system at path the given path
+      operationId: mkdir
+      parameters:
+      - name: systemId
+        in: path
+        description: System ID
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MkdirRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
   /v3/files/permissions/{systemId}/{path}:
     get:
       tags:
       - permissions
-      summary: List permissions on an file/folder
-      description: 'Returns a list of roles/users that can access the file QUESTION:
-        Who should be able to see access this? Only the owner of the system? '
+      summary: Get the API user's permissions on a file or folder.
+      description: Get the permissions for the API user for the system and path.
       operationId: permissionsSystemIdPathGet
       parameters:
       - name: systemId
@@ -243,6 +384,11 @@ paths:
         in: path
         description: path
         required: true
+        schema:
+          type: string
+      - name: username
+        in: query
+        description: Username to list
         schema:
           type: string
       responses:
@@ -258,8 +404,7 @@ paths:
       tags:
       - permissions
       summary: 'Add permissions on an object. '
-      description: 'Add a user to a file/folder. QUESTION - who should be able to
-        add permissions? Only the owner? '
+      description: Add a user to a file/folder.
       operationId: permissionsSystemIdPathPost
       parameters:
       - name: systemId
@@ -274,6 +419,12 @@ paths:
         required: true
         schema:
           type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePermissionRequest'
+        required: true
       responses:
         '200':
           description: FilePermission
@@ -285,8 +436,7 @@ paths:
       tags:
       - permissions
       summary: 'Remove permissions on an object for a user. '
-      description: 'Remove user permissions to a file/folder. QUESTION - who should
-        be able to delete permissions? Only the owner? '
+      description: Remove user permissions to a file/folder.
       operationId: permissionsSystemIdPathDelete
       parameters:
       - name: systemId
@@ -313,7 +463,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/FilePermissionResponse'
+                $ref: '#/components/schemas/FilePermissionStringResponse'
   /v3/files/share/{systemId}/{path}:
     get:
       tags:
@@ -442,27 +592,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TapisResponse'
-  /v3/files/transfers:
-    post:
-      tags:
-      - transfers
-      summary: Transfer data
-      description: This creates a background task which will transfer files into the
-        storage system
-      operationId: createTransferTask
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TransferTaskRequest'
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransferTaskResponse'
   /v3/files/transfers/{transferTaskId}/history:
     get:
       tags:
@@ -476,7 +605,59 @@ paths:
         required: true
         schema:
           type: string
+          format: uuid
         example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferTaskResponse'
+  /v3/files/transfers:
+    get:
+      tags:
+      - transfers
+      summary: Get a list of recent transfer tasks starting with the most recent
+      description: Get a list of recent transfer tasks starting with the most recent
+      operationId: getRecentTransferTasks
+      parameters:
+      - name: limit
+        in: query
+        description: pagination limit
+        schema:
+          type: integer
+          format: int32
+          default: 1000
+        example: 100
+      - name: offset
+        in: query
+        description: pagination offset
+        schema:
+          type: integer
+          format: int32
+          default: 0
+        example: 1000
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferTaskListResponse'
+    post:
+      tags:
+      - transfers
+      summary: Transfer data
+      description: This creates a background task which will transfer files into the
+        storage system
+      operationId: createTransferTask
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferTaskRequest'
+        required: true
       responses:
         '200':
           description: OK
@@ -517,12 +698,20 @@ components:
           type: string
         version:
           type: string
+    MkdirRequest:
+      required:
+      - path
+      type: object
+      properties:
+        path:
+          pattern: ^(?!.*\.).+
+          type: string
     FileInfo:
       type: object
       properties:
         lastModified:
-          type: integer
-          format: int64
+          type: string
+          format: date-time
         name:
           type: string
         path:
@@ -544,38 +733,49 @@ components:
             $ref: '#/components/schemas/FileInfo'
         version:
           type: string
-    FormDataContentDisposition:
+    MoveCopyRenameRequest:
+      required:
+      - newPath
+      - operation
       type: object
       properties:
-        type:
+        operation:
           type: string
-        parameters:
-          type: object
-          additionalProperties:
-            type: string
-        fileName:
+          enum:
+          - MOVE
+          - COPY
+          - RENAME
+        newPath:
           type: string
-        creationDate:
+          description: Paths must be absolute, ../.. is not allowed
+    FilePermissionStringResponse:
+      type: object
+      properties:
+        status:
           type: string
-          format: date-time
-        modificationDate:
+        message:
           type: string
-          format: date-time
-        readDate:
+        result:
           type: string
-          format: date-time
-        size:
-          type: integer
-          format: int64
-        name:
+        version:
           type: string
     FilePermission:
       type: object
       properties:
+        tenantId:
+          type: string
         username:
           type: string
-        created:
+        systemId:
           type: string
+        path:
+          type: string
+        permissions:
+          type: string
+          enum:
+          - READ
+          - READWRITE
+          - ALL
     FilePermissionResponse:
       type: object
       properties:
@@ -587,6 +787,20 @@ components:
           $ref: '#/components/schemas/FilePermission'
         version:
           type: string
+    CreatePermissionRequest:
+      required:
+      - permission
+      - username
+      type: object
+      properties:
+        username:
+          type: string
+        permission:
+          type: string
+          enum:
+          - READ
+          - READWRITE
+          - ALL
     SharedFileObject:
       type: object
       properties:
@@ -628,17 +842,52 @@ components:
         id:
           type: integer
           format: int32
+        username:
+          type: string
+        tenantId:
+          type: string
+        tag:
+          type: string
+        uuid:
+          type: string
+          format: uuid
+        created:
+          type: string
+          format: date-time
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+          - ACCEPTED
+          - STAGING
+          - STAGED
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          - FAILED
+          - PAUSED
+        parentTasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskParent'
+    TransferTaskChild:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
         tenantId:
           type: string
         username:
           type: string
-        sourceSystemId:
+        sourceURI:
           type: string
-        sourcePath:
-          type: string
-        destinationSystemId:
-          type: string
-        destinationPath:
+        destinationURI:
           type: string
         totalBytes:
           type: integer
@@ -646,20 +895,94 @@ components:
         bytesTransferred:
           type: integer
           format: int64
+        taskId:
+          type: integer
+          format: int32
+        startTime:
+          type: integer
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+        parentTaskId:
+          type: integer
+          format: int32
+        retries:
+          type: integer
+          format: int32
         uuid:
           type: string
           description: Unique ID of the task.
           format: uuid
         status:
           type: string
-          description: The status of the task, such as PENDING, IN_PROGRESS, COMPLETED,
+          description: The status of the task, such as ACCEPTED, IN_PROGRESS, COMPLETED,
             CANCELLED
           example: PENDING
           enum:
           - ACCEPTED
+          - STAGING
+          - STAGED
           - IN_PROGRESS
           - COMPLETED
           - CANCELLED
+          - FAILED
+          - PAUSED
+        created:
+          type: integer
+          description: Timestamp in UTC of task creation.
+          format: int64
+    TransferTaskParent:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        tenantId:
+          type: string
+        username:
+          type: string
+        sourceURI:
+          type: string
+        destinationURI:
+          type: string
+        totalBytes:
+          type: integer
+          format: int64
+        bytesTransferred:
+          type: integer
+          format: int64
+        taskId:
+          type: integer
+          format: int32
+        startTime:
+          type: integer
+          format: int64
+        endTime:
+          type: integer
+          format: int64
+        children:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskChild'
+        uuid:
+          type: string
+          description: Unique ID of the task.
+          format: uuid
+        status:
+          type: string
+          description: The status of the task, such as ACCEPTED, IN_PROGRESS, COMPLETED,
+            CANCELLED
+          example: PENDING
+          enum:
+          - ACCEPTED
+          - STAGING
+          - STAGED
+          - IN_PROGRESS
+          - COMPLETED
+          - CANCELLED
+          - FAILED
+          - PAUSED
         created:
           type: integer
           description: Timestamp in UTC of task creation.
@@ -675,26 +998,6 @@ components:
           $ref: '#/components/schemas/TransferTask'
         version:
           type: string
-    TransferTaskRequest:
-      required:
-      - destinationPath
-      - destinationSystemId
-      - sourcePath
-      - sourceSystemId
-      type: object
-      properties:
-        sourceSystemId:
-          type: string
-          description: ID of source system
-        sourcePath:
-          type: string
-          description: Path to file/folder in source system
-        destinationSystemId:
-          type: string
-          description: ID of destination system
-        destinationPath:
-          type: string
-          description: Path to file/folder in destination system
     TapisResponse:
       type: object
       properties:
@@ -704,5 +1007,45 @@ components:
           type: string
         result:
           type: object
+        version:
+          type: string
+    TransferTaskRequest:
+      required:
+      - elements
+      type: object
+      properties:
+        tag:
+          type: string
+        elements:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTaskRequestElement'
+    TransferTaskRequestElement:
+      required:
+      - destinationURI
+      - sourceURI
+      type: object
+      properties:
+        sourceURI:
+          type: string
+          description: Fully qualified URI, such as tapis://{systemID}/{path} or https://myserver.com/path/to/inputs/
+        destinationURI:
+          type: string
+          description: Fully qualified URI to a tapis system, such as tapis://{systemID}/{path}
+        optional:
+          type: boolean
+          description: Allow the full transfer to succeed even if this portion fails?
+            Default is false
+    TransferTaskListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferTask'
         version:
           type: string

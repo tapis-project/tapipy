@@ -18,6 +18,7 @@ ADD tests/configschema.json /home/tapis/configschema.json
 ADD tests/config-dev-develop.json /home/tapis/config.json
 
 # Build
+RUN pip uninstall -y tapipy
 RUN pip install -r /home/tapis/tapipy-install-dir/requirements.txt
 WORKDIR /home/tapis/tapipy-install-dir
 RUN poetry build
