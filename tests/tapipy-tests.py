@@ -20,7 +20,6 @@ def client():
               account_type=account_type,
               tenant_id=tenant_id,
               service_password=service_password,
-              resource_set='local',
               tenants=tenants,
               is_tapis_service=True)
     t.get_tokens()
