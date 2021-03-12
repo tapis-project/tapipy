@@ -1183,49 +1183,47 @@ class Operation(object):
         data = None
         # these are the list of allowable request body content types; ex., 'application/json'.
         if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
-            # Before we go by spec headers, we first check if the user specified any because the
-            # 'else' would overwrite those if the spec specifies one of the following content-types.
-            # In the case of custom headers, we just pass whatever in (Christian's decision, probably 
-            # should improve).
+            # Find possible headers, user specified
+            # headers override spec's possibilities.
             if 'Content-Type' in headers:
-                # TODO -- this assumes the kwarg is called "message", which is true in the case of the
-                # sendMessage() function in Abaco but it not a general solution.
-                data = kwargs['message']
-            # We go back to the old methods if there is not custom headers.
-            # Note: If an operation has many possible content-types, this just kind of breaks because
-            # all of the ifs return as true. e.g. sendMessage in Actors w/json, binary, and strings.
-            # In that case, these are more of order of which headers should be used. e.g. JSON headers
-            # would be used primarily unless it's not in the operation spec.
+                requestContentTypes = headers['Content-Type']
             else:
-                if 'application/json' in self.op_desc.request_body.content.keys():
-                    headers['Content-Type'] = 'application/json'
-                    required_fields = self.op_desc.request_body.content['application/json'].schema.required
-                    data = {}
-                    # if the request body has no defined properties, look for a single "request_body" parameter.
-                    if self.op_desc.request_body.content['application/json'].schema.properties == {}:
-                        # choice of "request_body" is arbitrary, as the property name is not provided by the
-                        # openapi spec in this case
-                        data = kwargs['request_body']
-                    else:
-                        # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                        for p_name, p_desc in self.op_desc.request_body.content['application/json'].schema.properties.items():
-                            if p_name in kwargs:
-                                data[p_name] = kwargs[p_name]
-                            elif p_name in required_fields:
-                                raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
-                        # serialize data before passing it to the request
-                    data = json.dumps(data)
-                elif 'application/octet-stream' in self.op_desc.request_body.content.keys():
-                    headers['Content-Type'] = 'application/octet-stream'
-                    data = kwargs['message']
-                # x-www-form-urlencoded
-                elif 'application/x-www-form-urlencoded' in self.op_desc.request_body.content.keys():
-                    headers['Content-Type'] = 'application/x-www-form-urlencoded'
-                    data = f"message={kwargs['message']}"
-                elif 'multipart/form-data' in self.op_desc.request_body.content.keys():
-                    # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
-                    raise NotImplementedError
-            # todo - handle other body content types..
+                requestContentTypes = self.op_desc.request_body.content.keys()
+
+            # Note: If multiple content types, we use first content type we have code for
+            if 'application/json' in requestContentTypes:
+                headers['Content-Type'] = 'application/json'
+                required_fields = self.op_desc.request_body.content['application/json'].schema.required
+                data = {}
+                # if the request body has no defined properties, look for a single "request_body" parameter.
+                if self.op_desc.request_body.content['application/json'].schema.properties == {}:
+                    # choice of "request_body" is arbitrary, as the property name is not provided by the
+                    # openapi spec in this case
+                    data = kwargs['request_body']
+                else:
+                    # otherwise, the request body has defined properties, so look for each one in the function kwargs
+                    for p_name, p_desc in self.op_desc.request_body.content['application/json'].schema.properties.items():
+                        if p_name in kwargs:
+                            data[p_name] = kwargs[p_name]
+                        elif p_name in required_fields:
+                            raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
+                    # serialize data before passing it to the request
+                data = json.dumps(data)
+            elif 'application/octet-stream' in requestContentTypes:
+                headers['Content-Type'] = 'application/octet-stream'
+                data = kwargs['message']
+            # x-www-form-urlencoded
+            elif 'application/x-www-form-urlencoded' in requestContentTypes:
+                headers['Content-Type'] = 'application/x-www-form-urlencoded'
+                data = f"message={kwargs['message']}"
+            elif 'multipart/form-data' in requestContentTypes:
+                # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
+                raise NotImplementedError
+            else:
+                # We could default to providing message field
+                # Error seems better
+                # data = kwargs['message']
+                raise NotImplementedError(f'Content type/s specified have not been implemented. Types: {requestContentTypes}')
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects
