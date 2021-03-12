@@ -14,16 +14,16 @@ info:
     url: "https://github.com/TACC/abaco"
 
 servers:
-- url: http://localhost:5000
+- url: http://localhost:8000
   description: Local Development
-- url: http://{tenant_id_url}.develop.tapis.io
-  description: Tapis Develop instance
-  variables:
-    tenant_id_url:
-      default: dev
-      description: The tenant_id associated with the request.
-- url: /
-  description: catch-all server definition for other Tapis instances.
+- url: https://api.tacc.utexas.edu
+  description: Production TACC tenant.
+- url: https://api.sd2e.org
+  description: Production SD2E tenant.
+- url: https://dev.tenants.staging.tacc.cloud
+  description: Staging TACC tenant.
+- url: https://dev.tenants.develop.tacc.cloud
+  description: Develop TACC tenant.
 
 security:
   - wso2jwtDevAuth: []
@@ -31,7 +31,7 @@ security:
 
 
 paths:
-  /v3/actors:
+  /actors:
     get:
       tags:
       - Actors
@@ -39,18 +39,23 @@ paths:
       description: List summary of all actors owned by user
       operationId: listActors
       parameters:
+      - name: search
+        in: query
+        description: The query to perform when using DB search.
+        schema:
+          type: string
       - name: limit
         in: query
-        description: limit the number of actors returned.
+        description: limit the number of search records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -73,7 +78,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewActor'
       responses:
-        '201':
+        201:
           description: Created
           content:
             application/json:
@@ -84,7 +89,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/Actor'
 
-  /v3/actors/{actor_id}:
+  /actors/{actor_id}:
     get:
       tags:
       - Actors
@@ -99,7 +104,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -129,7 +134,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewActor'
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -154,7 +159,7 @@ paths:
           type: string
 
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -168,7 +173,7 @@ paths:
                     enum: [null]
 
 
-  /v3/actors/{actor_id}/messages:
+  /actors/{actor_id}/messages:
     get:
       tags:
       - Actors
@@ -184,7 +189,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -220,16 +225,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/JSONMessage'
+              type: object
           application/octet-stream:
             schema:
-              $ref: '#/components/schemas/BinaryMessage'
+              type: string
+              format: binary
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Message'
 
       responses:
-        '200':
+        200:
           description: Message receieved
           content:
             application/json:
@@ -262,7 +268,7 @@ paths:
           type: string
 
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -276,7 +282,7 @@ paths:
                     enum: [null]
 
 
-  /v3/actors/{actor_id}/executions:
+  /actors/{actor_id}/executions:
     get:
       tags:
       - Actors
@@ -291,8 +297,23 @@ paths:
         required: true
         schema:
           type: string
+      - name: search
+        in: query
+        description: The query to perform when using DB search.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: limit the number of search records returned.
+        schema:
+          type: integer
+      - name: skip
+        in: query
+        description: index (skip) to start list.
+        schema:
+          type: integer
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -304,7 +325,7 @@ paths:
                     $ref: '#/components/schemas/ActorExecutionSummaries'
 
 
-  /v3/actors/{actor_id}/nonces:
+  /actors/{actor_id}/nonces:
     get:
       tags:
       - Actors
@@ -320,7 +341,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -353,7 +374,7 @@ paths:
               $ref: '#/components/schemas/NewActorNonce'
 
       responses:
-        '200':
+        200:
           description: Request successful
           content:
             application/json:
@@ -365,7 +386,7 @@ paths:
                     $ref: '#/components/schemas/ActorNonces'
 
 
-  /v3/actors/{actor_id}/nonces/{nonce_id}:
+  /actors/{actor_id}/nonces/{nonce_id}:
     get:
       tags:
       - Actors
@@ -387,7 +408,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -418,7 +439,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -432,7 +453,7 @@ paths:
                     enum: [null]
 
 
-  /v3/actors/{actor_id}/state:
+  /actors/{actor_id}/state:
     get:
       tags:
       - Actors
@@ -448,7 +469,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -483,7 +504,7 @@ paths:
               description: An arbitrary JSON-serializable object.
 
       responses:
-        '200':
+        200:
           description: Request successful
           content:
             application/json:
@@ -494,7 +515,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorNonces'
 
-  /v3/actors/{actor_id}/executions/{execution_id}:
+  /actors/{actor_id}/executions/{execution_id}:
     get:
       tags:
       - Actors
@@ -516,7 +537,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -527,7 +548,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorExecution'
 
-  /v3/actors/{actor_id}/executions/{execution_id}/logs:
+  /actors/{actor_id}/executions/{execution_id}/logs:
     get:
       tags:
       - Actors
@@ -548,8 +569,23 @@ paths:
         required: true
         schema:
           type: string
+      - name: search
+        in: query
+        description: The query to perform when using DB search.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: limit the number of search records returned.
+        schema:
+          type: integer
+      - name: skip
+        in: query
+        description: index (skip) to start list.
+        schema:
+          type: integer
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -560,38 +596,8 @@ paths:
                   result:
                     $ref: '#/components/schemas/ActorExecutionLogs'
 
-  /v3/actors/{actor_id}/executions/{execution_id}/results:
-    get:
-      tags:
-      - Actors
-      - Executions
-      summary: Get an execution's result.
-      description: Get an execution's result.
-      operationId: getExecutionResult
-      parameters:
-      - name: actor_id
-        in: path
-        description: Unique ID of the actor
-        required: true
-        schema:
-          type: string
-      - name: execution_id
-        in: path
-        description: Unique ID of the execution
-        required: true
-        schema:
-          type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/octet-stream:
-              schema:
-                type: string
-                format: binary
 
-
-  /v3/actors/{actor_id}/permissions:
+  /actors/{actor_id}/permissions:
     get:
       tags:
       - Actors
@@ -607,7 +613,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -639,7 +645,7 @@ paths:
               $ref: '#/components/schemas/ActorPermission'
 
       responses:
-        '200':
+        200:
           description: Request successful
           content:
             application/json:
@@ -651,7 +657,7 @@ paths:
                     $ref: '#/components/schemas/ActorPermissions'
 
 
-  /v3/actors/{actor_id}/workers:
+  /actors/{actor_id}/workers:
     get:
       tags:
       - Actors
@@ -666,8 +672,23 @@ paths:
         required: true
         schema:
           type: string
+      - name: search
+        in: query
+        description: The query to perform when using DB search.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: limit the number of search records returned.
+        schema:
+          type: integer
+      - name: skip
+        in: query
+        description: index (skip) to start list.
+        schema:
+          type: integer
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -705,7 +726,7 @@ paths:
                   description: Ensures the size of the pool is at least this number.
 
       responses:
-        '200':
+        200:
           description: Request successful
           content:
             application/json:
@@ -723,7 +744,7 @@ paths:
               schema:
                 type: string
 
-  /v3/actors/aliases:
+  /actors/aliases:
     get:
       tags:
       - Actors
@@ -743,7 +764,7 @@ paths:
         schema:
           type: integer
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -767,7 +788,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewAlias'
       responses:
-        '201':
+        201:
           description: Created
           content:
             application/json:
@@ -778,7 +799,7 @@ paths:
                   result:
                     $ref: '#/components/schemas/Alias'
 
-  /v3/actors/aliases/{alias}:
+  /actors/aliases/{alias}:
     get:
       tags:
       - Actors
@@ -794,7 +815,7 @@ paths:
         schema:
           type: string
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -825,7 +846,7 @@ paths:
             schema:
               $ref: '#/components/schemas/NewAlias'
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -851,7 +872,7 @@ paths:
           type: string
 
       responses:
-        '200':
+        200:
           description: OK
           content:
             application/json:
@@ -863,6 +884,49 @@ paths:
                     type: string
                     nullable: true
                     enum: [null]
+
+
+  /actors/search/{search_type}:
+    get:
+      tags:
+      - Actors
+      - Executions
+      - Workers
+      - Logs
+      summary: Search a specified Abaco database
+      description: Return db records that match query
+      operationId: searchDatabase
+      parameters:
+      - name: search_type
+        in: path
+        description: The Abaco database to search
+        required: true
+        schema:
+          type: string
+          enum: [actors, workers, logs, executions]
+      - name: search
+        in: query
+        description: The query to perform when using DB search.
+        schema:
+          type: string
+      - name: limit
+        in: query
+        description: limit the number of search records returned.
+        schema:
+          type: integer
+      - name: skip
+        in: query
+        description: index (skip) to start list.
+        schema:
+          type: integer
+      responses:
+        200:
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
 
 
 components:
@@ -984,10 +1048,17 @@ components:
           description: Actor identifier of actor to link this actor's events too. May be an actor id or an alias. Cycles not permitted.
           nullable: true
           default: null
+        webhook:
+          type: string
+          description: URL to publish this actor's events too.
+          nullable: true
+          default: null
       required: [image]
 
     Actor:
       type: object
+#      allOf:
+#        - $ref: '#/components/schemas/ArrayOfActorMounts'
       properties:
         id:
           type: string
@@ -1040,6 +1111,9 @@ components:
           type: string
           description: Return type (none, bin, json) for this actor. Default is none.
           enum: [none, bin, json]
+        webhook:
+          type: string
+          description: URL to publish this actor's events too.
 
     ArrayOfActors:
       type: array
@@ -1106,21 +1180,6 @@ components:
         message:
           type: string
           description: Text string message to send to actor
-
-    JSONMessage:
-      type: object
-      properties:
-        message:
-          type: object
-          description: a JSON object
-
-    BinaryMessage:
-      type: object
-      properties:
-        message:
-          type: string
-          format: binary
-          description: A binary object
 
     MessageJsonResponse:
       type: object
