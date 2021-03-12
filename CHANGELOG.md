@@ -1,7 +1,27 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 0.3.5 - 2021-01-28 (target)
+## 0.3.7 - 2021-03-12 (target)
+### Added
+- No change.
+
+### Changed
+- Changed actors spec and pickled files
+
+### Removed
+- No change.
+
+## 0.3.6 - 2021-03-12 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fix
+
+### Removed
+- No change.
+
+## 0.3.5 - 2021-03-11 (target)
 ### Added
 - No change.
 
