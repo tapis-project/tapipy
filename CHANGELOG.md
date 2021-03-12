@@ -1,6 +1,28 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.9 - 2021-03-12 (target)
+### Added
+- No change.
+
+### Changed
+- Lowering openapi-core version requirement. 0.13.0 slightly hurts some services.
+
+### Removed
+- No change.
+
+
+## 0.3.8 - 2021-03-12 (target)
+### Added
+- No change.
+
+### Changed
+- Properly added actors pickled file
+
+### Removed
+- No change.
+
+
 ## 0.3.7 - 2021-03-12 (target)
 ### Added
 - No change.
