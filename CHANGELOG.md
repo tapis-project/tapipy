@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.10 - 2021-03-16 (target)
+### Added
+- No change.
+
+### Changed
+- Updating systems resource urls and resource/spec.
+
+### Removed
+- Removing cyptography package as it was had security flaws and was not used.
+
+
 ## 0.3.9 - 2021-03-12 (target)
 ### Added
 - No change.
