@@ -87,7 +87,7 @@ RESOURCES = {
         'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/prod/api/src/main/resources/openapi.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/systems-client/SystemsAPI.yaml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/prod/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml'
     },
@@ -98,7 +98,7 @@ RESOURCES = {
         'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/dev/api/src/main/resources/openapi.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
-        'systems': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/systems-client/SystemsAPI.yaml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/dev/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml'
     }
