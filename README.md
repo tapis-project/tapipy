@@ -22,12 +22,10 @@ A basic example of logging in with a user account is below.
 
 ```
 # Import the Tapis object
-from tapipy import Tapis
+from tapipy.tapis import Tapis
 
-# Log into you the Tapis service by providing user/pass and url.
-t = Tapis(base_url='https://admin.tapis.io',
-          tenant_id='admin',
-	  account_type=account_type,
+# Log into you the Tapis service by providing user/pass and the base url of your tenant. For example, to interact with the tacc tenant --
+t = Tapis(base_url='https://tacc.tapis.io',
           username='myuser',
           password='mypass')
 	  
