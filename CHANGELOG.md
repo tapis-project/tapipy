@@ -6,6 +6,17 @@ All notable changes to this project will be documented in this file.
 - No change.
 
 ### Changed
+- Updating files pickled spec.
+
+### Removed
+- No change.
+
+
+## 0.3.11 - 2021-03-16 (target)
+### Added
+- No change.
+
+### Changed
 - Bumping cryptography.
 
 ### Removed
