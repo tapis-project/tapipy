@@ -33,7 +33,9 @@ if os.path.isfile(etagsFilePath):
         etagsDict = json.load(f)
 else:
     etagsDict = {}
-    
+
+newSpecs = []
+
 for specKey, specUrl in RESOURCES['prod'].items():
     # url follows 'https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}' format.
     if '/prod/' in specUrl:
@@ -73,6 +75,7 @@ for specKey, specUrl in RESOURCES['prod'].items():
             with open(f'{resourceFolderPath}/openapi_v3-{specKey}.yml', 'w') as f:
                 f.write(base64.b64decode(res.json()['content']).decode('utf-8'))
             etagsDict[specKey] = res.headers['ETag']
+            newSpecs.append(specKey)
         except FileNotFoundError:
             raise FileNotFoundError(f'Please ensure the resources folder specified exists: {resourceFolderPath}')
         except Exception as e:
@@ -83,5 +86,13 @@ for specKey, specUrl in RESOURCES['prod'].items():
 try:
     with open(etagsFilePath, 'w') as f:
         json.dump(etagsDict, f)
+except Exception as e:
+    raise Exception("Got exception writing to ETags json file.")
+
+try:
+    if newSpecs:
+        commit_message = f'Jenkins: Updating specs for {", ".join(newSpecs)}.'
+        with open('commit_message.txt', 'w') as f:
+            json.dump(commit_message, f)
 except Exception as e:
     raise Exception("Got exception writing to ETags json file.")
