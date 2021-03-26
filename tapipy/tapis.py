@@ -8,7 +8,7 @@ import requests
 from openapi_core import create_spec
 from openapi_core.schema.parameters.enums import ParameterLocation
 import yaml
-from . import errors
+import errors
 import pickle
 import shutil
 import multiprocessing
