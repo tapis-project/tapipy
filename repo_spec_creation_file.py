@@ -5,12 +5,20 @@ Note, this allows you to map any spec URL to any other URL filename as that's ho
 MEANING! You can give an actor spec a 'files' filename and there will be no error, be careful.
 """
 
+import os
 import copy
 import yaml
 import requests
 import pickle
 from openapi_core import create_spec
 from atomicwrites import atomic_write
+
+
+###~~~#### FILL THESE IN ####~~~###
+spec_dir = 'tapipy/specs'
+resource_dir = 'tapipy/resources'
+###################################
+
 
 def get_file_info_from_url(url: str, spec_dir: str):
     """
@@ -39,36 +47,78 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
     """
 
     for source_url, dest_url in spec_and_alias.items():
-        _, full_spec_name, spec_path = get_file_info_from_url(dest_url, spec_dir)
-        response = requests.get(source_url)
-        if response.status_code == 200:
+        # Get path from "dest_url". Where we'll save spec.
+        _, _, dest_path = get_file_info_from_url(dest_url, spec_dir)
+
+        if "local:" in source_url:
+            # Loads yaml into Python dictionary
             try:
-                # Loads yaml into Python dictionary
-                spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
+                source_path = source_url.replace('local:', '').strip()
+                with open(source_path, 'rb') as spec_file:
+                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
             except Exception as e:
-                print(f'Got exception when attempting to load yaml for '
-                      f'"{spec_path}" resource; exception: {e}')
+                print(f'Error reading local "{source_path}" resource. '
+                      f'Ensure path is absolute. e:{e}')
                 continue
+            # Attempts to create spec from dict to ensure the spec is valid
+            # We do a deepcopy as create_spec for some reason adds fields
+            # to the dictionary that's given
             try:
-                # Attempts to create spec from dict to ensure the spec is valid
-                # We do a deepcopy as create_spec for some reason adds fields
-                # to the dictionary that's given
                 test_spec_dict = copy.deepcopy(spec_dict)
                 create_spec(test_spec_dict)
             except Exception as e:
-                print(f'Got exception when test creating spec for "{spec_path}" '
+                print(f'Got exception when test creating spec for "{source_url}" '
                       f'resource; Spec probably not verifying; exception: {e}')
                 continue
+            # Pickles and saves the spec dict to the dest_path atomically
             try:
-                # Pickles and saves the spec dict to the spec_path atomically
-                with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
+                with atomic_write(f'{dest_path}', overwrite=True, mode='wb') as spec_file:
                     pickle.dump(spec_dict, spec_file, protocol=4)
             except Exception as e:
-                print(f'Got exception when attempting to pickle spec_dict for '
-                      f'"{spec_path}" resource; exception: {e}')
+                print(f'Got exception when attempting to pickle spec_dict and '
+                      f'write to "{dest_path}"; exception: {e}')
                 continue
+        else:
+            response = requests.get(source_url)
+            if response.status_code == 200:
+                # Loads yaml into Python dictionary
+                try:
+                    spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
+                except Exception as e:
+                    print(f'Got exception when attempting to load yaml from '
+                          f'"{source_url}" resource; exception: {e}')
+                    continue
+                # Attempts to create spec from dict to ensure the spec is valid
+                # We do a deepcopy as create_spec for some reason adds fields
+                # to the dictionary that's given
+                try:
+                    test_spec_dict = copy.deepcopy(spec_dict)
+                    create_spec(test_spec_dict)
+                except Exception as e:
+                    print(f'Got exception when test creating spec for "{source_url}" '
+                          f'resource; Spec probably not verifying; exception: {e}')
+                    continue
+                # Pickles and saves the spec dict to the dest_path atomically
+                try:
+                    with atomic_write(f'{dest_path}', overwrite=True, mode='wb') as spec_file:
+                        pickle.dump(spec_dict, spec_file, protocol=4)
+                except Exception as e:
+                    print(f'Got exception when attempting to pickle spec_dict and '
+                        f'write to "{dest_path}"; exception: {e}')
+                    continue
 
 RESOURCES = {
+    'local':{
+        'actors': f"local: {resource_dir}/openapi_v3-actors.yml",
+        'authenticator': f"local: {resource_dir}/openapi_v3-authenticator.yml",
+        'meta': f"local: {resource_dir}/openapi_v3-meta.yml",
+        'files': f"local: {resource_dir}/openapi_v3-files.yml",
+        'sk': f"local: {resource_dir}/openapi_v3-sk.yml",
+        'streams': f"local: {resource_dir}/openapi_v3-streams.yml",
+        'systems': f"local: {resource_dir}/openapi_v3-systems.yml",
+        'tenants': f"local: {resource_dir}/openapi_v3-tenants.yml",
+        'tokens': f"local: {resource_dir}/openapi_v3-tokens.yml",
+    },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-authenticator.yml',
@@ -109,17 +159,16 @@ RESOURCES = {
 
 spec_and_alias = {'source_spec_url': 'destination_spec_url'}
 
-# Set 1 updates all tapipy pickle files with the specs contained
-# in the tapipy resource directory. So what users have opted to update in the tapipy repo.
-spec_and_alias_set_1 = {RESOURCES['tapipy']['actors']: RESOURCES['tapipy']['actors'],
-                        RESOURCES['tapipy']['authenticator']: RESOURCES['tapipy']['authenticator'],
-                        RESOURCES['tapipy']['meta']: RESOURCES['tapipy']['meta'],
-                        RESOURCES['tapipy']['files']: RESOURCES['tapipy']['files'],
-                        RESOURCES['tapipy']['sk']: RESOURCES['tapipy']['sk'],
-                        RESOURCES['tapipy']['streams']: RESOURCES['tapipy']['streams'],
-                        RESOURCES['tapipy']['systems']: RESOURCES['tapipy']['systems'],
-                        RESOURCES['tapipy']['tenants']: RESOURCES['tapipy']['tenants'],
-                        RESOURCES['tapipy']['tokens']: RESOURCES['tapipy']['tokens']}
+# Set 1 updates all tapipy pickle files with the local specs held in the resources folder.
+spec_and_alias_set_1 = {RESOURCES['local']['actors']: RESOURCES['tapipy']['actors'],
+                        RESOURCES['local']['authenticator']: RESOURCES['tapipy']['authenticator'],
+                        RESOURCES['local']['meta']: RESOURCES['tapipy']['meta'],
+                        RESOURCES['local']['files']: RESOURCES['tapipy']['files'],
+                        RESOURCES['local']['sk']: RESOURCES['tapipy']['sk'],
+                        RESOURCES['local']['streams']: RESOURCES['tapipy']['streams'],
+                        RESOURCES['local']['systems']: RESOURCES['tapipy']['systems'],
+                        RESOURCES['local']['tenants']: RESOURCES['tapipy']['tenants'],
+                        RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens']}
 
 # Set 2 updates all tapipy pickle files with the specs contained
 # in each specs source's prod branch. So updating them completely.
@@ -136,7 +185,6 @@ spec_and_alias_set_2 = {RESOURCES['prod']['actors']: RESOURCES['tapipy']['actors
 # Specify where you want the specs to be saved, to get ready for a release
 # specify the github/tapipy/tapipy/specs folder to overwrite old specs.
 # Don't forget to delete any specs that are no longer needed.
-spec_dir = 'tapipy/specs'
 
 # Run the saver
-save_url_as_other_url(spec_and_alias_set_2, spec_dir)
+save_url_as_other_url(spec_and_alias_set_1, spec_dir)
