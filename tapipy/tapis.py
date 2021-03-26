@@ -50,6 +50,7 @@ RESOURCES = {
         'systems': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-systems.yml",
         'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tenants.yml",
         'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tokens.yml",
+        'pgrest': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pgrest.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -60,7 +61,8 @@ RESOURCES = {
         'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-streams.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml'
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml'
     },
     'prod': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
@@ -71,7 +73,8 @@ RESOURCES = {
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/prod/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml'
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
@@ -82,7 +85,8 @@ RESOURCES = {
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/dev/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml'
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml'
     }
 }
 
