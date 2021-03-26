@@ -1,0 +1,437 @@
+openapi: 3.0.1
+info:
+  title: Tapis Pgrest API
+  description: The Tapis Pgrest API provides a RESTful interface to a manged SQL-db-as-a-service.
+  contact:
+    name: CICSupport
+    email: cicsupport@tacc.utexas.edu
+  license:
+    name: 3-Clause BSD License
+    url: 'https://opensource.org/licenses/BSD-3-Clause'
+  version: '0.1'
+externalDocs:
+  description: Tapis on readthedocs.io
+  url: 'https://tapis.readthedocs.io/en/latest/technical/pgrest.html'
+servers:
+- url: http://localhost:5000
+  description: Local Development
+- url: https://dev.develop.tapis.io
+  description: Develop Instance
+#security:
+#  - TapisJWT: []
+paths:
+  /v3/pgrest/manage/tables:
+    get:
+      tags:
+        - Manage
+      summary: List tables.
+      description: List tables in the tenant's schema.
+      operationId: list_tables
+      x-swagger-router-controller: connexContr
+      parameters:
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: offset
+          in: query
+          description: index (offset) to start list.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/arrayOfTables'
+    post:
+      tags:
+        - Manage
+      summary: Create a tale.
+      description: Create a table.
+      operationId: create_table
+      x-swagger-router-controller: connexContr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTable'
+            examples:
+              widgets:
+                summary: An example of defining a simple table that holds "widgets".
+                value: {"table_name": "widgets", "root_url": "widgets", "columns": {"name": {"data_type": "varchar", "char_len": 255, "unique": true, "null": false }, "widget_type": {"data_type": "varchar", "char_len": 100, "default": "sprocket", "null": true, }, "count": {"data_type": "integer", "null": true}, "is_private": {"data_type": "boolean", "null": "true", "default": "true"}}}
+
+
+
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Table'
+
+  /v3/pgrest/manage/tables/{table_id}:
+    get:
+      tags:
+        - Manage
+      summary: Get details of a specific table.
+      description: Get details of a specific table.
+      operationId: get_table
+      x-swagger-router-controller: connexContr
+      parameters:
+      - name: table_id
+        in: path
+        description: The id of the table.
+        required: true
+        schema:
+          type: string
+      - name: details
+        in: query
+        description: Get additional details about the table
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Table'
+    delete:
+      tags:
+        - Manage
+      summary: Delete a specific table and all associted data.
+      description: Delete a specific table and all associted data. WARNING -- this action cannot be undone.
+      operationId: delete_table
+      x-swagger-router-controller: connexContr
+      parameters:
+      - name: table_id
+        in: path
+        description: The id of the table to delete.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+
+
+  /v3/pgrest/data/{collection}:
+    get:
+      tags:
+        - Data
+      summary: List objects in the table with root_url {collection}.
+      operationId: list_in_collection
+      parameters:
+      - name: collection
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/CollectionArray'
+    post:
+      tags:
+        - Data
+      summary: Create a new object in the table with root_url {collection}
+      operationId: create_in_collection
+      parameters:
+      - name: collection
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCollectionItem'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/CollectionItem'
+    put:
+      tags:
+        - Data
+      summary: Update multiple rows in a table atomically.
+      operationId: update_multiple_in_collection
+      parameters:
+      - name: collection
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMultipleCollectionItem'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+
+
+  /v3/pgrest/data/{collection}/{item}:
+    get:
+      tags:
+        - Data
+      summary: Get details about the specific object with id {item} on the table with root_url {collection}.
+      operationId: get_in_collection
+      parameters:
+      - name: collection
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      - name: item
+        in: path
+        description: The id of an item (i.e., a row) on the table whose root_url is given by {collection}.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/CollectionItem'
+    put:
+      tags:
+        - Data
+      summary: Update a specific object with id {item} from the table with root_url {collection}.
+      operationId: update_in_collection
+      parameters:
+      - name: collection
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      - name: item
+        in: path
+        description: The id of an item (i.e., a row) on the table whose root_url is given by {collection}.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCollectionItem'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/CollectionItem'
+
+    delete:
+      tags:
+        - Data
+      summary: Delete a specific object with id {item} from the table with root_url {collection}.
+      operationId: delete_in_collection
+      parameters:
+      - name: collection
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      - name: item
+        in: path
+        description: The id of an item (i.e., a row) on the table whose root_url is given by {collection}.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+
+components:
+  schemas:
+    BasicResponse:
+      type: object
+      properties:
+        version:
+          type: string
+          description: Version of the API
+        message:
+          type: string
+          description: Brief description of the response
+        status:
+          type: string
+          description: Whether the request was a success or failure.
+          enum: [success, error]
+    arrayOfTables:
+      type: array
+      items:
+        $ref: '#/components/schemas/Table'
+    Table:
+      type: object
+      properties:
+        table_name:
+          type: string
+          description: The name of the table.
+        root_url:
+          type: string
+          description: The url path used for the root collection associated with the records in the table.
+    NewTable:
+      type: object
+      properties:
+        table_name:
+          type: string
+          description: The name to be used for the table.
+        root_url:
+          type: string
+          description: The url path to use for the root collection associated with the records in the table.
+        columns:
+          $ref: '#/components/schemas/Columns'
+        create:
+          type: boolean
+          description: Whether the "created" endpoint (HTTP verb "POST") for creating new rows is available.
+          default: True
+        delete:
+          type: boolean
+          description: Whether the "delete" endpoint (HTTP verb "delete") for deleting a specific row is available.
+          default: True
+        list_all:
+          type: boolean
+          description: Whether the "list all" endpoint (HTTP verb "GET") for listing all rows in the table is available.
+          default: True
+        list_single:
+          type: boolean
+          description: Whether the "get row" endpoint (HTTP verb "GET") for retrieving a specifc row in the table is available.
+          default: True
+        update:
+          type: boolean
+          description: Whether the "update" endpoint (HTTP verb "PUT") for updating a specific row is available.
+          default: True
+
+      required: [table_name, root_url, columns]
+    Columns:
+      type: object
+      description: A description of the columns of the table, in key/value pair format. Each key corresponds to a single collumn; the name of the key is the name of the column, and the value of the key decribes the type of the column and any additional validation information.
+      properties:
+        "null":
+          type: boolean
+          description: Whether the column can contain null values.
+        data_type:
+          type: string
+          description: The Postgres type of the column, such as "integer", "varchar", etc.
+        char_len:
+          type: integer
+          description: For columns of type "varchar", the max length of the column.
+      additionalProperties:
+        type: object
+      required: [data_type]
+
+    UpdateMultipleCollectionItem:
+      type: object
+      description: Update multiple rows in the same way atomically, where the set of rows to be updated is described with a "where" clause and the update to be performed is defined by a JSON object of column names and column values (the new values to apply to all records).
+      properties:
+        where:
+          type: object
+          description: A JSON object describing a where clause of records to update; each record on the table matching the where clause will be updates.
+          properties:
+            sub_value:
+              type: object
+              properties:
+                operator:
+                  type: string
+                  description: The operator to use in the where clause when comparing rows to be updated.
+                value:
+                  description: The value to use in the where clause when comparing rows to be updated.
+                  oneOf:
+                    - type: integer
+                    - type: string
+                    - type: boolean
+
+      additionalProperties:
+        type: object
+      required: [where]
+
+
+    CollectionArray:
+      type: array
+      items:
+        $ref: '#/components/schemas/CollectionItem'
+
+    CollectionItem:
+      type: object
+
+    NewCollectionItem:
+      type: object
+      properties:
+        data:
+          type: object
+          description: The values of the row to add.
+
+
+    UpdateCollectionItem:
+      type: object
+      description: A JSON object of key/value pairs describing the updates to be made to the item. Each key should be the name of a column and each corresponding value should be the new value to update the column to.
+

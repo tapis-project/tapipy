@@ -118,6 +118,7 @@ RESOURCES = {
         'systems': f"local: {resource_dir}/openapi_v3-systems.yml",
         'tenants': f"local: {resource_dir}/openapi_v3-tenants.yml",
         'tokens': f"local: {resource_dir}/openapi_v3-tokens.yml",
+        'pgrest': f"local: {resource_dir}/openapi_v3-pgrest.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -128,7 +129,8 @@ RESOURCES = {
         'streams': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-streams.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml'
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml'
     },
     'prod': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
@@ -139,7 +141,8 @@ RESOURCES = {
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/prod/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml'
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
@@ -150,7 +153,8 @@ RESOURCES = {
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/dev/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
-        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml'
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml'
     }
 }
 
@@ -168,7 +172,8 @@ spec_and_alias_set_1 = {RESOURCES['local']['actors']: RESOURCES['tapipy']['actor
                         RESOURCES['local']['streams']: RESOURCES['tapipy']['streams'],
                         RESOURCES['local']['systems']: RESOURCES['tapipy']['systems'],
                         RESOURCES['local']['tenants']: RESOURCES['tapipy']['tenants'],
-                        RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens']}
+                        RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens'],
+                        RESOURCES['local']['pgrest']: RESOURCES['tapipy']['pgrest']}
 
 # Set 2 updates all tapipy pickle files with the specs contained
 # in each specs source's prod branch. So updating them completely.

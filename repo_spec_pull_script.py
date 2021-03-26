@@ -21,8 +21,7 @@ from openapi_core import create_spec
 
 
 # Get spec urls to check.
-sys.path.append('tapipy')
-from tapis import RESOURCES
+from repo_spec_creation_file import RESOURCES
 
 resourceFolderPath='tapipy/resources/'
 etagsFileName='resource_etags.json'
