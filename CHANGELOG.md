@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.15 - 2021-04-08 (target)
+### Added
+- Jobs spec added.
+- Added a Makefile for building, pulling specs, and testing. (Note: Should add way to update version number and add Changelog)
+
+### Changed
+- Changed some scripts for ease of use.
+
+### Removed
+- No change.
+
 ## 0.3.14 - 2021-03-26 (target)
 ### Added
 - No change.
