@@ -1,7 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 0.3.13 - 2021-03-16 (target)
+## 0.3.14 - 2021-03-26 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fix.
+
+### Removed
+- No change.
+
+
+## 0.3.13 - 2021-03-26 (target)
 ### Added
 - Adding pgrest spec files
 

@@ -608,9 +608,6 @@ components:
         base_url:
           type: string
           description: The base URL for the tenant.
-        is_owned_by_associate_site:
-          type: boolean
-          description: Whether the tenant is hosted by an associate site.
         site_id:
           type: string
           description: The site for which the tenant belongs.
@@ -653,7 +650,7 @@ components:
         last_update_time:
           type: string
           description: The time the client was last updated.
-      required: [tenant_id, base_url, is_owned_by_associate_site, site_id, token_service, security_kernel, authenticator, owner]
+      required: [tenant_id, base_url, site_id, token_service, security_kernel, authenticator, owner]
 
     arrayOfTenants:
       type: array

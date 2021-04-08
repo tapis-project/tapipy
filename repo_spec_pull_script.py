@@ -18,8 +18,6 @@ import copy
 import base64
 import requests as r
 from openapi_core import create_spec
-
-
 # Get spec urls to check.
 from repo_spec_creation_file import RESOURCES
 
@@ -35,6 +33,7 @@ else:
 
 newSpecs = []
 
+print(f'Dealing with specs now')
 for specKey, specUrl in RESOURCES['prod'].items():
     # url follows 'https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}' format.
     if '/prod/' in specUrl:

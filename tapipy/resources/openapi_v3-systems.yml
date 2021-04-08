@@ -68,9 +68,15 @@ paths:
       tags:
         - Systems
       summary: Retrieve systems
-      description: Retrieve details for systems. Use search and select query parameters to limit results.
+      description: Retrieve list of systems. Use search and select query parameters to limit results.
       operationId: getSystems
       parameters:
+        - name: allAttributes
+          in: query
+          description: 'Include all attributes. Default is to return minimal attributes: id, systemType, host, defaultAuthnMethod, canExec.'
+          schema:
+            type: boolean
+            default: false
         - name: search
           in: query
           description: Search conditions as a single query paramter. For example search=(name.like.MySys*)~(enabled.eq.true)
@@ -101,13 +107,18 @@ paths:
           description: Compute total number of results that would have been returned if unlimited. Default is false.
           schema:
             type: boolean
+            default: false
       responses:
         '200':
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespSystemsArray'
+                $ref: '#/components/schemas/RespSystemsBasic'
+#                $ref: '#/components/schemas/RespSystemsBasicOrFull'
+#                oneOf:
+#                  - $ref: '#/components/schemas/RespSystems'
+#                  - $ref: '#/components/schemas/RespSystemsBasic'
         '400':
           description: Input error.
           content:
@@ -174,10 +185,16 @@ paths:
     get:
       tags:
         - Systems
-      summary: Retrieve systems matching search conditions specified as query parameters
+      summary: Retrieve list of systems matching search conditions specified as query parameters
       description: Retrieve details for systems. Use query parameters to specify search conditions. For example owner.eq=jdoe&port.gt=1024
       operationId: searchSystemsQueryParameters
       parameters:
+        - name: allAttributes
+          in: query
+          description: 'Include all attributes. Default is to return minimal attributes: id, systemType, host, defaultAuthnMethod, canExec.'
+          schema:
+            type: boolean
+            default: false
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
@@ -203,13 +220,18 @@ paths:
           description: Compute total number of results that would have been returned if unlimited. Default is false.
           schema:
             type: boolean
+            default: false
       responses:
         '200':
           description: Success.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespSystemsSearch'
+                $ref: '#/components/schemas/RespSystemsBasic'
+#                $ref: '#/components/schemas/RespSystemsBasicOrFull'
+#                oneOf:
+#                  - $ref: '#/components/schemas/RespSystems'
+#                  - $ref: '#/components/schemas/RespSystemsBasic'
         '400':
           description: Input error.
           content:
@@ -231,10 +253,16 @@ paths:
     post:
       tags:
         - Systems
-      summary: Retrieve systems matching search conditions
+      summary: Retrieve list of systems matching search conditions
       description: Retrieve details for systems. Use request body to specify SQL-like search conditions.
       operationId: searchSystemsRequestBody
       parameters:
+        - name: allAttributes
+          in: query
+          description: 'Include all attributes. Default is to return minimal attributes: id, systemType, host, defaultAuthnMethod, canExec.'
+          schema:
+            type: boolean
+            default: false
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
@@ -260,6 +288,7 @@ paths:
           description: Compute total number of results that would have been returned if unlimited. Default is false.
           schema:
             type: boolean
+            default: false
       requestBody:
         required: true
         description: A JSON object specifying SQL-like search conditions as an array of strings. Strings are concatenated to form full search query.
@@ -273,7 +302,11 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespSystemsSearch'
+                $ref: '#/components/schemas/RespSystemsBasic'
+#                $ref: '#/components/schemas/RespSystemsBasicOrFull'
+#                oneOf:
+#                  - $ref: '#/components/schemas/RespSystems'
+#                  - $ref: '#/components/schemas/RespSystemsBasic'
         '400':
           description: Input error.
           content:
@@ -292,45 +325,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-  '/v3/systems/match/constraints':
-    post:
-      tags:
-        - Systems
-      summary: Retrieve systems satisfying specified constraint conditions
-      description: Retrieve details for systems. Use request body to specify constraint conditions as an SQL-like WHERE clause.
-      operationId: matchConstraints
-      requestBody:
-        required: true
-        description: A JSON object specifying SQL-like constraint conditions as an array of strings. Strings are concatenated to form full query.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqMatchConstraints'
-      responses:
-        '200':
-          description: Success.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespSystemsArray'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
+#  '/v3/systems/match/constraints':
+#    post:
+#      tags:
+#        - Systems
+#      summary: Retrieve systems satisfying specified constraint conditions
+#      description: Retrieve details for systems. Use request body to specify constraint conditions as an SQL-like WHERE clause.
+#      operationId: matchConstraints
+#      requestBody:
+#        required: true
+#        description: A JSON object specifying SQL-like constraint conditions as an array of strings. Strings are concatenated to form full query.
+#        content:
+#          application/json:
+#            schema:
+#              $ref: '#/components/schemas/ReqMatchConstraints'
+#      responses:
+#        '200':
+#          description: Success.
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/RespSystems'
+#        '400':
+#          description: Input error.
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/RespBasic'
+#        '401':
+#          description: Not authorized.
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/RespBasic'
+#        '500':
+#          description: Server error.
+#          content:
+#            application/json:
+#              schema:
+#                $ref: '#/components/schemas/RespBasic'
   '/v3/systems/{systemId}':
     get:
       tags:
@@ -410,6 +443,7 @@ paths:
           description: Must be specified to complete the action. For example confirm=true. Default is false.
           schema:
             type: boolean
+            default: false
       responses:
         '200':
           description: System deleted.
@@ -844,7 +878,7 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Create system user permissions
+      summary: Grant system user permissions
       description: Create permissions in the Security Kernel for a user. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
       operationId: grantUserPerms
       parameters:
@@ -896,7 +930,7 @@ paths:
       tags:
         - Permissions
       summary: Revoke system user permissions
-      description: Revoke permissions in the Security Kernel for a user. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
+      description: Remove permissions from the Security Kernel for a user. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerms
       parameters:
         - name: systemId
@@ -941,7 +975,7 @@ paths:
       tags:
         - Permissions
       summary: Revoke system user permission
-      description: Revoke system user permission in the Security Kernel. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
+      description: Remove system user permission from the Security Kernel. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerm
       parameters:
         - name: systemId
@@ -995,8 +1029,31 @@ components:
       name: X-Tapis-Token
       in: header
   schemas:
+    RespSystemsBasicOrFull:
+      oneOf:
+      - $ref: '#/components/schemas/RespSystems'
+      - $ref: '#/components/schemas/RespSystemsBasic'
+      discriminator:
+        propertyName: realType
+    # ------------------------------------------------------------------------------
     # --- Model objects ------------------------------------------------------------
-    TSystem:
+    # ------------------------------------------------------------------------------
+    # --- ResultSystemBasic ------------------------------------------------------------------
+    ResultSystemBasic:
+      type: object
+      properties:
+        id:
+          type: string
+        systemType:
+          $ref: '#/components/schemas/SystemTypeEnum'
+        host:
+          type: string
+        defaultAuthnMethod:
+          $ref: '#/components/schemas/AuthnEnum'
+        canExec:
+          type: boolean
+    # --- ResultSystem ------------------------------------------------------------------
+    ResultSystem:
       type: object
       properties:
         tenant:
@@ -1072,7 +1129,7 @@ components:
           type: boolean
           default: false
         batchScheduler:
-          type: string
+          $ref: '#/components/schemas/SchedulerTypeEnum'
         batchLogicalQueues:
           type: array
           items:
@@ -1089,12 +1146,16 @@ components:
             type: string
         notes:
           type: object
+        uuid:
+          type: string
+          format: uuid
         deleted:
           type: boolean
         created:
           type: string
         updated:
           type: string
+    # --- JobRuntime ------------------------------------------------------------------
     JobRuntime:
       type: object
       properties:
@@ -1102,6 +1163,7 @@ components:
           $ref: '#/components/schemas/RuntimeTypeEnum'
         version:
           type: string
+    # --- LogicalQueue ------------------------------------------------------------------
     LogicalQueue:
       type: object
       properties:
@@ -1123,6 +1185,7 @@ components:
           type: integer
         maxMinutes:
           type: integer
+    # --- Capability ------------------------------------------------------------------
     Capability:
       type: object
       properties:
@@ -1136,6 +1199,7 @@ components:
           type: integer
         value:
           type: string
+    # --- Credential ------------------------------------------------------------------
     Credential:
       type: object
       properties:
@@ -1159,8 +1223,9 @@ components:
           type: string
         value:
           type: string
-
+    # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
+    # -------------------------------------------------------------------------
     ReqCreateSystem:
       type: object
       properties:
@@ -1176,6 +1241,7 @@ components:
           type: string
         enabled:
           type: boolean
+          default: true
         effectiveUserId:
           type: string
         defaultAuthnMethod:
@@ -1195,6 +1261,7 @@ components:
           format: int32
         useProxy:
           type: boolean
+          default: false
         proxyHost:
           type: string
         proxyPort:
@@ -1208,6 +1275,7 @@ components:
           type: string
         isDtn:
           type: boolean
+          default: false
         canExec:
           type: boolean
         jobRuntimes:
@@ -1226,8 +1294,9 @@ components:
           type: integer
         jobIsBatch:
           type: boolean
+          default: false
         batchScheduler:
-          type: string
+          $ref: '#/components/schemas/SchedulerTypeEnum'
         batchLogicalQueues:
           type: array
           items:
@@ -1269,6 +1338,36 @@ components:
         proxyPort:
           type: integer
           format: int32
+        dtnSystemId:
+          type: string
+        dtnMountPoint:
+          type: string
+        dtnMountSourcePath:
+          type: string
+        jobRuntimes:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobRuntime'
+        jobWorkingDir:
+          type: string
+        jobEnvVariables:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+        jobMaxJobs:
+          type: integer
+        jobMaxJobsPerUser:
+          type: integer
+        jobIsBatch:
+          type: boolean
+        batchScheduler:
+          $ref: '#/components/schemas/SchedulerTypeEnum'
+        batchLogicalQueues:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogicalQueue'
+        batchDefaultLogicalQueue:
+          type: string
         jobCapabilities:
           type: array
           items:
@@ -1293,15 +1392,16 @@ components:
           type: array
           items:
             type: string
-    ReqMatchConstraints:
-      type: object
-      properties:
-        match:
-          type: array
-          items:
-            type: string
-
+#    ReqMatchConstraints:
+#      type: object
+#      properties:
+#        match:
+#          type: array
+#          items:
+#            type: string
+    # -------------------------------------------------------------------------
     # --- Response objects ----------------------------------------------------
+    # -------------------------------------------------------------------------
     RespBasic:
       type: object
       properties:
@@ -1385,8 +1485,8 @@ components:
         version:
           type: string
         result:
-          $ref: '#/components/schemas/TSystem'
-    RespSystemsArray:
+          $ref: '#/components/schemas/ResultSystem'
+    RespSystems:
       type: object
       properties:
         status:
@@ -1395,10 +1495,45 @@ components:
           type: string
         version:
           type: string
+        realType:
+          type: string
         result:
           type: array
           items:
-            $ref: '#/components/schemas/TSystem'
+            $ref: '#/components/schemas/ResultSystem'
+    RespSystemsBasic:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        realType:
+          type: string
+        result:
+          type: object
+          properties:
+            metadata:
+              type: object
+              properties:
+                recordCount:
+                  type: integer
+                recordLimit:
+                  type: integer
+                recordsSkipped:
+                  type: integer
+                sortBy:
+                  type: string
+                startAfter:
+                  type: string
+                totalCount:
+                  type: integer
+            search:
+              type: array
+              items:
+                $ref: '#/components/schemas/ResultSystemBasic'
     RespSystemsSearch:
       type: object
       properties:
@@ -1429,7 +1564,7 @@ components:
             search:
               type: array
               items:
-                $ref: '#/components/schemas/TSystem'
+                $ref: '#/components/schemas/ResultSystem'
     RespCredential:
       type: object
       properties:
@@ -1441,7 +1576,9 @@ components:
           type: string
         result:
           $ref: '#/components/schemas/Credential'
-    # --- Enums ----------------------------------------------------
+    # -------------------------------------------------------------------------
+    # --- Enums ---------------------------------------------------------------
+    # -------------------------------------------------------------------------
     SystemTypeEnum:
       type: string
       enum:
@@ -1483,3 +1620,12 @@ components:
       enum:
         - DOCKER
         - SINGULARITY
+    SchedulerTypeEnum:
+      type: string
+      enum:
+        - SLURM
+        - CONDOR
+        - PBS
+        - SGE
+        - UGE
+        - TORQUE

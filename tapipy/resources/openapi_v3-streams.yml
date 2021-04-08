@@ -103,6 +103,53 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 ### End of Ready
 
+### Begin of Healthcheck
+  /v3/streams/healthcheck:
+    get:
+      tags:
+        - Healthcheck
+      summary: Healthcheck
+      description: Checks health of meta, kapacitor, influx and chords
+      operationId: healthcheck
+      x-swagger-router-controller: connexContr
+      parameters:
+        - name: tenant
+          in: query
+          description: Tenant id to check healthcheck
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: string
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 ### Begin of Projects
   /v3/streams/projects:
     get:
@@ -2676,6 +2723,10 @@ components:
         active:
           type: boolean
           description: Current status of the project
+        metadata:
+          type: object
+          description: User defined metadata for the site
+
 
     NewProject:
       type: object
@@ -2701,6 +2752,9 @@ components:
         active:
           type: boolean
           description: Current status of the project
+        metadata:
+          type: object
+          description: User defined metadata for the site
       required: [project_name, owner, pi]
 
     Site:
@@ -2814,7 +2868,6 @@ components:
         metadata:
           type: string
           description: User enetered metadata on instruments
-      required: [inst_name, inst_description, inst_id]
 
     UpdateInstRequest:
       type: array
@@ -2879,7 +2932,6 @@ components:
         shortname:
           type: string
           description: User entered short name
-      required: [var_name, shortname, var_id]
 
     Variable:
       type: object
@@ -3110,11 +3162,6 @@ components:
                     type: string
                   message:
                     type: string
-                  abaco_base_url:
-                    type: string
-                  nonces:
-                    type: string
-
     Unit:
       type: object
       properties:
