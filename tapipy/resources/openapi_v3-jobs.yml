@@ -140,6 +140,65 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
+  '/jobs/{jobUuid}/status':
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve status of a previously submitted job by its UUID.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJobStatus
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job status retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGetJobStatus'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
   /jobs/submit:
     post:
       tags:
@@ -282,8 +341,12 @@ components:
           type: string
         version:
           type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/JobsProbe'
+    ResultMetadata:
+      type: object
     RespBasic:
       type: object
       properties:
@@ -293,6 +356,8 @@ components:
           type: string
         version:
           type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
         result:
           type: object
     Job:
@@ -446,6 +511,8 @@ components:
           type: string
         version:
           type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/Job'
     RespName:
@@ -457,6 +524,8 @@ components:
           type: string
         version:
           type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/ResultName'
     ResultName:
@@ -464,6 +533,24 @@ components:
       properties:
         name:
           type: string
+    JobStatusDisplay:
+      type: object
+      properties:
+        status:
+          type: string
+    RespGetJobStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/JobStatusDisplay'
     RespSubmitJob:
       type: object
       properties:
@@ -473,6 +560,8 @@ components:
           type: string
         version:
           type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/Job'
     ArgMetaSpec:
@@ -506,6 +595,8 @@ components:
           type: array
           items:
             type: string
+        includeLaunchFiles:
+          type: boolean
     InputSpec:
       type: object
       properties:

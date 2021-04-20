@@ -19,7 +19,7 @@ import base64
 import requests as r
 from openapi_core import create_spec
 # Get spec urls to check.
-from repo_spec_creation_file import RESOURCES
+from repo_spec_creation_script import RESOURCES
 
 resourceFolderPath='tapipy/resources/'
 etagsFileName='resource_etags.json'
