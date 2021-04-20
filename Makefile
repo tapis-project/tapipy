@@ -1,6 +1,11 @@
 # Makefile for local development
 
-.PHONY: down clean
+ifdef in_jenkins
+unexport interactive
+else
+export interactive := -it
+endif
+
 
 build:	
 	rm -rf dist
@@ -8,7 +13,7 @@ build:
 
 test: build
 	docker build -t tapis/tapipy-tests -f Dockerfile-tests .
-	docker run -it --rm  tapis/tapipy-tests
+	docker run $$interactive --rm  tapis/tapipy-tests
 
 pull_specs:
 	python3 repo_spec_pull_script.py
