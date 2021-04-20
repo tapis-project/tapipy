@@ -91,6 +91,6 @@ try:
     if newSpecs:
         commit_message = f'Jenkins: Updating specs for {", ".join(newSpecs)}.'
         with open('commit_message.txt', 'w') as f:
-            json.dump(commit_message, f)
+            f.write(commit_message)
 except Exception as e:
     raise Exception("Got exception writing to ETags json file.")
