@@ -1,0 +1,730 @@
+openapi: 3.0.1
+info:
+  title: Tapis Jobs API
+  description: The Tapis Jobs API executes jobs on Tapis systems.
+  contact:
+    name: CICSupport
+    email: cicsupport@tacc.utexas.edu
+  license:
+    name: 3-Clause BSD License
+    url: 'https://opensource.org/licenses/BSD-3-Clause'
+  version: '0.1'
+externalDocs:
+  description: Tapis Home
+  url: 'https://tacc-cloud.readthedocs.io/projects/agave/en/latest/'
+servers:
+  - url: 'http://localhost:8080/v3'
+    description: Local test environment
+    variables: {}
+tags:
+  - name: jobs
+    description: manage job execution and data
+  - name: general
+    description: informational endpoints
+paths:
+  /jobs/ready:
+    get:
+      tags:
+        - general
+      description: Lightwieght readiness check. No authorization required.
+      operationId: ready
+      responses:
+        '200':
+          description: Service ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+  /jobs/hello:
+    get:
+      tags:
+        - general
+      description: Logged connectivity test. No authorization required.
+      operationId: sayHello
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+  /jobs/healthcheck:
+    get:
+      tags:
+        - general
+      description: Lightwieght health check for liveness. No authorization required.
+      operationId: checkHealth
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+  '/jobs/{jobUuid}':
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve a previously submitted job by its UUID.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJob
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGetJob'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  '/jobs/{jobUuid}/status':
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve status of a previously submitted job by its UUID.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJobStatus
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job status retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGetJobStatus'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /jobs/submit:
+    post:
+      tags:
+        - jobs
+      description: |
+        Submit a job for execution.  The main phases of job execution are:
+
+          - validate input
+          - check resource availability
+          - stage input files
+          - stage application code
+          - launch application
+          - monitor application
+          - archive application output
+      operationId: submitJob
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqSubmitJob'
+        required: true
+      responses:
+        '200':
+          description: Job created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubmitJob'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  '/jobs/{jobuuid}/resubmit':
+    post:
+      tags:
+        - jobs
+      description: |
+        Resubmit a job for execution using the original parameters.  The main phases of job execution are:
+
+          - validate input
+          - check resource availability
+          - stage input files
+          - stage application code
+          - launch application
+          - monitor application
+          - archive application output
+      operationId: resubmitJob
+      parameters:
+        - name: jobuuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubmitJob'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+components:
+  schemas:
+    JobsProbe:
+      type: object
+      properties:
+        checkNum:
+          type: integer
+          format: int64
+        databaseAccess:
+          type: boolean
+        tenantsAccess:
+          type: boolean
+        queueAccess:
+          type: boolean
+    RespProbe:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/JobsProbe'
+    ResultMetadata:
+      type: object
+    RespBasic:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          type: object
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          type: string
+        owner:
+          type: string
+        tenant:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum:
+            - PENDING
+            - PROCESSING_INPUTS
+            - STAGING_INPUTS
+            - STAGING_JOB
+            - SUBMITTING_JOB
+            - QUEUED
+            - RUNNING
+            - ARCHIVING
+            - BLOCKED
+            - PAUSED
+            - FINISHED
+            - CANCELLED
+            - FAILED
+        lastMessage:
+          type: string
+        created:
+          type: string
+        ended:
+          type: string
+        lastUpdated:
+          type: string
+        uuid:
+          type: string
+        appId:
+          type: string
+        appVersion:
+          type: string
+        archiveOnAppError:
+          type: boolean
+        dynamicExecSystem:
+          type: boolean
+        execSystemId:
+          type: string
+        execSystemExecDir:
+          type: string
+        execSystemInputDir:
+          type: string
+        execSystemOutputDir:
+          type: string
+        execSystemLogicalQueue:
+          type: string
+        archiveSystemId:
+          type: string
+        archiveSystemDir:
+          type: string
+        dtnSystemId:
+          type: string
+        dtnMountSourcePath:
+          type: string
+        dtnMountPoint:
+          type: string
+        nodeCount:
+          type: integer
+          format: int32
+        coresPerNode:
+          type: integer
+          format: int32
+        memoryMB:
+          type: integer
+          format: int32
+        maxMinutes:
+          type: integer
+          format: int32
+        fileInputs:
+          type: string
+        parameterSet:
+          type: string
+        execSystemConstraints:
+          type: string
+        subscriptions:
+          type: string
+        blockedCount:
+          type: integer
+          format: int32
+        remoteJobId:
+          type: string
+        remoteJobId2:
+          type: string
+        remoteOutcome:
+          type: string
+          enum:
+            - FINISHED
+            - FAILED
+            - FAILED_SKIP_ARCHIVE
+        remoteResultInfo:
+          type: string
+        remoteQueue:
+          type: string
+        remoteSubmitted:
+          type: string
+        remoteStarted:
+          type: string
+        remoteEnded:
+          type: string
+        remoteSubmitRetries:
+          type: integer
+          format: int32
+        remoteChecksSuccess:
+          type: integer
+          format: int32
+        remoteChecksFailed:
+          type: integer
+          format: int32
+        remoteLastStatusCheck:
+          type: string
+        inputTransactionId:
+          type: string
+        inputCorrelationId:
+          type: string
+        archiveTransactionId:
+          type: string
+        archiveCorrelationId:
+          type: string
+        tapisQueue:
+          type: string
+        visible:
+          type: boolean
+        createdby:
+          type: string
+        createdbyTenant:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+    RespGetJob:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/Job'
+    RespName:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/ResultName'
+    ResultName:
+      type: object
+      properties:
+        name:
+          type: string
+    JobStatusDisplay:
+      type: object
+      properties:
+        status:
+          type: string
+    RespGetJobStatus:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/JobStatusDisplay'
+    RespSubmitJob:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/Job'
+    ArgMetaSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+        kv:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+    ArgSpec:
+      type: object
+      properties:
+        arg:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ArgMetaSpec'
+    IncludeExcludeFilter:
+      type: object
+      properties:
+        includes:
+          type: array
+          items:
+            type: string
+        excludes:
+          type: array
+          items:
+            type: string
+        includeLaunchFiles:
+          type: boolean
+    InputSpec:
+      type: object
+      properties:
+        sourceUrl:
+          type: string
+        targetPath:
+          type: string
+        inPlace:
+          type: boolean
+        meta:
+          $ref: '#/components/schemas/ArgMetaSpec'
+    JobParameterSet:
+      type: object
+      properties:
+        appArgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgSpec'
+        containerArgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgSpec'
+        schedulerOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgSpec'
+        envVariables:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+        archiveFilter:
+          $ref: '#/components/schemas/IncludeExcludeFilter'
+    KeyValuePair:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    NotificationMechanism:
+      type: object
+      properties:
+        mechanism:
+          type: string
+          enum:
+            - WEBHOOK
+            - EMAIL
+            - QUEUE
+            - ACTOR
+        webhookURL:
+          type: string
+        emailAddress:
+          type: string
+    NotificationSubscription:
+      type: object
+      properties:
+        filter:
+          type: string
+        notificationMechanisms:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationMechanism'
+    ReqSubmitJob:
+      type: object
+      properties:
+        name:
+          type: string
+        owner:
+          type: string
+        tenant:
+          type: string
+        description:
+          type: string
+        appId:
+          type: string
+        appVersion:
+          type: string
+        archiveOnAppError:
+          type: boolean
+        dynamicExecSystem:
+          type: boolean
+        execSystemId:
+          type: string
+        execSystemExecDir:
+          type: string
+        execSystemInputDir:
+          type: string
+        execSystemOutputDir:
+          type: string
+        execSystemLogicalQueue:
+          type: string
+        archiveSystemId:
+          type: string
+        archiveSystemDir:
+          type: string
+        nodeCount:
+          type: integer
+          format: int32
+        coresPerNode:
+          type: integer
+          format: int32
+        memoryMB:
+          type: integer
+          format: int32
+        maxMinutes:
+          type: integer
+          format: int32
+        fileInputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/InputSpec'
+        parameterSet:
+          $ref: '#/components/schemas/JobParameterSet'
+        execSystemConstraints:
+          type: array
+          items:
+            type: string
+        tags:
+          type: array
+          items:
+            type: string
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationSubscription'
+  securitySchemes:
+    TapisJWT:
+      type: apiKey
+      description: Tapis signed JWT token authentication
+      name: X-Tapis-Token
+      in: header

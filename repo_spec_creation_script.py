@@ -33,6 +33,7 @@ def get_file_info_from_url(url: str, spec_dir: str):
     spec_path = f'{spec_dir}/{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
 
+
 def save_url_as_other_url(spec_and_alias, spec_dir):
     """
     Remember, filenames are derived from a URL, so you're essentially getting the data
@@ -107,18 +108,20 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
                         f'write to "{dest_path}"; exception: {e}')
                     continue
 
+
 RESOURCES = {
     'local':{
-        'actors': f"local: {resource_dir}/openapi_v3-actors.yml",
-        'authenticator': f"local: {resource_dir}/openapi_v3-authenticator.yml",
-        'meta': f"local: {resource_dir}/openapi_v3-meta.yml",
-        'files': f"local: {resource_dir}/openapi_v3-files.yml",
-        'sk': f"local: {resource_dir}/openapi_v3-sk.yml",
-        'streams': f"local: {resource_dir}/openapi_v3-streams.yml",
-        'systems': f"local: {resource_dir}/openapi_v3-systems.yml",
-        'tenants': f"local: {resource_dir}/openapi_v3-tenants.yml",
-        'tokens': f"local: {resource_dir}/openapi_v3-tokens.yml",
-        'pgrest': f"local: {resource_dir}/openapi_v3-pgrest.yml"
+        'actors': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-actors.yml",
+        'authenticator': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-authenticator.yml",
+        'meta': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-meta.yml",
+        'files': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-files.yml",
+        'sk': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-sk.yml",
+        'streams': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-streams.yml",
+        'systems': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-systems.yml",
+        'tenants': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-tenants.yml",
+        'tokens': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-tokens.yml",
+        'pgrest': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-pgrest.yml",
+        'jobs': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-jobs.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -130,7 +133,8 @@ RESOURCES = {
         'systems': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-systems.yml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml',
-        'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml'
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml',
+        'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml'
     },
     'prod': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
@@ -142,7 +146,8 @@ RESOURCES = {
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/prod/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml',
-        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml'
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml',
+        'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
@@ -154,42 +159,46 @@ RESOURCES = {
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/dev/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml',
-        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml'
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml',
+        'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml'
     }
 }
 
-# Spec/Key is the url to download and copy the spec dict from.
-# Alias/Val is the file to save the spec dict to.
 
-spec_and_alias = {'source_spec_url': 'destination_spec_url'}
+if __name__ == "__main__":
+    # Spec/Key is the url to download and copy the spec dict from.
+    # Alias/Val is the file to save the spec dict to.
 
-# Set 1 updates all tapipy pickle files with the local specs held in the resources folder.
-spec_and_alias_set_1 = {RESOURCES['local']['actors']: RESOURCES['tapipy']['actors'],
-                        RESOURCES['local']['authenticator']: RESOURCES['tapipy']['authenticator'],
-                        RESOURCES['local']['meta']: RESOURCES['tapipy']['meta'],
-                        RESOURCES['local']['files']: RESOURCES['tapipy']['files'],
-                        RESOURCES['local']['sk']: RESOURCES['tapipy']['sk'],
-                        RESOURCES['local']['streams']: RESOURCES['tapipy']['streams'],
-                        RESOURCES['local']['systems']: RESOURCES['tapipy']['systems'],
-                        RESOURCES['local']['tenants']: RESOURCES['tapipy']['tenants'],
-                        RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens'],
-                        RESOURCES['local']['pgrest']: RESOURCES['tapipy']['pgrest']}
+    spec_and_alias = {'source_spec_url': 'destination_spec_url'}
 
-# Set 2 updates all tapipy pickle files with the specs contained
-# in each specs source's prod branch. So updating them completely.
-spec_and_alias_set_2 = {RESOURCES['prod']['actors']: RESOURCES['tapipy']['actors'],
-                        RESOURCES['prod']['authenticator']: RESOURCES['tapipy']['authenticator'],
-                        RESOURCES['prod']['meta']: RESOURCES['tapipy']['meta'],
-                        RESOURCES['prod']['files']: RESOURCES['tapipy']['files'],
-                        RESOURCES['prod']['sk']: RESOURCES['tapipy']['sk'],
-                        RESOURCES['prod']['streams']: RESOURCES['tapipy']['streams'],
-                        RESOURCES['prod']['systems']: RESOURCES['tapipy']['systems'],
-                        RESOURCES['prod']['tenants']: RESOURCES['tapipy']['tenants'],
-                        RESOURCES['prod']['tokens']: RESOURCES['tapipy']['tokens']}
- 
-# Specify where you want the specs to be saved, to get ready for a release
-# specify the github/tapipy/tapipy/specs folder to overwrite old specs.
-# Don't forget to delete any specs that are no longer needed.
+    # Set 1 updates all tapipy pickle files with the local specs held in the resources folder.
+    spec_and_alias_set_1 = {RESOURCES['local']['actors']: RESOURCES['tapipy']['actors'],
+                            RESOURCES['local']['authenticator']: RESOURCES['tapipy']['authenticator'],
+                            RESOURCES['local']['meta']: RESOURCES['tapipy']['meta'],
+                            RESOURCES['local']['files']: RESOURCES['tapipy']['files'],
+                            RESOURCES['local']['sk']: RESOURCES['tapipy']['sk'],
+                            RESOURCES['local']['streams']: RESOURCES['tapipy']['streams'],
+                            RESOURCES['local']['systems']: RESOURCES['tapipy']['systems'],
+                            RESOURCES['local']['tenants']: RESOURCES['tapipy']['tenants'],
+                            RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens'],
+                            RESOURCES['local']['pgrest']: RESOURCES['tapipy']['pgrest'],
+                            RESOURCES['local']['jobs']: RESOURCES['tapipy']['jobs']}
 
-# Run the saver
-save_url_as_other_url(spec_and_alias_set_1, spec_dir)
+    # Set 2 updates all tapipy pickle files with the specs contained
+    # in each specs source's prod branch. So updating them completely.
+    spec_and_alias_set_2 = {RESOURCES['prod']['actors']: RESOURCES['tapipy']['actors'],
+                            RESOURCES['prod']['authenticator']: RESOURCES['tapipy']['authenticator'],
+                            RESOURCES['prod']['meta']: RESOURCES['tapipy']['meta'],
+                            RESOURCES['prod']['files']: RESOURCES['tapipy']['files'],
+                            RESOURCES['prod']['sk']: RESOURCES['tapipy']['sk'],
+                            RESOURCES['prod']['streams']: RESOURCES['tapipy']['streams'],
+                            RESOURCES['prod']['systems']: RESOURCES['tapipy']['systems'],
+                            RESOURCES['prod']['tenants']: RESOURCES['tapipy']['tenants'],
+                            RESOURCES['prod']['tokens']: RESOURCES['tapipy']['tokens']}
+    
+    # Specify where you want the specs to be saved, to get ready for a release
+    # specify the github/tapipy/tapipy/specs folder to overwrite old specs.
+    # Don't forget to delete any specs that are no longer needed.
+
+    # Run the saver
+    save_url_as_other_url(spec_and_alias_set_1, spec_dir)
