@@ -121,7 +121,8 @@ RESOURCES = {
         'tenants': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-tenants.yml",
         'tokens': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-tokens.yml",
         'pgrest': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-pgrest.yml",
-        'jobs': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-jobs.yml"
+        'jobs': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-jobs.yml",
+        'apps': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-apps.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -185,7 +186,8 @@ if __name__ == "__main__":
                             RESOURCES['local']['tenants']: RESOURCES['tapipy']['tenants'],
                             RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens'],
                             RESOURCES['local']['pgrest']: RESOURCES['tapipy']['pgrest'],
-                            RESOURCES['local']['jobs']: RESOURCES['tapipy']['jobs']}
+                            RESOURCES['local']['jobs']: RESOURCES['tapipy']['jobs'],
+                            RESOURCES['local']['apps']: RESOURCES['tapipy']['apps']}
 
     # Set 2 updates all tapipy pickle files with the specs contained
     # in each specs source's prod branch. So updating them completely.
