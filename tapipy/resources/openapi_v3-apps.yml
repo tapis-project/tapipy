@@ -1,0 +1,1315 @@
+openapi: 3.0.3
+info:
+  title: Tapis Applications API
+  description: The Tapis Applications API provides for management of Tapis applications including permissions.
+  version: '0.0.1'
+  termsOfService: "https://tapis-project.org"
+  contact:
+    name: "Applications API - CICSupport"
+    url: "https://tapis-project.org"
+    email: "cicsupport@tacc.utexas.edu"
+  license:
+    name: 3-Clause BSD License
+    url: 'https://opensource.org/licenses/BSD-3-Clause'
+externalDocs:
+  description: Tapis Project
+  url: 'https://tapis-project.org'
+servers:
+  - url: 'http://localhost:8080/'
+    description: Local test environment
+    variables: {}
+  - url: 'https://dev.develop.tapis.io/'
+    description: Development environment
+    variables: {}
+security:
+  - TapisJWT: []
+tags:
+  - name: Applications
+    description: manage applications
+
+# ------------------------------------------------------------------------------
+# --- Paths -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+paths:
+
+  # --- Paths for /apps -----------------------------------------------------
+  '/v3/apps/healthcheck':
+    get:
+      tags:
+        - General
+      description: Health check.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+  '/v3/apps/readycheck':
+    get:
+      tags:
+        - General
+      description: Ready check.
+      operationId: readyCheck
+      responses:
+        '200':
+          description: Service ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '503':
+          description: Service unavailable.
+
+  '/v3/apps':
+    get:
+      tags:
+        - Applications
+      summary: Retrieve applications.
+      description: Retrieve list of applications. Use search and select query parameters to limit results.
+      operationId: getApps
+      parameters:
+        - name: search
+          in: query
+          description: Search conditions as a single query paramter. For example search=(id.like.MyApp*)~(enabled.eq.true)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys1
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. For example select=id,version,owner
+          schema:
+            type: string
+            default: 'summaryAttributes'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespApps'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Applications
+      summary: Create a new version of an application
+      description: Create an application using a request body. App id+version must be unique within tenant and can be composed of alphanumeric characters and the following special characters [-._~]. Id must begin with an alphabetic character and can be no more than 80 characters in length.'
+      operationId: createAppVersion
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the app to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqCreateApp'
+      responses:
+        '201':
+          description: Application created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '409':
+          description: Application already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/search':
+    get:
+      tags:
+        - Applications
+      summary: Retrieve list of applications matching search conditions specified as query parameters.
+      description: Retrieve details for applications. Use query parameters to specify search conditions. For example ?owner.eq=jdoe&enabled.eq=false
+      operationId: searchAppsQueryParameters
+      parameters:
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.app2
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. For example select=id,version,owner
+          schema:
+            type: string
+            default: 'summaryAttributes'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespApps'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Applications
+      summary: Retrieve applications matching search conditions.
+      description: Retrieve details for applications. Use request body to specify SQL-like search conditions.
+      operationId: searchAppsRequestBody
+      parameters:
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          schema:
+            type: integer
+        - name: sortBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.app1
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. For example select=id,version,owner
+          schema:
+            type: string
+            default: 'summaryAttributes'
+      requestBody:
+        required: true
+        description: A JSON object specifying SQL-like search conditions as an array of strings. Strings are concatenated to form full search query.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqSearchApps'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespApps'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}':
+    get:
+      tags:
+        - Applications
+      summary: Retrieve latest version of an application
+      description: Retrieve latest version of an application.
+      operationId: getAppLatestVersion
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: requireExecPerm
+          in: query
+          description: check for EXECUTE permission as well as READ permission.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Application found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespApp'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - Applications
+      summary: Soft delete all versions of an application
+      description: Soft delete an application given the application name. Must specify confirm=true to complete the action.
+      operationId: deleteApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: confirm
+          in: query
+          description: Must be specified to complete the action. For example confirm=true. Default is false.
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Application deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/{appVersion}':
+    get:
+      tags:
+        - Applications
+      summary: Retrieve details for specific version of an application
+      description: Retrieve information for an application given the application Id and version.
+      operationId: getApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: appVersion
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: requireExecPerm
+          in: query
+          description: check for EXECUTE permission as well as READ permission.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Application found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespApp'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    patch:
+      tags:
+        - Applications
+      summary: Update existing version of an application
+      description: Update existing version of an application.
+      operationId: updateApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: appVersion
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: A JSON object specifying changes to be applied.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqUpdateApp'
+      responses:
+        '200':
+          description: Application updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/isEnabled':
+    get:
+      tags:
+        - Applications
+      summary: Check if application is currently enabled
+      description: Check if an application is currently enabled, i.e. available for use.
+      operationId: isEnabled
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Check successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBoolean'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/enable':
+    post:
+      tags:
+        - Applications
+      summary: Mark an application availabe for use.
+      description: Mark an application available for use. Applies to all versions.
+      operationId: enableApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application enabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/disable':
+    post:
+      tags:
+        - Applications
+      summary: Mark an application unavailabe for use.
+      description: Mark an application unavailable for use. Applies to all versions.
+      operationId: disableApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/changeOwner/{userName}':
+    post:
+      tags:
+        - Applications
+      summary: Change application owner
+      description: Change owner of an application. Applies to all versions.
+      operationId: changeAppOwner
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application owner updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for /perms -------------------------------------------------------
+  '/v3/apps/perms/{appId}/user/{userName}':
+    get:
+      tags:
+        - Permissions
+      summary: Retrieve application user permissions
+      description: Retrieve all application related permissions for a given application and user.
+      operationId: getUserPerms
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespNameArray'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Permissions
+      summary: Grant application user permissions
+      description: Create permissions in the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
+      operationId: grantUserPerms
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: A JSON object specifying a list of permissions.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPerms'
+      responses:
+        '200':
+          description: Permissions granted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/apps/perms/{appId}/user/{userName}/revoke':
+    post:
+      tags:
+        - Permissions
+      summary: Revoke application user permissions
+      description: Remove permissions from the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
+      operationId: revokeUserPerms
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userName
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: A JSON object specifying a list of permissions.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPerms'
+      responses:
+        '200':
+          description: Permission revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/apps/perms/{appId}/user/{userName}/{permission}':
+    delete:
+      tags:
+        - Permissions
+      summary: Revoke application user permission
+      description: Remove user permission from the Security Kernel. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
+      operationId: revokeUserPerm
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: permission
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Permission revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+# ------------------------------------------------------------------------------
+# --- Components ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
+components:
+  securitySchemes:
+    TapisJWT:
+      type: apiKey
+      description: Tapis signed JWT token authentication
+      name: X-Tapis-Token
+      in: header
+  schemas:
+    # ------------------------------------------------------------------------------
+    # --- Model objects ------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    # --- App ------------------------------------------------------------------
+    App:
+      type: object
+      properties:
+        tenant:
+          type: string
+        id:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        appType:
+          $ref: '#/components/schemas/AppTypeEnum'
+        owner:
+          type: string
+          default: "${apiUserId}"
+        enabled:
+          type: boolean
+          default: true
+        runtime:
+          $ref: '#/components/schemas/RuntimeEnum'
+        runtimeVersion:
+          type: string
+        runtimeOptions:
+          $ref: '#/components/schemas/RuntimeOptions'
+        containerImage:
+          type: string
+        maxJobs:
+          type: integer
+          default: -1
+        maxJobsPerUser:
+          type: integer
+          default: -1
+        strictFileInputs:
+          type: boolean
+          default: false
+        jobAttributes:
+          $ref: '#/components/schemas/JobAttributes'
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: object
+        deleted:
+          type: boolean
+        created:
+          type: string
+        updated:
+          type: string
+    # --- RuntimeOptions --------------------------------------------------------
+    RuntimeOptions:
+      type: array
+      items:
+        $ref: '#/components/schemas/RuntimeOptionEnum'
+    # --- JobAttributes --------------------------------------------------------
+    JobAttributes:
+      type: object
+      properties:
+        description:
+          type: string
+        dynamicExecSystem:
+          type: boolean
+          default: false
+        execSystemConstraints:
+          type: array
+          items:
+            type: string
+        execSystemId:
+          type: string
+        execSystemExecDir:
+          type: string
+        execSystemInputDir:
+          type: string
+        execSystemOutputDir:
+          type: string
+        execSystemLogicalQueue:
+          type: string
+        archiveSystemId:
+          type: string
+        archiveSystemDir:
+          type: string
+        archiveOnAppError:
+          type: boolean
+          default: true
+        parameterSet:
+          $ref: '#/components/schemas/ParameterSet'
+        fileInputDefinitions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileInputDefinition'
+        nodeCount:
+          type: integer
+        coresPerNode:
+          type: integer
+        memoryMB:
+          type: integer
+        maxMinutes:
+          type: integer
+        subscriptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationSubscription'
+        tags:
+          type: array
+          items:
+            type: string
+    # --- ParameterSet --------------------------------------------------------
+    ParameterSet:
+      type: object
+      properties:
+        appArgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgSpec'
+        containerArgs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgSpec'
+        schedulerOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgSpec'
+        envVariables:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+        archiveFilter:
+          type: object
+          properties:
+            includes:
+              type: array
+              items:
+                type: string
+            excludes:
+              type: array
+              items:
+                type: string
+    # --- FileInputDefinition --------------------------------------------------------
+    FileInputDefinition:
+      type: object
+      properties:
+        sourceUrl:
+          type: string
+        targetPath:
+          type: string
+        inPlace:
+          type: boolean
+          default: false
+        meta:
+          $ref: '#/components/schemas/ArgMetaSpec'
+    # --- ArgSpec --------------------------------------------------------------
+    ArgSpec:
+      type: object
+      properties:
+        arg:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ArgMetaSpec'
+    # --- ArgMetaSpec ----------------------------------------------------------
+    ArgMetaSpec:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        required:
+          type: boolean
+          default: false
+        keyValuePairs:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+    # --- KeyValuePair -------------------------------------------------------
+    KeyValuePair:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    # --- NotificationSubscription -------------------------------------------
+    NotificationSubscription:
+      type: object
+      properties:
+        filter:
+          type: string
+        notificationMechanisms:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotificationMechanism'
+    # --- NotificationMechanism -------------------------------------------
+    NotificationMechanism:
+      type: object
+      properties:
+        mechanism:
+          $ref: '#/components/schemas/NotificationMechanismEnum'
+        webhookURL:
+          type: string
+        emailAddress:
+          type: string
+    # -------------------------------------------------------------------------
+    # --- Request objects -----------------------------------------------------
+    # -------------------------------------------------------------------------
+    ReqCreateApp:
+      type: object
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        description:
+          type: string
+        appType:
+          $ref: '#/components/schemas/AppTypeEnum'
+        owner:
+          type: string
+          default: "${apiUserId}"
+        enabled:
+          type: boolean
+          default: true
+        runtime:
+          $ref: '#/components/schemas/RuntimeEnum'
+        runtimeVersion:
+          type: string
+        runtimeOptions:
+          $ref: '#/components/schemas/RuntimeOptions'
+        containerImage:
+          type: string
+        maxJobs:
+          type: integer
+          default: -1
+        maxJobsPerUser:
+          type: integer
+          default: -1
+        strictFileInputs:
+          type: boolean
+          default: false
+        jobAttributes:
+          $ref: '#/components/schemas/JobAttributes'
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: object
+    ReqUpdateApp:
+      type: object
+      properties:
+        description:
+          type: string
+        runtime:
+          $ref: '#/components/schemas/RuntimeEnum'
+        runtimeVersion:
+          type: string
+        runtimeOptions:
+          $ref: '#/components/schemas/RuntimeOptions'
+        containerImage:
+          type: string
+        maxJobs:
+          type: integer
+          default: -1
+        maxJobsPerUser:
+          type: integer
+          default: -1
+        strictFileInputs:
+          type: boolean
+          default: false
+        jobAttributes:
+          $ref: '#/components/schemas/JobAttributes'
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: object
+    ReqPerms:
+      type: object
+      properties:
+        permissions:
+          type: array
+          items:
+            type: string
+    ReqSearchApps:
+      type: object
+      properties:
+        search:
+          type: array
+          items:
+            type: string
+    # -------------------------------------------------------------------------
+    # --- Response objects ----------------------------------------------------
+    # -------------------------------------------------------------------------
+    RespBasic:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: object
+        metadata:
+          type: object
+    RespBoolean:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: boolean
+        metadata:
+          type: object
+    RespNameArray:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultNameArray'
+        metadata:
+          type: object
+    ResultNameArray:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+    RespChangeCount:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultChangeCount'
+        metadata:
+          type: object
+    ResultChangeCount:
+      type: object
+      properties:
+        changes:
+          type: integer
+          format: int32
+    RespResourceUrl:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultResourceUrl'
+        metadata:
+          type: object
+    ResultResourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+    RespApp:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/App'
+        metadata:
+          type: object
+    RespApps:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/App'
+        metadata:
+          type: object
+    # -------------------------------------------------------------------------
+    # --- Enums ---------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    AppTypeEnum:
+      type: string
+      enum:
+        - BATCH
+        - FORK
+    RuntimeEnum:
+      type: string
+      enum:
+        - SINGULARITY
+        - DOCKER
+    RuntimeOptionEnum:
+      type: string
+      enum:
+        - SINGULARITY_START
+        - SINGULARITY_RUN
+    NotificationMechanismEnum:
+      type: string
+      enum:
+        - WEBHOOK
+        - EMAIL
+        - QUEUE
+        - ACTOR

@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.17 - 2021-04-22 (target)
+### Added
+- Added apps service.
+
+### Changed
+- Updating files to account for apps service spec.
+
+### Removed
+- No change.
+
+
 ## 0.3.16 - 2021-04-20 (target)
 ### Added
 - No change.
