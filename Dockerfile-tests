@@ -31,4 +31,4 @@ RUN chown -R tapis:tapis /home/tapis
 USER tapis
 
 # Testing
-ENTRYPOINT ["pytest", "/home/tapis/tapipy-tests.py"]
+ENTRYPOINT ["pytest", "--verbose", "/home/tapis/tapipy-tests.py"]
