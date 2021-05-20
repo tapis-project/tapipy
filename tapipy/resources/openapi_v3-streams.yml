@@ -2653,6 +2653,173 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+
+### Begin of Roles
+  /v3/streams/roles:
+    get:
+      tags:
+        - Roles
+      summary: List roles for a given user
+      description: Get roles for a given user
+      operationId: list_roles
+      parameters:
+        - name: user
+          in: query
+          description: Check roles for this user
+          required: true
+          schema:
+            type: string
+        - name: resource_type
+          in: query
+          description: Check roles for this user
+          required: true
+          schema:
+            type: string
+            enum: [project, channel]
+        - name: resource_id
+          in: query
+          description: Project id or channel id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Roles'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Alert not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    #### End of roles
+
+    post:
+      tags:
+        - Roles
+      summary: Grant user role.
+      description: Grant user role.
+      operationId: grant_role
+      x-swagger-router-controller: connexContr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRole'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Roles'
+
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+### Begin of revoke Role
+  /v3/streams/roles/revokeRole:
+    post:
+      tags:
+        - Revoke Roles
+      summary: Revoke user role.
+      description: Revoke user role.
+      operationId: revoke_role
+      x-swagger-router-controller: connexContr
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeRole'
+      responses:
+        '201':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Roles'
+
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
 components:
   schemas:
     BasicResponse:
@@ -3266,6 +3433,51 @@ components:
           type: string
         type:
           type: string
+
+    Roles:
+      type: object
+      properties:
+        roleNames:
+          type: array
+          items:
+            type: string
+          description: User role
+
+    NewRole:
+      type: object
+      properties:
+        user:
+          type: string
+          description: User id whom the role is to be granted
+        resource_id:
+          type: string
+          description: project or channel uuid/id
+        resource_type:
+          type: string
+          description: Resource type should be either project or channel
+          enum: [project,channel, template]
+        role_name:
+          type: string
+          description: role name
+          enum: [admin, manager, user]
+
+    RevokeRole:
+      type: object
+      properties:
+        user:
+          type: string
+          description: User id whom the role is to be revoked
+        resource_id:
+          type: string
+          description: project or channel uuid/id
+        resource_type:
+          type: string
+          description: Resource type should be either project or channel
+          enum: [project,channel, template]
+        role_name:
+          type: string
+          description: role name
+          enum: [admin, manager, user]
 
     Application:
      type: object
