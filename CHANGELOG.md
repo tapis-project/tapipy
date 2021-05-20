@@ -1,6 +1,28 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.20 - 2021-05-20 (target)
+### Added
+- Adding back support for inputted access/refresh tokens at Tapis() initialization.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
+## 0.3.19 - 2021-05-17 (target)
+### Added
+- No change.
+
+### Changed
+- Updating streams spec.
+
+### Removed
+- No change.
+
+
 ## 0.3.18 - 2021-04-22 (target)
 ### Added
 - No change.
