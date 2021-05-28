@@ -82,9 +82,9 @@ paths:
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
           schema:
             type: integer
-        - name: sortBy
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -94,7 +94,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys1
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.app1
           schema:
             type: string
         - name: computeTotal
@@ -109,6 +109,12 @@ paths:
           schema:
             type: string
             default: 'summaryAttributes'
+        - name: showDeleted
+          in: query
+          description: Indicates if Applications marked as deleted should be shown in the results. Default is false.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Success.
@@ -191,9 +197,9 @@ paths:
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
           schema:
             type: integer
-        - name: sortBy
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -203,7 +209,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.app2
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.app2
           schema:
             type: string
         - name: computeTotal
@@ -255,9 +261,9 @@ paths:
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
           schema:
             type: integer
-        - name: sortBy
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -267,7 +273,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.app1
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.app1
           schema:
             type: string
         - name: computeTotal
@@ -333,6 +339,12 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of the result item. For example select=id,version,owner
+          schema:
+            type: string
+            default: 'allAttributes'
       responses:
         '200':
           description: Application found.
@@ -354,48 +366,6 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
         '404':
           description: Application not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-    delete:
-      tags:
-        - Applications
-      summary: Soft delete all versions of an application
-      description: Soft delete an application given the application name. Must specify confirm=true to complete the action.
-      operationId: deleteApp
-      parameters:
-        - name: appId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: confirm
-          in: query
-          description: Must be specified to complete the action. For example confirm=true. Default is false.
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: Application deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
           content:
             application/json:
               schema:
@@ -430,6 +400,12 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of the result item. For example select=id,version,owner
+          schema:
+            type: string
+            default: 'allAttributes'
       responses:
         '200':
           description: Application found.
@@ -608,6 +584,82 @@ paths:
       responses:
         '200':
           description: Application disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/delete':
+    post:
+      tags:
+        - Applications
+      summary: Mark an application as deleted.
+      description: Mark an application as deleted. Application will not appear in queries unless explicitly requested.
+      operationId: deleteApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/undelete':
+    post:
+      tags:
+        - Applications
+      summary: Mark an application as not deleted.
+      description: Mark an application as not deleted. Application will appear in queries.
+      operationId: undeleteApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Application undeleted.
           content:
             application/json:
               schema:
@@ -882,8 +934,8 @@ components:
     # ------------------------------------------------------------------------------
     # --- Model objects ------------------------------------------------------------
     # ------------------------------------------------------------------------------
-    # --- App ------------------------------------------------------------------
-    App:
+    # --- TapisApp ------------------------------------------------------------------
+    TapisApp:
       type: object
       properties:
         tenant:
@@ -1200,9 +1252,14 @@ components:
         version:
           type: string
         result:
-          type: boolean
+          $ref: '#/components/schemas/ResultBoolean'
         metadata:
           type: object
+    ResultBoolean:
+      type: object
+      properties:
+        aBool:
+          type: boolean
     RespNameArray:
       type: object
       properties:
@@ -1270,7 +1327,7 @@ components:
         version:
           type: string
         result:
-          $ref: '#/components/schemas/App'
+          $ref: '#/components/schemas/TapisApp'
         metadata:
           type: object
     RespApps:
@@ -1285,9 +1342,22 @@ components:
         result:
           type: array
           items:
-            $ref: '#/components/schemas/App'
+            $ref: '#/components/schemas/TapisApp'
         metadata:
           type: object
+          properties:
+            recordCount:
+              type: integer
+            recordLimit:
+              type: integer
+            recordsSkipped:
+              type: integer
+            orderBy:
+              type: string
+            startAfter:
+              type: string
+            totalCount:
+              type: integer
     # -------------------------------------------------------------------------
     # --- Enums ---------------------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1304,6 +1374,7 @@ components:
     RuntimeOptionEnum:
       type: string
       enum:
+        - NONE
         - SINGULARITY_START
         - SINGULARITY_RUN
     NotificationMechanismEnum:

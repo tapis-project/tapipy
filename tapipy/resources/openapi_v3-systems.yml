@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Tapis Systems API
-  description: The Tapis Systems API provides for management of Tapis Systems including transfer methods, permissions and credentials.
+  description: The Tapis Systems API provides for management of Tapis Systems including permissions and credentials.
   version: '0.0.1'
   termsOfService: "https://tapis-project.org"
   contact:
@@ -81,9 +81,9 @@ paths:
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
           schema:
             type: integer
-        - name: sortBy
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -93,7 +93,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys1
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.sys1
           schema:
             type: string
         - name: computeTotal
@@ -108,6 +108,12 @@ paths:
           schema:
             type: string
             default: 'summaryAttributes'
+        - name: showDeleted
+          in: query
+          description: Indicates if Systems marked as deleted should be shown in the results. Default is false.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Success.
@@ -190,9 +196,9 @@ paths:
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
           schema:
             type: integer
-        - name: sortBy
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -202,7 +208,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys2
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.sys2
           schema:
             type: string
         - name: computeTotal
@@ -254,9 +260,9 @@ paths:
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
           schema:
             type: integer
-        - name: sortBy
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -266,7 +272,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys1
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.sys1
           schema:
             type: string
         - name: computeTotal
@@ -420,54 +426,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-    delete:
-      tags:
-        - Systems
-      summary: Soft delete a system
-      description: Soft delete a system given the system name. Must specify confirm=true to complete the action.
-      operationId: deleteSystem
-      parameters:
-        - name: systemId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: confirm
-          in: query
-          description: Must be specified to complete the action. For example confirm=true. Default is false.
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: System deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
     patch:
       tags:
         - Systems
       summary: Update a system
-      description: Update attributes for a system. Attributes that may be updated are description, host, effectiveUserId, defaultAuthnMethod, transferMethods, port, useProxy, proxyHost, proxyPort, jobCapabilities, tags, notes.
+      description: Update attributes for a system. Attributes that may be updated are description, host, effectiveUserId, defaultAuthnMethod, port, useProxy, proxyHost, proxyPort, jobCapabilities, tags, notes.
       operationId: updateSystem
       parameters:
         - name: systemId
@@ -605,6 +568,82 @@ paths:
       responses:
         '200':
           description: System disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/{systemId}/delete':
+    post:
+      tags:
+        - Systems
+      summary: Mark a system as deleted.
+      description: Mark a system as deleted. System will not appear in queries unless explicitly requested.
+      operationId: deleteSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: System deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/{systemId}/undelete':
+    post:
+      tags:
+        - Systems
+      summary: Mark a system as not deleted.
+      description: Mark a system as not deleted. System will appear in queries.
+      operationId: undeleteSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: System undeleted.
           content:
             application/json:
               schema:
@@ -1057,10 +1096,6 @@ components:
           type: string
         rootDir:
           type: string
-        transferMethods:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferMethodEnum'
         port:
           type: integer
           format: int32
@@ -1151,11 +1186,19 @@ components:
         maxJobsPerUser:
           type: integer
           default: 2147483647
+        minNodeCount:
+          type: integer
         maxNodeCount:
+          type: integer
+        minCoresPerNode:
           type: integer
         maxCoresPerNode:
           type: integer
+        minMemoryMB:
+          type: integer
         maxMemoryMB:
+          type: integer
+        minMinutes:
           type: integer
         maxMinutes:
           type: integer
@@ -1226,10 +1269,6 @@ components:
           type: string
         rootDir:
           type: string
-        transferMethods:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferMethodEnum'
         port:
           type: integer
           format: int32
@@ -1298,10 +1337,6 @@ components:
           type: string
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
-        transferMethods:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferMethodEnum'
         port:
           type: integer
           format: int32
@@ -1399,9 +1434,14 @@ components:
         version:
           type: string
         result:
-          type: boolean
+          $ref: '#/components/schemas/ResultBoolean'
         metadata:
           type: object
+    ResultBoolean:
+      type: object
+      properties:
+        aBool:
+          type: boolean
     RespNameArray:
       type: object
       properties:
@@ -1494,7 +1534,7 @@ components:
               type: integer
             recordsSkipped:
               type: integer
-            sortBy:
+            orderBy:
               type: string
             startAfter:
               type: string
@@ -1520,7 +1560,7 @@ components:
       type: string
       enum:
         - LINUX
-        - OBJECT_STORE
+        - S3
     AuthnEnum:
       type: string
       enum:
@@ -1528,11 +1568,6 @@ components:
         - PKI_KEYS
         - ACCESS_KEY
         - CERT
-    TransferMethodEnum:
-      type: string
-      enum:
-        - SFTP
-        - S3
     CategoryEnum:
       type: string
       enum:

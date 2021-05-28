@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.21 - 2021-05-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updating systems and apps specs.
+
+### Removed
+- No change.
+
+
 ## 0.3.20 - 2021-05-20 (target)
 ### Added
 - Adding back support for inputted access/refresh tokens at Tapis() initialization.
