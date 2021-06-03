@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.22 - 2021-06-03 (target)
+### Added
+- Adding set of staging specs accessible with 'resource_set' = 'staging'.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
 ## 0.3.21 - 2021-05-28 (target)
 ### Added
 - No change.
