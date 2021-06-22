@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.24 - 2021-06-22 (target)
+### Added
+- No change.
+
+### Changed
+- Updating apps, authenticator, and systems specs.
+
+### Removed
+- No change.
+
+
 ## 0.3.23 - 2021-06-22 (target)
 ### Added
 - No change.
