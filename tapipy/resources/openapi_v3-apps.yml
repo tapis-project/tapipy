@@ -68,7 +68,7 @@ paths:
     get:
       tags:
         - Applications
-      summary: Retrieve applications.
+      summary: Retrieve applications
       description: Retrieve list of applications. Use search and select query parameters to limit results.
       operationId: getApps
       parameters:
@@ -79,9 +79,10 @@ paths:
             type: string
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
+            default: 100
         - name: orderBy
           in: query
           description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
@@ -144,7 +145,21 @@ paths:
       tags:
         - Applications
       summary: Create a new version of an application
-      description: Create an application using a request body. App id+version must be unique within tenant and can be composed of alphanumeric characters and the following special characters [-._~]. Id must begin with an alphabetic character and can be no more than 80 characters in length.'
+      description: |
+
+        Create an application using a request body. App id+version must be unique within tenant and can be composed of
+        alphanumeric characters and the following special characters [-._~]. Id must begin with an alphabetic character
+        and can be no more than 80 characters in length.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a POST request to create an application.
+        The attributes that are allowed but ignored are
+
+          - tenant
+          - uuid
+          - deleted
+          - created
+          - updated
       operationId: createAppVersion
       requestBody:
         required: true
@@ -188,15 +203,16 @@ paths:
     get:
       tags:
         - Applications
-      summary: Retrieve list of applications matching search conditions specified as query parameters.
+      summary: Retrieve list of applications matching search conditions specified as query parameters
       description: Retrieve details for applications. Use query parameters to specify search conditions. For example ?owner.eq=jdoe&enabled.eq=false
       operationId: searchAppsQueryParameters
       parameters:
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
+            default: 100
         - name: orderBy
           in: query
           description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
@@ -252,15 +268,16 @@ paths:
     post:
       tags:
         - Applications
-      summary: Retrieve applications matching search conditions.
+      summary: Retrieve applications matching search conditions
       description: Retrieve details for applications. Use request body to specify SQL-like search conditions.
       operationId: searchAppsRequestBody
       parameters:
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
+            default: 100
         - name: orderBy
           in: query
           description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
@@ -440,9 +457,20 @@ paths:
     patch:
       tags:
         - Applications
-      summary: Update existing version of an application
-      description: Update existing version of an application.
-      operationId: updateApp
+      summary: Update selected attributes of an existing version of an application
+      description: |
+        Update selected attributes of an existing version of an application.
+        Request body may only contain updatable attributes. Application must exist.
+
+        Attributes that may not be updated via PATCH are
+
+          - id
+          - appType
+          - owner
+          - enabled
+
+        Note that the attributes owner and enabled may be modified using other endpoints.
+      operationId: patchApp
       parameters:
         - name: appId
           in: path
@@ -460,7 +488,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqUpdateApp'
+              $ref: '#/components/schemas/ReqPatchApp'
       responses:
         '200':
           description: Application updated.
@@ -486,6 +514,83 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    put:
+      tags:
+        - Applications
+      summary: Update all updatable attributes of an application
+      description: |
+        Update all updatable attributes of an application using a request body identical to POST. Application must exist.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a PUT request to update.
+
+        The attributes that are allowed but ignored for both PUT and POST are
+
+          - tenant
+          - uuid
+          - deleted
+          - created
+          - updated
+
+        In addition for a PUT operation the following non-updatable attributes are allowed but ignored
+
+          - id
+          - version
+          - appType
+          - owner
+          - enabled
+
+        Note that the attributes owner and enabled may be modified using other endpoints.
+      operationId: putApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: appVersion
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: A JSON object specifying changes to be applied.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPutApp'
+      responses:
+        '200':
+          description: Application updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '409':
+          description: Application already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
         '500':
           description: Server error.
           content:
@@ -534,7 +639,7 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application availabe for use.
+      summary: Mark an application availabe for use
       description: Mark an application available for use. Applies to all versions.
       operationId: enableApp
       parameters:
@@ -572,7 +677,7 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application unavailabe for use.
+      summary: Mark an application unavailabe for use
       description: Mark an application unavailable for use. Applies to all versions.
       operationId: disableApp
       parameters:
@@ -610,7 +715,7 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application as deleted.
+      summary: Mark an application as deleted
       description: Mark an application as deleted. Application will not appear in queries unless explicitly requested.
       operationId: deleteApp
       parameters:
@@ -648,7 +753,7 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application as not deleted.
+      summary: Mark an application as not deleted
       description: Mark an application as not deleted. Application will appear in queries.
       operationId: undeleteApp
       parameters:
@@ -1182,7 +1287,37 @@ components:
             type: string
         notes:
           type: object
-    ReqUpdateApp:
+    ReqPatchApp:
+      type: object
+      properties:
+        description:
+          type: string
+        runtime:
+          $ref: '#/components/schemas/RuntimeEnum'
+        runtimeVersion:
+          type: string
+        runtimeOptions:
+          $ref: '#/components/schemas/RuntimeOptions'
+        containerImage:
+          type: string
+        maxJobs:
+          type: integer
+          default: -1
+        maxJobsPerUser:
+          type: integer
+          default: -1
+        strictFileInputs:
+          type: boolean
+          default: false
+        jobAttributes:
+          $ref: '#/components/schemas/JobAttributes'
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: object
+    ReqPutApp:
       type: object
       properties:
         description:
@@ -1371,6 +1506,8 @@ components:
       enum:
         - SINGULARITY
         - DOCKER
+    # NOTE: RuntimeOption starts with NONE due to a bug in client code generation.
+    #       Without an initial entry the prefix SINGULARITY_ gets stripped off the other 2 entries.
     RuntimeOptionEnum:
       type: string
       enum:

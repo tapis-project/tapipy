@@ -78,9 +78,10 @@ paths:
             type: string
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
+            default: 100
         - name: orderBy
           in: query
           description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
@@ -143,7 +144,21 @@ paths:
       tags:
         - Systems
       summary: Create a system
-      description: Create a system using a request body. System name must be unique within a tenant and can be composed of alphanumeric characters and the following special characters [-._~]. Name must begin with an alphabetic character and can be no more than 80 characters in length. Description is optional with a maximum length of 2048 characters.'
+      description: |
+        Create a system using a request body. System name must be unique within a tenant and can be composed of
+        alphanumeric characters and the following special characters [-._~].
+        Name must begin with an alphabetic character and can be no more than 80 characters in length.
+        Description is optional with a maximum length of 2048 characters.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a POST request to create a system.
+        The attributes that are allowed but ignored are
+
+          - tenant
+          - uuid
+          - deleted
+          - created
+          - updated
       operationId: createSystem
       requestBody:
         required: true
@@ -193,9 +208,10 @@ paths:
       parameters:
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
+            default: 100
         - name: orderBy
           in: query
           description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
@@ -257,9 +273,10 @@ paths:
       parameters:
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
+            default: 100
         - name: orderBy
           in: query
           description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
@@ -429,9 +446,23 @@ paths:
     patch:
       tags:
         - Systems
-      summary: Update a system
-      description: Update attributes for a system. Attributes that may be updated are description, host, effectiveUserId, defaultAuthnMethod, port, useProxy, proxyHost, proxyPort, jobCapabilities, tags, notes.
-      operationId: updateSystem
+      summary: Update selected attributes of a system
+      description: |
+        Update selected attributes of a system. Request body may only contain updatable attributes. System must exist.
+
+        Attributes that may not be updated via PATCH are
+
+          - id
+          - systemType
+          - owner
+          - enabled
+          - bucketName
+          - rootDir
+          - isDtn
+          - canExec
+
+        Note that the attributes owner and enabled may be modified using other endpoints.
+      operationId: patchSystem
       parameters:
         - name: systemId
           in: path
@@ -444,7 +475,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqUpdateSystem'
+              $ref: '#/components/schemas/ReqPatchSystem'
       responses:
         '200':
           description: System updated.
@@ -470,6 +501,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    put:
+      tags:
+        - Systems
+      summary: Update all updatable attributes of a system
+      description: |
+        Update all updatable attributes of a system using a request body identical to POST. System must exist.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a PUT request to update a system.
+
+        The attributes that are allowed but ignored for both PUT and POST are
+
+          - tenant
+          - uuid
+          - deleted
+          - created
+          - updated
+
+        In addition for a PUT operation the following non-updatable attributes are allowed but ignored
+
+          - id
+          - systemType
+          - owner
+          - enabled
+          - bucketName
+          - rootDir
+          - isDtn
+          - canExec
+
+        Note that the attributes owner and enabled may be modified using other endpoints.
+      operationId: putSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: A JSON object specifying changes to be applied.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPutSystem'
+      responses:
+        '200':
+          description: System updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '409':
+          description: System already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
         '500':
           description: Server error.
           content:
@@ -518,7 +624,7 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system availabe for use.
+      summary: Mark a system availabe for use
       description: Mark a system available for use.
       operationId: enableSystem
       parameters:
@@ -556,7 +662,7 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system unavailabe for use.
+      summary: Mark a system unavailabe for use
       description: Mark a system unavailable for use.
       operationId: disableSystem
       parameters:
@@ -594,7 +700,7 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system as deleted.
+      summary: Mark a system as deleted
       description: Mark a system as deleted. System will not appear in queries unless explicitly requested.
       operationId: deleteSystem
       parameters:
@@ -632,7 +738,7 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system as not deleted.
+      summary: Mark a system as not deleted
       description: Mark a system as not deleted. System will appear in queries.
       operationId: undeleteSystem
       parameters:
@@ -1120,6 +1226,7 @@ components:
           type: boolean
         jobRuntimes:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:
@@ -1293,6 +1400,7 @@ components:
           type: boolean
         jobRuntimes:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:
@@ -1326,7 +1434,73 @@ components:
             type: string
         notes:
           type: object
-    ReqUpdateSystem:
+    ReqPutSystem:
+      type: object
+      properties:
+        description:
+          type: string
+        host:
+          type: string
+        effectiveUserId:
+          type: string
+        defaultAuthnMethod:
+          $ref: '#/components/schemas/AuthnEnum'
+        authnCredential:
+          $ref: '#/components/schemas/Credential'
+        port:
+          type: integer
+          format: int32
+        useProxy:
+          type: boolean
+          default: false
+        proxyHost:
+          type: string
+        proxyPort:
+          type: integer
+          format: int32
+        dtnSystemId:
+          type: string
+        dtnMountPoint:
+          type: string
+        dtnMountSourcePath:
+          type: string
+        jobRuntimes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/JobRuntime'
+        jobWorkingDir:
+          type: string
+        jobEnvVariables:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+        jobMaxJobs:
+          type: integer
+        jobMaxJobsPerUser:
+          type: integer
+        jobIsBatch:
+          type: boolean
+          default: false
+        batchScheduler:
+          $ref: '#/components/schemas/SchedulerTypeEnum'
+        batchLogicalQueues:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogicalQueue'
+        batchDefaultLogicalQueue:
+          type: string
+        jobCapabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capability'
+        tags:
+          type: array
+          items:
+            type: string
+        notes:
+          type: object
+    ReqPatchSystem:
       type: object
       properties:
         description:
@@ -1355,6 +1529,7 @@ components:
           type: string
         jobRuntimes:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:

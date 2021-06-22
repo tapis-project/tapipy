@@ -11,7 +11,7 @@ import yaml
 from . import errors
 import pickle
 import shutil
-import multiprocessing
+import concurrent.futures
 import copy
 from typing import Dict, NewType, Mapping, Optional
 from atomicwrites import atomic_write
@@ -128,7 +128,9 @@ def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs
 def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download_latest_specs: bool) -> None:
     """
     Function that calls threads to download and pickle specs.
-    Cuts wait time for 9 specs from 4s to 0.7s
+    Not parallel: 4s for 9 specs
+    Threads: Untested
+    Multiprocessing: 0.7s for 9 specs
     """
     # Get list of specs and check which we need to download
     # We download if the file name requested does not exist
@@ -143,12 +145,19 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
             if not full_spec_name in os.listdir(spec_dir):
                 urls_to_download.append([resource_name, url, spec_path])
     
+    # Set off some parallel threads cause it's quick.
+    # Switched from multiprocessing due to some startup warnings when import Tapipy in scripts
+    if urls_to_download:
+        POOL_SIZE = os.environ.get('POOL_SIZE', 16)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=POOL_SIZE) as executor:
+            executor.map(_thread_download_spec_dict, urls_to_download)
+
     # Set off some parallel processes cause it's quick.
-    POOL_SIZE = os.environ.get('POOL_SIZE', 16)
-    pool = multiprocessing.Pool(processes=POOL_SIZE)
-    pool.map(_thread_download_spec_dict, urls_to_download)
-    pool.close()
-    pool.join()
+    #POOL_SIZE = os.environ.get('POOL_SIZE', 16)
+    #pool = multiprocessing.Pool(processes=POOL_SIZE)
+    #pool.map(_thread_download_spec_dict, urls_to_download)
+    #pool.close()
+    #pool.join()
 
 
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
