@@ -273,6 +273,68 @@ def test_debug_flag_tenants(client):
     assert hasattr(debug.response, 'content')
 
 
+# -----------------------
+# Download spec tests -
+# -----------------------
+
+def test_download_prod_specs():
+    try:
+        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
+        username = getattr(conf, 'username', 'pysdk')
+        account_type = getattr(conf, 'account_type', 'service')
+        tenant_id = getattr(conf, 'tenant_id', 'admin')
+        service_password = getattr(conf, 'service_password', None)
+        t = Tapis(base_url=base_url,
+                username=username,
+                account_type=account_type,
+                tenant_id=tenant_id,
+                service_password=service_password,
+                tenants=tenants,
+                is_tapis_service=True,
+                resource_set='prod')
+        t.get_tokens()
+    except Exception as e:
+        raise
+
+def test_ownload_staging_specs():
+    try:
+        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
+        username = getattr(conf, 'username', 'pysdk')
+        account_type = getattr(conf, 'account_type', 'service')
+        tenant_id = getattr(conf, 'tenant_id', 'admin')
+        service_password = getattr(conf, 'service_password', None)
+        t = Tapis(base_url=base_url,
+                username=username,
+                account_type=account_type,
+                tenant_id=tenant_id,
+                service_password=service_password,
+                tenants=tenants,
+                is_tapis_service=True,
+                resource_set='staging')
+        t.get_tokens()
+    except Exception as e:
+        raise
+
+def test_download_dev_specs():
+    try:
+        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
+        username = getattr(conf, 'username', 'pysdk')
+        account_type = getattr(conf, 'account_type', 'service')
+        tenant_id = getattr(conf, 'tenant_id', 'admin')
+        service_password = getattr(conf, 'service_password', None)
+        t = Tapis(base_url=base_url,
+                username=username,
+                account_type=account_type,
+                tenant_id=tenant_id,
+                service_password=service_password,
+                tenants=tenants,
+                is_tapis_service=True,
+                resource_set='dev')
+        t.get_tokens()
+    except Exception as e:
+        raise
+
+
 # ---------------------
 # Metadata tests -
 # ---------------------
