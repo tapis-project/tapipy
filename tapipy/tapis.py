@@ -648,7 +648,9 @@ class Tapis(object):
             return access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
 
         access_token = token
-        access_token.claims = self.validate_token(access_token.access_token)
+        # we do not validate the token because we may not have the cache of tenant objects (with corresponding
+        # public keys) yet, in which case validation will fail
+        access_token.claims = jwt.decode(access_token.access_token, verify=False)
         access_token.original_ttl = access_token.expires_in
         access_token.expires_at = datetime.datetime.fromtimestamp(access_token.claims['exp'],
                                                                   datetime.timezone.utc)
@@ -1086,12 +1088,6 @@ class Operation(object):
                                                                                                              self.resource_name)
             except:
                 pass
-            # if we got a tenant_id, use it to look up the base_url:
-            if tenant_id:
-                try:
-                    base_url = self.tapis_client.tenant_cache.get_base_url_for_service_request(tenant_id, self.resource_name)
-                except:
-                    pass
             # if all else fails, use the base_url for the client
             if not base_url:
                 base_url = self.tapis_client.base_url
