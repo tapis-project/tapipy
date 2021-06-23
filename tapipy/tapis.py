@@ -393,9 +393,17 @@ class Tapis(object):
             self.account_type = 'user'
 
         # the access token to use -- should be an honest TapisResult access token.
+        if access_token and type(access_token) == str:
+            # if the access_token passed is a string, convert it to an honest TapisResult token:
+            tok = TapisResult(**{'access_token': access_token})
+            access_token = self.add_claims_to_token(tok)
         self.access_token = access_token
 
         # the refresh token to use -- should be an honest TapisResult refresh token.
+        if refresh_token and type(refresh_token) == str:
+            # if the access_token passed is a string, convert it to an honest TapisResult token:
+            tok = TapisResult(**{'refresh_token': refresh_token})
+            refresh_token = self.add_claims_to_token(tok)
         self.refresh_token = refresh_token
 
         # pass in a "raw" JWT directly. This is only used if the access_token is not set.
@@ -651,20 +659,33 @@ class Tapis(object):
     def add_claims_to_token(self, token):
         """
         Adds claims and a callable expires_in() function to a Tapis token object.
-        :param tokne: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
+        :param token: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
         """
         def _expires_in():
-            return access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
+            return token_with_claims.expires_at - datetime.datetime.now(datetime.timezone.utc)
 
-        access_token = token
+        token_with_claims = token
+        # we could have been passed an access or a refresh token, so that will dictate which attribute is
+        # available:
+        try:
+            token_str = token_with_claims.access_token
+        except AttributeError:
+            token_str = token_with_claims.refresh_token
         # we do not validate the token because we may not have the cache of tenant objects (with corresponding
         # public keys) yet, in which case validation will fail
-        access_token.claims = jwt.decode(access_token.access_token, verify=False)
-        access_token.original_ttl = access_token.expires_in
-        access_token.expires_at = datetime.datetime.fromtimestamp(access_token.claims['exp'],
+        token_with_claims.claims = jwt.decode(token_str, verify=False)
+        # access_token.expires_in will not exist if the token is a string type... need to compute it from the
+        # claims...
+        if hasattr(token_with_claims, 'expires_in'):
+            token_with_claims.original_ttl = token_with_claims.expires_in
+        else:
+            # otherwise, we have no way of computing the original_ttl because all we have is the exp claim (an int)
+            # and the ttl would require also knowing when the token was created.
+            token_with_claims.original_ttl = -1
+        token_with_claims.expires_at = datetime.datetime.fromtimestamp(token_with_claims.claims['exp'],
                                                                   datetime.timezone.utc)
-        access_token.expires_in = _expires_in
-        return access_token
+        token_with_claims.expires_in = _expires_in
+        return token_with_claims
 
     def set_access_token(self, token):
         """
@@ -1179,6 +1200,8 @@ class Operation(object):
                                                    f"tenant {request_site_admin_tenant_id};")
             else:
                 pass
+        elif self.tapis_client.access_token:
+            access_token = self.tapis_client.access_token
         elif self.tapis_client.get_access_jwt():
             access_token = self.tapis_client.get_access_jwt()
         # if we got an access token, check if we need to refresh it
@@ -1195,7 +1218,9 @@ class Operation(object):
             if datetime.timedelta(seconds=5) > time_remaining:
                 # if the access token is about to expire, try to use refresh, unless this is a call to
                 # refresh (otherwise this would never terminate!)
-                if self.resource_name == 'tokens' and self.operation_id == 'refresh_token':
+                if (self.resource_name == 'tokens' and self.operation_id == 'refresh_token')\
+                        or (self.resource_name == 'authenticator' and self.operation_id == 'create_token'):
+
                     pass
                 else:
                     try:
