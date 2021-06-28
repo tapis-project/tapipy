@@ -10,6 +10,8 @@ DEFAULT_CACHE_FILE = 'client.json'
 
 
 class TapisLocalCache(Tapis):
+    """A client for the Tapis API that caches client and token in a local file
+    """
     def __init__(self, cache_dir=None, cache=None, **kwargs):
         setattr(self, 'user_tokens_cache_path',
                 self.path_to_cache(cache_dir, cache))
@@ -27,11 +29,8 @@ class TapisLocalCache(Tapis):
         return os.path.join(cache_dir, cache)
 
     @classmethod
-    def restore(cls, cache_dir=None, cache=None, password=None):
-        """Load Tapis from a cached client
-
-        It is possible to provide a password to support the 
-        case where the refresh token is expired.
+    def restore(cls, cache_dir=None, cache=None):
+        """Load Tapis client from cached credentials
         """
         cache_path = cls.path_to_cache(cache_dir, cache)
         with open(cache_path, 'r') as cl:
@@ -42,8 +41,6 @@ class TapisLocalCache(Tapis):
                                 refresh_token=data['refresh_token'],
                                 client_id=data['client_id'],
                                 client_key=data['client_key'],
-                                username=data['username'],
-                                password=password,
                                 verify=True)
             return t
 
@@ -73,11 +70,13 @@ class TapisLocalCache(Tapis):
         data = {
             'base_url': self.base_url,
             'tenant_id': self.tenant_id,
-            'username': self.username,
             'client_id': self.client_id,
             'client_key': self.client_key,
             'access_token': access_token,
             'refresh_token': refresh_token,
+            # The expires_at key is not used by Tapis but is here
+            # as a debug aid so one can quickly tell when a token
+            # pair is _expected_ to expire
             'expires_at': expires_at
         }
 
