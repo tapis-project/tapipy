@@ -1,6 +1,40 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.27 - 2021-06-29 (target)
+### Added
+- Added `resource_dicts` to Tapis object. This allows you to view the specs in dictionary form that Tapipy is using.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
+## 0.3.26 - 2021-06-23 (target)
+### Added
+- No change.
+
+### Changed
+- Changed multiprocessing to threads library.
+
+### Removed
+- No change.
+
+
+## 0.3.25 - 2021-06-23 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fixes in __call__
+- Bug fix in `add_claims_to_token` function.
+
+### Removed
+- No change.
+
+
 ## 0.3.24 - 2021-06-22 (target)
 ### Added
 - No change.

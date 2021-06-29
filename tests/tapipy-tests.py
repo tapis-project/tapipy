@@ -296,7 +296,7 @@ def test_download_prod_specs():
     except Exception as e:
         raise
 
-def test_ownload_staging_specs():
+def test_download_staging_specs():
     try:
         base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
         username = getattr(conf, 'username', 'pysdk')

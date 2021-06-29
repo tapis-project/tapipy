@@ -51,7 +51,8 @@ RESOURCES = {
         'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tenants.yml",
         'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tokens.yml",
         'pgrest': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pgrest.yml",
-        'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-jobs.yml"
+        'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-jobs.yml",
+        'apps': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-apps.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -121,8 +122,8 @@ def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs
     # Download and save specs if neccessary
     download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=download_latest_specs)
     # Load, unpickle, and create specs
-    specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
-    return specs
+    specs, dicts = unpickle_and_create_specs(resources, spec_dir=spec_dir)
+    return specs, dicts
 
 
 def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download_latest_specs: bool) -> None:
@@ -206,6 +207,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     Can't be threaded, map doesn't allow spec object to be sent back.
     """
     specs = {}
+    dicts = {}
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
         if "local:" in url:
@@ -214,6 +216,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                 with open(spec_path, 'rb') as spec_file:
                     spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
                 specs.update({resource_name: create_spec(spec_dict)})
+                dicts.update({resource_name: spec_dict})
             except Exception as e:
                 print(f'Error reading local "{resource_name}" resource. '
                       f'Ensure path is absolute. e:{e}')
@@ -224,6 +227,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
             with open(spec_path, 'rb') as spec_file:
                 spec_dict = pickle.load(spec_file)
             specs.update({resource_name: create_spec(spec_dict)})
+            dicts.update({resource_name: spec_dict})
         except Exception as e:
             print(f'Got exception trying to unpickle and create spec for '
                   f'spec_path: "{resource_name}"; exception: {e}')
@@ -239,11 +243,12 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                     with open(spec_path, 'rb') as spec_file:
                         spec_dict = pickle.load(spec_file)
                     specs.update({resource_name: create_spec(spec_dict)})
+                    dicts.update({resource_name: spec_dict})
                 except Exception as e:
                     print('Error opening tapipy prod spec. This is bad.')
             else:
                 print(f'No "{resource_name}" spec was found to fallback on')
-    return specs
+    return specs, dicts
 
 
 def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
@@ -254,16 +259,11 @@ def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None
     If a folder is specified, all urls specified are updated there.
     """
     if not resources:
-        # Get base resources from RESOURCES if resoruces not inputted
-        url_list = []
-        for resource_set in RESOURCES:
-            url_list.extend(list(RESOURCES[resource_set].values()))
-    else:
-        # Get just the URL's from the resources given
-        url_list = resources.values()
+        # Get base resources from RESOURCES if resources not inputted
+        resources = RESOURCES['tapipy']
 
     spec_dir = get_spec_dir(spec_dir)
-    download_and_pickle_spec_dicts(url_list, spec_dir=spec_dir, download_latest_specs=True)
+    download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=True)
 
 
 def get_file_info_from_url(url: str, spec_dir: str):
@@ -302,7 +302,7 @@ def get_spec_dir(spec_dir: str):
     return spec_dir
     
 
-RESOURCE_SPECS = _get_specs(RESOURCES['tapipy'])
+RESOURCE_SPECS, RESOURCE_DICTS = _get_specs(RESOURCES['tapipy'])
 
 
 def get_basic_auth_header(username: str, password: str) -> str:
@@ -373,7 +373,8 @@ class Tapis(object):
                  download_latest_specs: bool = False,
                  spec_dir: str = None,
                  tenants: Tenants = None,
-                 is_tapis_service: bool = False
+                 is_tapis_service: bool = False,
+                 resource_dicts: dict = {}
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -464,11 +465,11 @@ class Tapis(object):
         # Valuable so users don't overwrite their base specs.
         self.spec_dir = spec_dir
 
-        # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs. 
+        # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs.
         if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'tapipy':
-            resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
+            resource_specs, self.resource_dicts = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
         else:
-            resource_specs = RESOURCE_SPECS
+            resource_specs, self.resource_dicts = RESOURCE_SPECS, RESOURCE_DICTS
 
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
