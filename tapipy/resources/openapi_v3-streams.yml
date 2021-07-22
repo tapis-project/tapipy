@@ -928,7 +928,6 @@ paths:
       summary: Update an instrument
       description: Update an instrument
       operationId: update_instrument
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: project_id
           in: path
@@ -1001,7 +1000,6 @@ paths:
       summary: Delete an instrument
       description: Delete an instrument
       operationId: delete_instrument
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: project_id
           in: path
@@ -1069,7 +1067,6 @@ paths:
       summary: List variables.
       description: List variables.
       operationId: list_variables
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: project_id
           in: path
@@ -1144,13 +1141,12 @@ paths:
       summary: Create variable (single or bulk).
       description: Create variable (single or bulk).
       operationId: create_variable
-      #x-swagger-router-controller: connexContr
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewVariable'
+              $ref: '#/components/schemas/NewVarRequest'
       parameters:
         - name: project_id
           in: path
@@ -1281,7 +1277,6 @@ paths:
       summary: Update a variable
       description: Update a variable
       operationId: update_variable
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: project_id
           in: path
@@ -1358,7 +1353,6 @@ paths:
       summary: Delete a variable (single or bulk)
       description: Delete a variable (single or bulk)
       operationId: delete_variable
-      #sx-swagger-router-controller: connexContr
       parameters:
         - name: project_id
           in: path
@@ -1433,7 +1427,6 @@ paths:
       summary: Create a measurement.
       description: Create a measurement.
       operationId: create_measurement
-      #x-swagger-router-controller: connexContr
       requestBody:
         required: true
         content:
@@ -1566,7 +1559,6 @@ paths:
       summary: List measurments.
       description: List measurements.
       operationId: list_measurements
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: project_id
           in: path
@@ -1671,7 +1663,6 @@ paths:
       summary: List ontologies.
       description: List ontologies.
       operationId: list_ontologies
-      #x-swagger-router-controller: connexContr
       parameters:
       - name: query
         in: query
@@ -1728,7 +1719,6 @@ paths:
       summary: Add an ontology .
       description: Add an ontology .
       operationId: add_ontology
-      #x-swagger-router-controller: connexContr
       requestBody:
         required: true
         content:
@@ -1776,7 +1766,6 @@ paths:
       summary: Get ontology details.
       description: Get ontology details.
       operationId: get_ontology
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: onto_id
           in: path
@@ -1830,7 +1819,6 @@ paths:
       summary: Update an ontology
       description: Update an ontology
       operationId: update_ontology
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: onto_id
           in: path
@@ -1890,7 +1878,6 @@ paths:
       summary: Delete an ontology
       description: Delete an ontology
       operationId: delete_ontology
-      #x-swagger-router-controller: connexContr
       parameters:
         - name: onto_id
           in: path
