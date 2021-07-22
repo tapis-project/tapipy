@@ -140,6 +140,386 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
+  '/jobs/{jobUuid}/history':
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve history of a previously submitted job by its UUID.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJobHistory
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job's history retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespJobHistory'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /jobs/list:
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve list of jobs for the user.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJobList
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: startAfter
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          schema:
+            type: boolean
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Jobs List retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGetJobList'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  '/jobs/{jobUuid}/output/download/{outputPath}':
+    get:
+      tags:
+        - jobs
+      description: |-
+        Download job's output files for previously submitted job by its UUID. The job must be in a terminal state - FINISHED or FAILED.  
+
+        The caller must be the job owner, creator or a tenant administrator.
+        The URL must ends with '/' even if there is no outputPath is specified. 
+      operationId: getJobOutputDownload
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: outputPath
+          in: path
+          required: true
+          schema:
+            type: string
+            default: ''
+        - name: compress
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: format
+          in: query
+          schema:
+            type: string
+            default: zip
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job's output files downloaded.
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Input error.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/octet-stream:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  '/jobs/{jobUuid}/output/list/{outputPath}':
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve job's output files list for previously submitted job by its UUID. The job must be in a terminal state (FINISHED or FAILED or CANCELLED)  
+
+        The caller must be the job owner, creator or a tenant administrator.
+        The URL must ends with '/' even if there is no outputPath is specified. 
+      operationId: getJobOutputList
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: outputPath
+          in: path
+          required: true
+          schema:
+            type: string
+            default: ''
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job's output files list retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGetJobOutputList'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /jobs/search:
+    get:
+      tags:
+        - jobs
+      description: |-
+        Retrieve list of jobs for the user based on search conditions in the query paramter on the dedicated search end-point.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJobSearchList
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: startAfter
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          schema:
+            type: boolean
+        - name: select
+          in: query
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Jobs Search List retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespJobSearchAllAttributes'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Jobs not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
   '/jobs/{jobUuid}/status':
     get:
       tags:
@@ -533,6 +913,140 @@ components:
       properties:
         name:
           type: string
+    JobHistoryDisplayDTO:
+      type: object
+    RespJobHistory:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobHistoryDisplayDTO'
+    JobListDTO:
+      type: object
+      properties:
+        uuid:
+          type: string
+        name:
+          type: string
+        owner:
+          type: string
+        appId:
+          type: string
+        created:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum:
+            - PENDING
+            - PROCESSING_INPUTS
+            - STAGING_INPUTS
+            - STAGING_JOB
+            - SUBMITTING_JOB
+            - QUEUED
+            - RUNNING
+            - ARCHIVING
+            - BLOCKED
+            - PAUSED
+            - FINISHED
+            - CANCELLED
+            - FAILED
+        remoteStarted:
+          type: integer
+          format: int64
+        ended:
+          type: integer
+          format: int64
+        tenant:
+          type: string
+        execSystemId:
+          type: string
+        archiveSystemId:
+          type: string
+        appVersion:
+          type: string
+        lastUpdated:
+          type: integer
+          format: int64
+    RespGetJobList:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobListDTO'
+    FileInfo:
+      type: object
+      properties:
+        mimeType:
+          type: string
+        type:
+          type: string
+        owner:
+          type: string
+        group:
+          type: string
+        nativePermissions:
+          type: string
+        uri:
+          type: string
+        lastModified:
+          type: integer
+          format: int64
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+          format: int64
+    RespGetJobOutputList:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileInfo'
+    RespJobSearchAllAttributes:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
     JobStatusDisplay:
       type: object
       properties:
@@ -660,6 +1174,10 @@ components:
           items:
             $ref: '#/components/schemas/NotificationMechanism'
     ReqSubmitJob:
+      required:
+        - appId
+        - appVersion
+        - name
       type: object
       properties:
         name:

@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.28 - 2021-07-22 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for sk, streams, systems, tenants, jobs, apps.
+
+### Removed
+- No change.
+
+
 ## 0.3.27 - 2021-06-29 (target)
 ### Added
 - Added `resource_dicts` to Tapis object. This allows you to view the specs in dictionary form that Tapipy is using.

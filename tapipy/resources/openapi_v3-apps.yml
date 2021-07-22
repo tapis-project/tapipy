@@ -349,7 +349,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: requireExecPerm
           in: query
           description: check for EXECUTE permission as well as READ permission.
@@ -405,12 +405,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: appVersion
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/AppVersionString'
         - name: requireExecPerm
           in: query
           description: check for EXECUTE permission as well as READ permission.
@@ -476,12 +476,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: appVersion
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/AppVersionString'
       requestBody:
         required: true
         description: A JSON object specifying changes to be applied.
@@ -553,12 +553,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: appVersion
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/AppVersionString'
       requestBody:
         required: true
         description: A JSON object specifying changes to be applied.
@@ -609,7 +609,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: Check successful.
@@ -647,7 +647,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: Application enabled.
@@ -685,7 +685,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: Application disabled.
@@ -723,7 +723,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: Application deleted.
@@ -761,7 +761,7 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: Application undeleted.
@@ -799,12 +799,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
           description: Application owner updated.
@@ -844,12 +844,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
           description: Success.
@@ -892,12 +892,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       requestBody:
         required: true
         description: A JSON object specifying a list of permissions.
@@ -943,12 +943,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       requestBody:
         required: true
         description: A JSON object specifying a list of permissions.
@@ -988,12 +988,12 @@ paths:
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
         - name: permission
           in: path
           required: true
@@ -1046,16 +1046,15 @@ components:
         tenant:
           type: string
         id:
-          type: string
+          $ref: '#/components/schemas/IdString'
         version:
-          type: string
+          $ref: '#/components/schemas/AppVersionString'
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         appType:
           $ref: '#/components/schemas/AppTypeEnum'
         owner:
-          type: string
-          default: "${apiUserId}"
+          $ref: '#/components/schemas/UserNameApiDefaultString'
         enabled:
           type: boolean
           default: true
@@ -1100,37 +1099,39 @@ components:
       type: object
       properties:
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         dynamicExecSystem:
           type: boolean
           default: false
         execSystemConstraints:
           type: array
+          minItems: 1
           items:
             type: string
+            minLength: 3
         execSystemId:
-          type: string
+          $ref: '#/components/schemas/IdString'
         execSystemExecDir:
-          type: string
+          $ref: '#/components/schemas/DirString'
         execSystemInputDir:
-          type: string
+          $ref: '#/components/schemas/DirString'
         execSystemOutputDir:
-          type: string
+          $ref: '#/components/schemas/DirString'
         execSystemLogicalQueue:
-          type: string
+          $ref: '#/components/schemas/QueueNameString'
         archiveSystemId:
-          type: string
+          $ref: '#/components/schemas/IdString'
         archiveSystemDir:
-          type: string
+          $ref: '#/components/schemas/DirString'
         archiveOnAppError:
           type: boolean
           default: true
         parameterSet:
           $ref: '#/components/schemas/ParameterSet'
-        fileInputDefinitions:
+        fileInputs:
           type: array
           items:
-            $ref: '#/components/schemas/FileInputDefinition'
+            $ref: '#/components/schemas/FileInput'
         nodeCount:
           type: integer
         coresPerNode:
@@ -1146,7 +1147,7 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
     # --- ParameterSet --------------------------------------------------------
     ParameterSet:
       type: object
@@ -1174,13 +1175,20 @@ components:
               type: array
               items:
                 type: string
+                minLength: 1
             excludes:
               type: array
               items:
                 type: string
-    # --- FileInputDefinition --------------------------------------------------------
-    FileInputDefinition:
+                minLength: 1
+            includeLaunchFiles:
+                type: boolean
+                default: true
+    # --- FileInput --------------------------------------------------------
+    FileInput:
       type: object
+      required:
+        - meta
       properties:
         sourceUrl:
           type: string
@@ -1194,6 +1202,8 @@ components:
     # --- ArgSpec --------------------------------------------------------------
     ArgSpec:
       type: object
+      required:
+        - arg
       properties:
         arg:
           type: string
@@ -1202,9 +1212,12 @@ components:
     # --- ArgMetaSpec ----------------------------------------------------------
     ArgMetaSpec:
       type: object
+      required:
+        - name
       properties:
         name:
           type: string
+          minLength: 1
         description:
           type: string
         required:
@@ -1217,24 +1230,33 @@ components:
     # --- KeyValuePair -------------------------------------------------------
     KeyValuePair:
       type: object
+      required:
+        - key
       properties:
         key:
           type: string
+          minLength: 1
         value:
           type: string
     # --- NotificationSubscription -------------------------------------------
     NotificationSubscription:
       type: object
+      required:
+        - notificationMechanisms
       properties:
         filter:
           type: string
+          minLength: 1
         notificationMechanisms:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/NotificationMechanism'
     # --- NotificationMechanism -------------------------------------------
     NotificationMechanism:
       type: object
+      required:
+        - mechanism
       properties:
         mechanism:
           $ref: '#/components/schemas/NotificationMechanismEnum'
@@ -1242,23 +1264,60 @@ components:
           type: string
         emailAddress:
           type: string
+    # --- String types with constraints ------------------------------------
+    IdString:
+      type: string
+      minLength: 1
+      maxLength: 80
+    AppVersionString:
+      type: string
+      minLength: 1
+      maxLength: 64
+    DescriptionString:
+      type: string
+      maxLength: 2048
+    UserNameString:
+      type: string
+      minLength: 1
+      maxLength: 60
+    UserNameApiDefaultString:
+      type: string
+      minLength: 1
+      maxLength: 60
+      default: "${apiUserId}"
+    DirString:
+      type: string
+      minLength: 1
+      maxLength: 4096
+    TagString:
+      type: string
+      minLength: 1
+      maxLength: 128
+    QueueNameString:
+      type: string
+      minLength: 1
+      maxLength: 128
     # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
     # -------------------------------------------------------------------------
     ReqCreateApp:
       type: object
+      required:
+        - id
+        - version
+        - appType
+        - jobAttributes
       properties:
         id:
-          type: string
+          $ref: '#/components/schemas/IdString'
         version:
-          type: string
+          $ref: '#/components/schemas/AppVersionString'
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         appType:
           $ref: '#/components/schemas/AppTypeEnum'
         owner:
-          type: string
-          default: "${apiUserId}"
+          $ref: '#/components/schemas/UserNameApiDefaultString'
         enabled:
           type: boolean
           default: true
@@ -1284,14 +1343,14 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
         notes:
           type: object
     ReqPatchApp:
       type: object
       properties:
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         runtime:
           $ref: '#/components/schemas/RuntimeEnum'
         runtimeVersion:
@@ -1314,14 +1373,14 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
         notes:
           type: object
     ReqPutApp:
       type: object
       properties:
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         runtime:
           $ref: '#/components/schemas/RuntimeEnum'
         runtimeVersion:
@@ -1344,21 +1403,27 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
         notes:
           type: object
     ReqPerms:
       type: object
+      required:
+        - permissions
       properties:
         permissions:
           type: array
+          minItems: 1
           items:
             type: string
     ReqSearchApps:
       type: object
+      required:
+        - search
       properties:
         search:
           type: array
+          minItems: 1
           items:
             type: string
     # -------------------------------------------------------------------------

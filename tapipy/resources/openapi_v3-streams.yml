@@ -1150,7 +1150,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewVarRequest'
+              $ref: '#/components/schemas/NewVariable'
       parameters:
         - name: project_id
           in: path
