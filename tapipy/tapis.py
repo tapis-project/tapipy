@@ -1003,10 +1003,12 @@ class Operation(object):
         """
         Determines the tenant_id for a service request from the kwargs to said
         request and the application context (flask thread-local), if available.
+        This value is used to set the X-Tapis-Tenant header.
         """
         # we need to determine the tenant id for the request.
         tenant_id = None
-        # first, requests to the Tenants API always go to the primary site.
+        # first, requests to the Tenants API are special, as there is not always a single tenant associated with
+        # the request (for example, when listing tenants) and the Tenants API only runs at the primary site.
         if self.resource_name == 'tenants':
             # in this case, we would ideally set it to the admin tenant of the primary site, however,
             # to use get_base_url_admin_tenant_primary_site() we require a fully formed service tenant_cache (i.e.,
@@ -1176,20 +1178,9 @@ class Operation(object):
             # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
             # service tokens are stored by admin tenant, so we need to get the admin tenant for the
             # owning site of the tenant.
-            try:
-                request_tenant = self.tapis_client.tenant_cache.get_tenant_config(tenant_id=tenant_id)
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request tenant for tenant {tenant_id}; e: {e}")
-            try:
-                request_site = request_tenant.site
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request site for tenant {tenant_id}; e: {e}")
-            try:
-                request_site_admin_tenant_id = request_site.site_admin_tenant_id
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request site_admin tenant for "
-                                               f"tenant {tenant_id}; e: {e}")
-
+            for tn in self.tapis_client.tenant_cache.tenants():
+                if tn.site.site_id == site_id:
+                    request_site_admin_tenant_id = tn.site.site_admin_tenant_id
             # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
             # the service's first set of tokens.
             if request_site_admin_tenant_id in self.tapis_client.service_tokens.keys() \
