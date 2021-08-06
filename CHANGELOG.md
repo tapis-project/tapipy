@@ -1,6 +1,27 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.32 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- Syntax fix.
+
+### Removed
+- No change.
+
+
+## 0.3.31 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- No change.
+
+### Removed
+- Remove test exception.
+
 
 ## 0.3.30 - 2021-08-06 (target)
 ### Added

@@ -1178,7 +1178,7 @@ class Operation(object):
             # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
             # service tokens are stored by admin tenant, so we need to get the admin tenant for the
             # owning site of the tenant.
-            for tn in self.tapis_client.tenant_cache.tenants():
+            for tn in self.tapis_client.tenant_cache.tenants:
                 if tn.site.site_id == site_id:
                     request_site_admin_tenant_id = tn.site.site_admin_tenant_id
             # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
