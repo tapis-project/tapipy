@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '0.0.1'
+  version: '1.0.0-rc1'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
