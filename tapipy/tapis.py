@@ -374,6 +374,7 @@ class Tapis(object):
                  spec_dir: str = None,
                  tenants: Tenants = None,
                  is_tapis_service: bool = False,
+                 debug_prints: bool = True,
                  resource_dicts: dict = {}
                  ):
         # the base_url for the server this Tapis client should interact with
@@ -617,7 +618,7 @@ class Tapis(object):
                 raise errors.BaseTapyException(f"Could not generate service tokens for service: {username}; "
                                                f"exception: {e};"
                                                f"function args:"
-                                               f"token_usermame: {self.username}; "
+                                               f"token_username: {self.username}; "
                                                f"account_type: {self.account_type}; "
                                                f"target_site_id: {target_site_id}; ")
             self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
@@ -1087,7 +1088,7 @@ class Operation(object):
             except (ImportError, RuntimeError):
                 pass
         # finally, look a username on the tapis client itself
-        if not user:
+        if not user and self.debug_prints:
             print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
             user = self.tapis_client.username
         return user
