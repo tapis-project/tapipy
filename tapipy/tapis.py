@@ -1091,8 +1091,9 @@ class Operation(object):
             except (ImportError, RuntimeError):
                 pass
         # finally, look a username on the tapis client itself
-        if not user and self.tapis_client.debug_prints:
-            print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
+        if not user:
+            if self.tapis_client.debug_prints:
+                print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
             user = self.tapis_client.username
         return user
 
