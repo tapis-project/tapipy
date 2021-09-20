@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 0.3.33 - 2021-03-20 (target)
+### Added
+- Added "debug_prints" flag to Tapipy object to get rid of some annoying print statements. Purely QOL.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
 ## 0.3.32 - 2021-08-06 (target)
 ### Added
 - No change.
