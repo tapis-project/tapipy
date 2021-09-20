@@ -431,6 +431,9 @@ class Tapis(object):
         self.x_tenant_id = x_tenant_id
         self.x_username = x_username
 
+        # allows users to turn off debug_prints
+        self.debug_prints = debug_prints
+
         # Allows a user to specify which set of resources to pull from.
         # Only used when download_lastest_specs is used.
         self.resource_set = resource_set
@@ -1088,7 +1091,7 @@ class Operation(object):
             except (ImportError, RuntimeError):
                 pass
         # finally, look a username on the tapis client itself
-        if not user and self.debug_prints:
+        if not user and self.tapis_client.debug_prints:
             print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
             user = self.tapis_client.username
         return user
