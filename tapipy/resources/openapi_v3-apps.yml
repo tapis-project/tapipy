@@ -1083,6 +1083,9 @@ components:
             type: string
         notes:
           type: object
+        uuid:
+          type: string
+          format: uuid
         deleted:
           type: boolean
         created:
@@ -1306,6 +1309,7 @@ components:
         - id
         - version
         - appType
+        - containerImage
         - jobAttributes
       properties:
         id:

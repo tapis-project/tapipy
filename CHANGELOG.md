@@ -1,7 +1,21 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 0.3.34 - 2021-03-20 (target)
+## 1.0.0 - 2021-09-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for pgrest, apps, jobs, tokens.
+
+### Removed
+- No change.
+
+
+## Tapis V3 in Production, moving from 0.3.34 -> 1.0.0
+
+
+## 0.3.34 - 2021-09-20 (target)
 ### Added
 - No change.
 
@@ -12,7 +26,7 @@ All notable changes to this project will be documented in this file.
 - No change.
 
 
-## 0.3.33 - 2021-03-20 (target)
+## 0.3.33 - 2021-09-20 (target)
 ### Added
 - Added "debug_prints" flag to Tapipy object to get rid of some annoying print statements. Purely QOL.
 
