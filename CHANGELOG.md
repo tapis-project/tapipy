@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.0.1 - 2021-09-29 (target)
+### Added
+- No change.
+
+### Changed
+- Rebuild to ensure new specs working (PgREST was using previous spec still).
+
+### Removed
+- No change.
+
+
 ## 1.0.0 - 2021-09-28 (target)
 ### Added
 - No change.
