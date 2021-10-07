@@ -7,13 +7,13 @@ info:
     email: cicsupport@tacc.utexas.edu
   license:
     name: 3-Clause BSD License
-    url: 'https://opensource.org/licenses/BSD-3-Clause'
+    url: https://opensource.org/licenses/BSD-3-Clause
   version: '0.1'
 externalDocs:
   description: Tapis Home
-  url: 'https://tacc-cloud.readthedocs.io/projects/agave/en/latest/'
+  url: https://tacc-cloud.readthedocs.io/projects/agave/en/latest/
 servers:
-  - url: 'http://localhost:8080/v3'
+  - url: http://localhost:8080/v3
     description: Local test environment
     variables: {}
 tags:
@@ -81,7 +81,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespProbe'
-  '/jobs/{jobUuid}':
+  /jobs/{jobUuid}/cancel:
+    post:
+      tags:
+        - jobs
+      description: |-
+        Cancel a previously submitted job by its UUID.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: cancelJob
+      parameters:
+        - name: jobUuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Job Cancellation Initiated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespCancelJob'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Job not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '409':
+          description: >-
+            Job is already in Terminal State (CANCELLED, FINISHED or FAILED).
+            Job state conflicts with the cancel request. No action taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /jobs/{jobUuid}:
     get:
       tags:
         - jobs
@@ -140,7 +207,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/jobs/{jobUuid}/history':
+  /jobs/{jobUuid}/history:
     get:
       tags:
         - jobs
@@ -286,14 +353,17 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/jobs/{jobUuid}/output/download/{outputPath}':
+  /jobs/{jobUuid}/output/download/{outputPath}:
     get:
       tags:
         - jobs
-      description: |-
-        Download job's output files for previously submitted job by its UUID. The job must be in a terminal state - FINISHED or FAILED.  
+      description: >-
+        Download job's output files for previously submitted job by its UUID.
+        The job must be in a terminal state - FINISHED or FAILED.  
+
 
         The caller must be the job owner, creator or a tenant administrator.
+
         The URL must ends with '/' even if there is no outputPath is specified. 
       operationId: getJobOutputDownload
       parameters:
@@ -363,14 +433,18 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/jobs/{jobUuid}/output/list/{outputPath}':
+  /jobs/{jobUuid}/output/list/{outputPath}:
     get:
       tags:
         - jobs
-      description: |-
-        Retrieve job's output files list for previously submitted job by its UUID. The job must be in a terminal state (FINISHED or FAILED or CANCELLED)  
+      description: >-
+        Retrieve job's output files list for previously submitted job by its
+        UUID. The job must be in a terminal state (FINISHED or FAILED or
+        CANCELLED)  
+
 
         The caller must be the job owner, creator or a tenant administrator.
+
         The URL must ends with '/' even if there is no outputPath is specified. 
       operationId: getJobOutputList
       parameters:
@@ -443,8 +517,10 @@ paths:
     get:
       tags:
         - jobs
-      description: |-
-        Retrieve list of jobs for the user based on search conditions in the query paramter on the dedicated search end-point.
+      description: >-
+        Retrieve list of jobs for the user based on search conditions in the
+        query paramter on the dedicated search end-point.
+
 
         The caller must be the job owner, creator or a tenant administrator.
       operationId: getJobSearchList
@@ -520,7 +596,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/jobs/{jobUuid}/status':
+  /jobs/{jobUuid}/status:
     get:
       tags:
         - jobs
@@ -639,12 +715,13 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/jobs/{jobuuid}/resubmit':
+  /jobs/{jobuuid}/resubmit:
     post:
       tags:
         - jobs
-      description: |
-        Resubmit a job for execution using the original parameters.  The main phases of job execution are:
+      description: >
+        Resubmit a job for execution using the original parameters.  The main
+        phases of job execution are:
 
           - validate input
           - check resource availability
@@ -740,6 +817,42 @@ components:
           $ref: '#/components/schemas/ResultMetadata'
         result:
           type: object
+    JobCancelDisplay:
+      type: object
+      properties:
+        message:
+          type: string
+    RespCancelJob:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/JobCancelDisplay'
+    RespName:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/ResultName'
+    ResultName:
+      type: object
+      properties:
+        name:
+          type: string
     Job:
       type: object
       properties:
@@ -895,26 +1008,20 @@ components:
           $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/Job'
-    RespName:
-      type: object
-      properties:
-        status:
-          type: string
-        message:
-          type: string
-        version:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/ResultMetadata'
-        result:
-          $ref: '#/components/schemas/ResultName'
-    ResultName:
-      type: object
-      properties:
-        name:
-          type: string
     JobHistoryDisplayDTO:
       type: object
+      properties:
+        event:
+          type: string
+        created:
+          type: integer
+          format: int64
+        jobStatus:
+          type: string
+        description:
+          type: string
+        transferTaskUuid:
+          type: string
     RespJobHistory:
       type: object
       properties:

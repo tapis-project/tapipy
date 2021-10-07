@@ -1,6 +1,87 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.0.1 - 2021-09-29 (target)
+### Added
+- No change.
+
+### Changed
+- Rebuild to ensure new specs working (PgREST was using previous spec still).
+
+### Removed
+- No change.
+
+
+## 1.0.0 - 2021-09-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for pgrest, apps, jobs, tokens.
+
+### Removed
+- No change.
+
+
+## Tapis V3 in Production, moving from 0.3.34 -> 1.0.0
+
+
+## 0.3.34 - 2021-09-20 (target)
+### Added
+- No change.
+
+### Changed
+- Bugfix for debug prints.
+
+### Removed
+- No change.
+
+
+## 0.3.33 - 2021-09-20 (target)
+### Added
+- Added "debug_prints" flag to Tapipy object to get rid of some annoying print statements. Purely QOL.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
+## 0.3.32 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- Syntax fix.
+
+### Removed
+- No change.
+
+
+## 0.3.31 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- No change.
+
+### Removed
+- Remove test exception.
+
+
+## 0.3.30 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for systems, apps.
+
+### Removed
+- No change.
+
+
 ## 0.3.29 - 2021-07-22 (target)
 ### Added
 - No change.

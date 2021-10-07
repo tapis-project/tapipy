@@ -171,13 +171,19 @@ def test_create_token(client):
 
 def test_list_tenants(client):
     tenants = client.tenants.list_tenants()
+    sites = client.tenants.list_sites()
+    admin_tenants = set()
+    for s in sites:
+        admin_tenants.add(s.site_admin_tenant_id)
     for t in tenants:
         assert hasattr(t, 'base_url')
         assert hasattr(t, 'tenant_id')
         assert hasattr(t, 'public_key')
         assert hasattr(t, 'token_service')
         assert hasattr(t, 'security_kernel')
-        assert hasattr(t, 'token_gen_services')
+        # Only non-admin tenants require `token_gen_services` key
+        if not t.tenant_id in admin_tenants:
+            assert hasattr(t, 'token_gen_services')
 
 def test_get_tenant_by_id(client):
     t = client.tenants.get_tenant(tenant_id='dev')
