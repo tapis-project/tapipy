@@ -1,0 +1,5 @@
+numpy
+tapipy
+pymongo
+jupyterlab
+cloudpickle
