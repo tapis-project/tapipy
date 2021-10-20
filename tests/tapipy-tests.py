@@ -2,11 +2,14 @@
 # Build the test docker image: docker build -t tapis/pysdk-tests -f Dockerfile-tests .
 # Run these tests using the built docker image: docker run -it --rm  tapis/pysdk-tests
 
-import pytest
+import subprocess
+import time
 
-from common.config import conf
+import pytest
 from common.auth import tenants
-from tapipy.tapis import TapisResult, Tapis
+from common.config import conf
+from tapipy.tapis import Tapis, TapisResult
+
 
 @pytest.fixture
 def client():
@@ -277,6 +280,17 @@ def test_debug_flag_tenants(client):
     assert hasattr(debug, 'response')
     assert hasattr(debug.request, 'url')
     assert hasattr(debug.response, 'content')
+
+
+# -----------------------
+# Tapipy import timing test -
+# -----------------------
+
+def test_import_timing():
+    start = time.time()
+    subprocess.call(['python', '-c', 'from tapipy.tapis import Tapis'])
+    import_time = time.time() - start
+    assert import_time <= 2
 
 
 # -----------------------

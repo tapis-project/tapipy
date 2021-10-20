@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.0.2 - 2021-10-20 (target)
+### Added
+- No change.
+
+### Changed
+- Downgraded jsonschema version due to slowdown caused by 4.0+ releases in spec parsing.
+
+### Removed
+- No change.
+
+
 ## 1.0.1 - 2021-09-29 (target)
 ### Added
 - No change.
