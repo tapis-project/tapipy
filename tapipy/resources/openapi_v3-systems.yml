@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Tapis Systems API
-  description: The Tapis Systems API provides for management of Tapis Systems including transfer methods, permissions and credentials.
-  version: '0.0.1'
+  description: The Tapis Systems API provides for management of Tapis Systems including permissions and credentials.
+  version: '1.0.0-rc1'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -78,12 +78,13 @@ paths:
             type: string
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
-        - name: sortBy
+            default: 100
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -93,7 +94,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys1
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.sys1
           schema:
             type: string
         - name: computeTotal
@@ -108,6 +109,12 @@ paths:
           schema:
             type: string
             default: 'summaryAttributes'
+        - name: showDeleted
+          in: query
+          description: Indicates if Systems marked as deleted should be shown in the results. Default is false.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Success.
@@ -137,7 +144,21 @@ paths:
       tags:
         - Systems
       summary: Create a system
-      description: Create a system using a request body. System name must be unique within a tenant and can be composed of alphanumeric characters and the following special characters [-._~]. Name must begin with an alphabetic character and can be no more than 80 characters in length. Description is optional with a maximum length of 2048 characters.'
+      description: |
+        Create a system using a request body. System name must be unique within a tenant and can be composed of
+        alphanumeric characters and the following special characters [-._~].
+        Name must begin with an alphabetic character and can be no more than 80 characters in length.
+        Description is optional with a maximum length of 2048 characters.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a POST request to create a system.
+        The attributes that are allowed but ignored are
+
+          - tenant
+          - uuid
+          - deleted
+          - created
+          - updated
       operationId: createSystem
       requestBody:
         required: true
@@ -187,12 +208,13 @@ paths:
       parameters:
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
-        - name: sortBy
+            default: 100
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -202,7 +224,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys2
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.sys2
           schema:
             type: string
         - name: computeTotal
@@ -246,17 +268,19 @@ paths:
       tags:
         - Systems
       summary: Retrieve list of systems matching search conditions
-      description: Retrieve details for systems. Use request body to specify SQL-like search conditions.
+      description: |
+        Retrieve details for systems. Use request body to specify SQL-like search conditions.
       operationId: searchSystemsRequestBody
       parameters:
         - name: limit
           in: query
-          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is unlimited.
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
           schema:
             type: integer
-        - name: sortBy
+            default: 100
+        - name: orderBy
           in: query
-          description: Attribute for sorting. Direction may be included. For example sortBy=id(desc). Default direction is (asc).
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
           schema:
             type: string
         - name: skip
@@ -266,7 +290,7 @@ paths:
             type: integer
         - name: startAfter
           in: query
-          description: Where to start when sorting. Use one of skip or startAfter. Must also specify sortBy. For example, limit=10&sortBy=id(asc)&startAfter=my.sys1
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=my.sys1
           schema:
             type: string
         - name: computeTotal
@@ -317,8 +341,10 @@ paths:
     post:
       tags:
         - Systems
-      summary: Retrieve systems satisfying specified constraint conditions
-      description: Retrieve details for systems. Use request body to specify constraint conditions as an SQL-like WHERE clause.
+      summary: Retrieve systems satisfying specified constraint conditions (WARNING - not yet supported)
+      description: |
+        *WARNING Capability constraint matching is not yet supported.*
+        Retrieve details for systems. Use request body to specify constraint conditions as an SQL-like WHERE clause.
       operationId: matchConstraints
       requestBody:
         required: true
@@ -357,14 +383,17 @@ paths:
       tags:
         - Systems
       summary: Retrieve system details
-      description: Retrieve information for a system given the system name. Use query parameter returnCredentials=true to have effectiveUserId credentials included in the response. Use query parameter authnMethod=<method> to override default authn method.
+      description: |
+        Retrieve information for a system given the system name. Use query parameter returnCredentials=true to have
+        effectiveUserId credentials included in the response. Use query parameter authnMethod=<method> to override
+        default authn method.
       operationId: getSystem
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: returnCredentials
           in: query
           description: Highly restricted. Only certain Tapis services are authorized to get credentials.
@@ -373,7 +402,7 @@ paths:
             default: false
         - name: authnMethod
           in: query
-          description: Desired authn method to use when fetching credentials, default authn method used if this is null.
+          description: Desired authentication method to use when fetching credentials, default method used if this is null.
           schema:
             type: string
             default: ''
@@ -420,68 +449,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-    delete:
-      tags:
-        - Systems
-      summary: Soft delete a system
-      description: Soft delete a system given the system name. Must specify confirm=true to complete the action.
-      operationId: deleteSystem
-      parameters:
-        - name: systemId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: confirm
-          in: query
-          description: Must be specified to complete the action. For example confirm=true. Default is false.
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: System deleted.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
     patch:
       tags:
         - Systems
-      summary: Update a system
-      description: Update attributes for a system. Attributes that may be updated are description, host, effectiveUserId, defaultAuthnMethod, transferMethods, port, useProxy, proxyHost, proxyPort, jobCapabilities, tags, notes.
-      operationId: updateSystem
+      summary: Update selected attributes of a system
+      description: |
+        Update selected attributes of a system. Request body may only contain updatable attributes. System must exist.
+
+        Attributes that may not be updated via PATCH are
+
+          - id
+          - systemType
+          - owner
+          - enabled
+          - bucketName
+          - rootDir
+          - isDtn
+          - canExec
+
+        Note that the attributes owner and enabled may be modified using other endpoints.
+      operationId: patchSystem
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       requestBody:
         required: true
         description: A JSON object specifying changes to be applied.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqUpdateSystem'
+              $ref: '#/components/schemas/ReqPatchSystem'
       responses:
         '200':
           description: System updated.
@@ -513,19 +513,95 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+    put:
+      tags:
+        - Systems
+      summary: Update all updatable attributes of a system
+      description: |
+        Update all updatable attributes of a system using a request body identical to POST. System must exist.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a PUT request to update a system.
+
+        The attributes that are allowed but ignored for both PUT and POST are
+
+          - tenant
+          - uuid
+          - deleted
+          - created
+          - updated
+
+        In addition for a PUT operation the following non-updatable attributes are allowed but ignored
+
+          - id
+          - systemType
+          - owner
+          - enabled
+          - bucketName
+          - rootDir
+          - isDtn
+          - canExec
+
+        Note that the attributes owner and enabled may be modified using other endpoints.
+      operationId: putSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      requestBody:
+        required: true
+        description: A JSON object specifying changes to be applied.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPutSystem'
+      responses:
+        '200':
+          description: System updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '409':
+          description: System already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
   '/v3/systems/{systemId}/isEnabled':
     get:
       tags:
         - Systems
       summary: Check if system is currently enabled
-      description: Check if a system is currently enabled, i.e. available for use.
+      description: |
+        Check if a system is currently enabled, i.e. available for use.
       operationId: isEnabled
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: Check successful.
@@ -555,15 +631,16 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system availabe for use.
-      description: Mark a system available for use.
+      summary: Mark a system availabe for use
+      description: |
+        Mark a system available for use.
       operationId: enableSystem
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: System enabled.
@@ -593,18 +670,97 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system unavailabe for use.
-      description: Mark a system unavailable for use.
+      summary: Mark a system unavailabe for use
+      description: |
+        Mark a system unavailable for use.
       operationId: disableSystem
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
       responses:
         '200':
           description: System disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/{systemId}/delete':
+    post:
+      tags:
+        - Systems
+      summary: Mark a system as deleted
+      description: |
+        Mark a system as deleted. System will not appear in queries unless explicitly requested.
+      operationId: deleteSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: System deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/{systemId}/undelete':
+    post:
+      tags:
+        - Systems
+      summary: Mark a system as not deleted
+      description: |
+        Mark a system as not deleted. System will appear in queries.
+      operationId: undeleteSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: System undeleted.
           content:
             application/json:
               schema:
@@ -632,19 +788,20 @@ paths:
       tags:
         - Systems
       summary: Change system owner
-      description: Change owner of a system.
+      description: |
+        Change owner of a system.
       operationId: changeSystemOwner
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
           description: System owner updated.
@@ -676,23 +833,31 @@ paths:
     get:
       tags:
         - Credentials
-      summary: Retrieve system user credentials
-      description: Highly restricted. Only certain Tapis services authorized. Retrieve credentials for given system and user. Use query parameter authnMethod=<method> to override default authn method.
+      summary: Retrieve user credentials for a system and target user
+      description: |
+        Highly restricted. Only certain Tapis services authorized. Retrieve credentials for given system, *target user* and authentication method.
+
+        Note that user making the request and *target user* may be different and frequently are different.
+
+        Desired authentication method may be specified using query parameter authnMethod=<method>. If desired authentication method
+        not specified then credentials for the system's default authentication method are returned.
+
+        The result includes the field authnMethod indicating the authentication method associated with the returned credentials.
       operationId: getUserCredential
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
         - name: authnMethod
           in: query
-          description: Desired authn method to use when fetching credentials, default authn method used if not provided.
+          description: Desired authentication method to use when fetching credentials, default method used if not provided.
           schema:
             type: string
             default: ''
@@ -730,30 +895,37 @@ paths:
     post:
       tags:
         - Credentials
-      summary: Create or update system user credentials
-      description: Create or update credentials in the Security Kernel for given system and user using a request body. Requester must be owner of the system.
+      summary: Create or update user credentials for a system and target user
+      description: |
+        Create or update credentials in the Security Kernel for given system and *target user* using a request body.
+        Requester must be owner of the system. Credentials for multiple authentication methods may be provided.
+
+        Note that user making the request and *target user* may be different and frequently are different.
+
+        Note that the attribute authnMethod is allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a POST to update credentials.
       operationId: createUserCredential
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       requestBody:
         required: true
-        description: A JSON object specifying a credential.
+        description: A JSON object specifying credentials.
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Credential'
+              $ref: '#/components/schemas/ReqCreateCredential'
       responses:
         '200':
-          description: Credential updated.
+          description: Credentials updated.
           content:
             application/json:
               schema:
@@ -779,23 +951,26 @@ paths:
     delete:
       tags:
         - Credentials
-      summary: Remove system user credentials
-      description: Remove credential from the Security Kernel for given system and user. Requester must be owner of the system.
+      summary: Remove user credentials for a system and target user
+      description: |
+        Remove credentials from the Security Kernel for given system and *target user*. Requester must be owner of the system.
+
+        Note that user making the request and *target user* may be different and frequently are different.
       operationId: removeUserCredential
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
-          description: Credential removed.
+          description: Credentials removed.
           content:
             application/json:
               schema:
@@ -825,19 +1000,20 @@ paths:
       tags:
         - Permissions
       summary: Retrieve system user permissions
-      description: Retrieve all system related permissions for a given system and user.
+      description: |
+        Retrieve all system related permissions for a given system and user.
       operationId: getUserPerms
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
           description: Success.
@@ -873,19 +1049,21 @@ paths:
       tags:
         - Permissions
       summary: Grant system user permissions
-      description: Create permissions in the Security Kernel for a user. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
+      description: |
+        Create permissions in the Security Kernel for a user. Requester must be owner of the system.
+        Permissions are READ, MODIFY, EXECUTE.
       operationId: grantUserPerms
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       requestBody:
         required: true
         description: A JSON object specifying a list of permissions.
@@ -924,19 +1102,21 @@ paths:
       tags:
         - Permissions
       summary: Revoke system user permissions
-      description: Remove permissions from the Security Kernel for a user. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
+      description: |
+        Remove permissions from the Security Kernel for a user. Requester must be owner of the system.
+        Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerms
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
       requestBody:
         required: true
         description: A JSON object specifying a list of permissions.
@@ -969,19 +1149,21 @@ paths:
       tags:
         - Permissions
       summary: Revoke system user permission
-      description: Remove system user permission from the Security Kernel. Requester must be owner of the system. Permissions are READ, MODIFY, EXECUTE.
+      description: |
+        Remove system user permission from the Security Kernel. Requester must be owner of the system.
+        Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerm
       parameters:
         - name: systemId
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/IdString'
         - name: userName
           in: path
           required: true
           schema:
-            type: string
+            $ref: '#/components/schemas/UserNameString'
         - name: permission
           in: path
           required: true
@@ -1033,22 +1215,20 @@ components:
         tenant:
           type: string
         id:
-          type: string
+          $ref: '#/components/schemas/IdString'
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         systemType:
           $ref: '#/components/schemas/SystemTypeEnum'
         owner:
-          type: string
-          default: "${apiUserId}"
+          $ref: '#/components/schemas/UserNameApiDefaultString'
         host:
-          type: string
+          $ref: '#/components/schemas/HostString'
         enabled:
           type: boolean
           default: true
         effectiveUserId:
-          type: string
-          default: "${apiUserId}"
+          $ref: '#/components/schemas/UserNameApiDefaultString'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
@@ -1056,11 +1236,7 @@ components:
         bucketName:
           type: string
         rootDir:
-          type: string
-        transferMethods:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferMethodEnum'
+          $ref: '#/components/schemas/DirString'
         port:
           type: integer
           format: int32
@@ -1068,12 +1244,12 @@ components:
           type: boolean
           default: false
         proxyHost:
-          type: string
+          $ref: '#/components/schemas/HostString'
         proxyPort:
           type: integer
           format: int32
         dtnSystemId:
-          type: string
+          $ref: '#/components/schemas/IdString'
         dtnMountPoint:
           type: string
         dtnMountSourcePath:
@@ -1085,10 +1261,12 @@ components:
           type: boolean
         jobRuntimes:
           type: array
+          minItems: 1
+          uniqueItems: true
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:
-          type: string
+          $ref: '#/components/schemas/DirString'
         jobEnvVariables:
           type: array
           items:
@@ -1109,7 +1287,7 @@ components:
           items:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
-          type: string
+          $ref: '#/components/schemas/QueueNameString'
         jobCapabilities:
           type: array
           items:
@@ -1117,7 +1295,7 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
         notes:
           type: object
         uuid:
@@ -1132,6 +1310,8 @@ components:
     # --- JobRuntime ------------------------------------------------------------------
     JobRuntime:
       type: object
+      required:
+        - runtimeType
       properties:
         runtimeType:
           $ref: '#/components/schemas/RuntimeTypeEnum'
@@ -1140,28 +1320,43 @@ components:
     # --- LogicalQueue ------------------------------------------------------------------
     LogicalQueue:
       type: object
+      required:
+        - name
+        - hpcQueueName
       properties:
         name:
-          type: string
+          $ref: '#/components/schemas/QueueNameString'
         hpcQueueName:
-          type: string
+          $ref: '#/components/schemas/QueueNameString'
         maxJobs:
           type: integer
           default: 2147483647
         maxJobsPerUser:
           type: integer
           default: 2147483647
+        minNodeCount:
+          type: integer
         maxNodeCount:
+          type: integer
+        minCoresPerNode:
           type: integer
         maxCoresPerNode:
           type: integer
+        minMemoryMB:
+          type: integer
         maxMemoryMB:
+          type: integer
+        minMinutes:
           type: integer
         maxMinutes:
           type: integer
     # --- Capability ------------------------------------------------------------------
     Capability:
       type: object
+      required:
+        - category
+        - name
+        - datatype
       properties:
         category:
           $ref: '#/components/schemas/CategoryEnum'
@@ -1177,6 +1372,8 @@ components:
     Credential:
       type: object
       properties:
+        authnMethod:
+          $ref: '#/components/schemas/AuthnEnum'
         password:
           type: string
         privateKey:
@@ -1192,44 +1389,84 @@ components:
     # --- KeyValuePair -------------------------------------------------------
     KeyValuePair:
       type: object
+      required:
+        - key
       properties:
         key:
           type: string
+          minLength: 1
         value:
           type: string
+
+    # --- String types with constraints ------------------------------------
+    HostString:
+      type: string
+      minLength: 1
+      maxLength: 256
+    IdString:
+      type: string
+      minLength: 1
+      maxLength: 80
+    UserNameString:
+      type: string
+      minLength: 1
+      maxLength: 60
+    UserNameApiDefaultString:
+      type: string
+      minLength: 1
+      maxLength: 60
+      default: "${apiUserId}"
+    DescriptionString:
+      type: string
+      maxLength: 2048
+    DirString:
+      type: string
+      minLength: 1
+      maxLength: 4096
+    TagString:
+      type: string
+      minLength: 1
+      maxLength: 128
+    QueueNameString:
+      type: string
+      minLength: 1
+      maxLength: 128
+
     # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
     # -------------------------------------------------------------------------
     ReqCreateSystem:
       type: object
+      required:
+        - id
+        - systemType
+        - host
+        - defaultAuthnMethod
+        - canExec
       properties:
         id:
-          type: string
+          $ref: '#/components/schemas/IdString'
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         systemType:
           $ref: '#/components/schemas/SystemTypeEnum'
         owner:
           type: string
         host:
-          type: string
+          $ref: '#/components/schemas/HostString'
         enabled:
           type: boolean
           default: true
         effectiveUserId:
-          type: string
+          $ref: '#/components/schemas/UserNameString'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
-          $ref: '#/components/schemas/Credential'
+          $ref: '#/components/schemas/ReqCreateCredential'
         bucketName:
           type: string
         rootDir:
-          type: string
-        transferMethods:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferMethodEnum'
+          $ref: '#/components/schemas/DirString'
         port:
           type: integer
           format: int32
@@ -1237,12 +1474,12 @@ components:
           type: boolean
           default: false
         proxyHost:
-          type: string
+          $ref: '#/components/schemas/HostString'
         proxyPort:
           type: integer
           format: int32
         dtnSystemId:
-          type: string
+          $ref: '#/components/schemas/IdString'
         dtnMountPoint:
           type: string
         dtnMountSourcePath:
@@ -1254,10 +1491,11 @@ components:
           type: boolean
         jobRuntimes:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:
-          type: string
+          $ref: '#/components/schemas/DirString'
         jobEnvVariables:
           type: array
           items:
@@ -1276,7 +1514,7 @@ components:
           items:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
-          type: string
+          $ref: '#/components/schemas/QueueNameString'
         jobCapabilities:
           type: array
           items:
@@ -1284,46 +1522,109 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
         notes:
           type: object
-    ReqUpdateSystem:
+    ReqPutSystem:
       type: object
       properties:
         description:
-          type: string
+          $ref: '#/components/schemas/DescriptionString'
         host:
-          type: string
+          $ref: '#/components/schemas/HostString'
         effectiveUserId:
-          type: string
+          $ref: '#/components/schemas/UserNameString'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
-        transferMethods:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransferMethodEnum'
+        authnCredential:
+          $ref: '#/components/schemas/ReqCreateCredential'
         port:
           type: integer
           format: int32
         useProxy:
           type: boolean
+          default: false
         proxyHost:
-          type: string
+          $ref: '#/components/schemas/HostString'
         proxyPort:
           type: integer
           format: int32
         dtnSystemId:
-          type: string
+          $ref: '#/components/schemas/IdString'
         dtnMountPoint:
           type: string
         dtnMountSourcePath:
           type: string
         jobRuntimes:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:
+          $ref: '#/components/schemas/DirString'
+        jobEnvVariables:
+          type: array
+          items:
+            $ref: '#/components/schemas/KeyValuePair'
+        jobMaxJobs:
+          type: integer
+        jobMaxJobsPerUser:
+          type: integer
+        jobIsBatch:
+          type: boolean
+          default: false
+        batchScheduler:
+          $ref: '#/components/schemas/SchedulerTypeEnum'
+        batchLogicalQueues:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogicalQueue'
+        batchDefaultLogicalQueue:
+          $ref: '#/components/schemas/QueueNameString'
+        jobCapabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Capability'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/TagString'
+        notes:
+          type: object
+    ReqPatchSystem:
+      type: object
+      properties:
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        host:
+          $ref: '#/components/schemas/HostString'
+        effectiveUserId:
+          $ref: '#/components/schemas/UserNameString'
+        defaultAuthnMethod:
+          $ref: '#/components/schemas/AuthnEnum'
+        port:
+          type: integer
+          format: int32
+        useProxy:
+          type: boolean
+        proxyHost:
+          $ref: '#/components/schemas/HostString'
+        proxyPort:
+          type: integer
+          format: int32
+        dtnSystemId:
+          $ref: '#/components/schemas/IdString'
+        dtnMountPoint:
           type: string
+        dtnMountSourcePath:
+          type: string
+        jobRuntimes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/JobRuntime'
+        jobWorkingDir:
+          $ref: '#/components/schemas/DirString'
         jobEnvVariables:
           type: array
           items:
@@ -1341,7 +1642,7 @@ components:
           items:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
-          type: string
+          $ref: '#/components/schemas/QueueNameString'
         jobCapabilities:
           type: array
           items:
@@ -1349,28 +1650,52 @@ components:
         tags:
           type: array
           items:
-            type: string
+            $ref: '#/components/schemas/TagString'
         notes:
           type: object
+    ReqCreateCredential:
+      type: object
+      properties:
+        password:
+          type: string
+        privateKey:
+          type: string
+        publicKey:
+          type: string
+        accessKey:
+          type: string
+        accessSecret:
+          type: string
+        certificate:
+          type: string
     ReqPerms:
       type: object
+      required:
+        - permissions
       properties:
         permissions:
           type: array
+          minItems: 1
           items:
             type: string
     ReqSearchSystems:
       type: object
+      required:
+        - search
       properties:
         search:
           type: array
+          minItems: 1
           items:
             type: string
     ReqMatchConstraints:
       type: object
+      required:
+        - match
       properties:
         match:
           type: array
+          minItems: 1
           items:
             type: string
     # -------------------------------------------------------------------------
@@ -1399,9 +1724,14 @@ components:
         version:
           type: string
         result:
-          type: boolean
+          $ref: '#/components/schemas/ResultBoolean'
         metadata:
           type: object
+    ResultBoolean:
+      type: object
+      properties:
+        aBool:
+          type: boolean
     RespNameArray:
       type: object
       properties:
@@ -1494,7 +1824,7 @@ components:
               type: integer
             recordsSkipped:
               type: integer
-            sortBy:
+            orderBy:
               type: string
             startAfter:
               type: string
@@ -1520,7 +1850,7 @@ components:
       type: string
       enum:
         - LINUX
-        - OBJECT_STORE
+        - S3
     AuthnEnum:
       type: string
       enum:
@@ -1528,11 +1858,6 @@ components:
         - PKI_KEYS
         - ACCESS_KEY
         - CERT
-    TransferMethodEnum:
-      type: string
-      enum:
-        - SFTP
-        - S3
     CategoryEnum:
       type: string
       enum:

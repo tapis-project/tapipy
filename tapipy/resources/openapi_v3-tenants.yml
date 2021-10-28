@@ -213,12 +213,12 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/Tenant'
-    delete:
+    put:
       tags:
       - Tenants
-      summary: Delete a tenant
-      description: Permenantly delete a tenant.
-      operationId: delete_tenant
+      summary: Update a tenant
+      description: Update certain fields on an exsiting tenant.
+      operationId: update_tenant
       parameters:
       - name: tenant_id
         in: path
@@ -226,7 +226,12 @@ paths:
         required: true
         schema:
           type: string
-
+      requestBody:
+              required: true
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/UpdateTenant'
       responses:
         '200':
           description: OK
@@ -237,9 +242,33 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                   result:
-                    type: string
-                    nullable: true
-                    enum: [null]
+                    $ref: '#/components/schemas/Tenant'
+
+  /v3/tenants/{tenant_id}/history:
+    get:
+      tags:
+      - Tenants
+      summary: Get tenant history
+      description: Get history log for a specific tenant by its id.
+      operationId: get_tenant_history
+      parameters:
+      - name: tenant_id
+        in: path
+        description: Unique ID of the tenant
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/arrayOfTenantHistory'
 
   /v3/tenants/ldaps:
     get:
@@ -593,10 +622,65 @@ components:
         user_ldap_connection_id:
           type: string
           description: The unique identifier for the LDAP object for user accounts in the tenant.
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - inactive
+          description: The status of the tenant; Tenants can be created in "draft" status without a public key; Tenants in both "inactive" and "draft" status are by default not returned in the tenants listing.
+        public_key:
+          type: string
+          description: The public key associated with the private key used for signing tokens in this tenant. Note that the public key is optional in that tenants can be created without the public key but only in "draft" status.
         description:
           type: string
           description: A description of the tenant.
       required: [tenant_id, base_url, site_id, token_service, security_kernel, authenticator, owner, admin_user, token_gen_services]
+
+    UpdateTenant:
+      type: object
+      properties:
+        token_service:
+          type: string
+          description: The resolvable location of the token service for the tenant.
+        security_kernel:
+          type: string
+          description: The resolvable location of the security kernel for the tenant.
+        authenticator:
+          type: string
+          description: The resolvable location of the authenticator for the tenant.
+        owner:
+          type: string
+          description: The email address of the primary owner and contact for the tenant.
+        admin_user:
+          type: string
+          description: The username of the user that is automatically assigned the tenant_admin role by the Security Kernel.
+        token_gen_services:
+          type: array
+          items:
+            type: string
+            pattern: "^[a-zA-Z0-9-]*$"
+          description: The list of services that are automatically granted the token_generator role for this tenant by the Security Kernel.
+        service_ldap_connection_id:
+          type: string
+          description: The unique identifier for the LDAP object for service accounts in the tenant.
+        user_ldap_connection_id:
+          type: string
+          description: The unique identifier for the LDAP object for user accounts in the tenant.
+        public_key:
+          type: string
+          description: The public key that should be used to validate the signatures of JWTs associated with the tenant.
+        status:
+          type: string
+          enum:
+            - draft
+            - active
+            - inactive
+          description: The status of the tenant; Tenants can be created in "draft" status without a public key; Tenants in both "inactive" and "draft" status are by default not returned in the tenants listing.
+        description:
+          type: string
+          description: A description of the tenant.
+
 
     Tenant:
       type: object
@@ -644,6 +728,12 @@ components:
         description:
           type: string
           description: A description of the tenant.
+        created_by:
+          type: string
+          description: The API identity who created this tenant.
+        last_updated_by:
+          type: string
+          description: The API identity that last updated this tenant.
         create_time:
           type: string
           description: The time the client was created.
@@ -656,6 +746,28 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Tenant'
+
+    TenantHistory:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+          description: The tenant_id that was updated.
+        update_time:
+          type: string
+          description: The time this update occurred.
+        updated_by:
+          type: string
+          description: The API identity that made the update.
+        updates:
+          type: object
+          description: The set of changes that were made with this update.
+
+
+    arrayOfTenantHistory:
+      type: array
+      items:
+        $ref: '#/components/schemas/TenantHistory'
 
     NewSite:
       type: object

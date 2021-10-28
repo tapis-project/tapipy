@@ -42,6 +42,10 @@ for specKey, specUrl in RESOURCES['prod'].items():
     elif '/dev-v3/' in specUrl:
         specUrl = specUrl.replace('/dev-v3/', '/contents/')
         specUrl = f"{specUrl}?ref=dev-v3"
+    elif '/prod-v3/' in specUrl:
+        specUrl = specUrl.replace('/prod-v3/', '/contents/')
+        specUrl = f"{specUrl}?ref=prod-v3"
+
     url = specUrl.replace('raw.githubusercontent.com', 'api.github.com/repos')
     print(f'\n\n"{specKey}" resource url: {url}')
     if specKey in etagsDict:

@@ -11,7 +11,7 @@ import yaml
 from . import errors
 import pickle
 import shutil
-import multiprocessing
+import concurrent.futures
 import copy
 from typing import Dict, NewType, Mapping, Optional
 from atomicwrites import atomic_write
@@ -51,7 +51,8 @@ RESOURCES = {
         'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tenants.yml",
         'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tokens.yml",
         'pgrest': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pgrest.yml",
-        'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-jobs.yml"
+        'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-jobs.yml",
+        'apps': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-apps.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -68,7 +69,7 @@ RESOURCES = {
         'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml'
     },
     'prod': {
-        'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/prod-v3/docs/specs/openapi_v3.yml',               
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/prod/service/resources/openapi_v3.yml',
         'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/meta-client/src/main/resources/metav3-openapi.yaml',
         'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/prod/api/src/main/resources/openapi.yaml',
@@ -81,6 +82,20 @@ RESOURCES = {
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/prod/AppsAPI.yaml'
     },
+    'staging': {
+        'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
+        'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/staging/service/resources/openapi_v3.yml',
+        'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/meta-client/src/main/resources/metav3-openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/staging/api/src/main/resources/openapi.yaml',
+        'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/security-client/src/main/resources/SKAuthorizationAPI.yaml',
+        'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/staging/service/resources/openapi_v3.yml',
+        'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/staging/SystemsAPI.yaml',
+        'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/staging/service/resources/openapi_v3.yml',
+        'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/staging/service/resources/openapi_v3.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/staging/pgrest/resources/openapi_v3.yml',
+        'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/jobs-client/src/main/resources/JobsAPI.yaml',
+        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/staging/AppsAPI.yaml'
+    },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
@@ -91,7 +106,7 @@ RESOURCES = {
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/dev/SystemsAPI.yaml',
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml',
-        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml',
+        'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/dev/pgrest/resources/openapi_v3.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/dev/AppsAPI.yaml'
     }
@@ -107,14 +122,16 @@ def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs
     # Download and save specs if neccessary
     download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=download_latest_specs)
     # Load, unpickle, and create specs
-    specs = unpickle_and_create_specs(resources, spec_dir=spec_dir)
-    return specs
+    specs, dicts = unpickle_and_create_specs(resources, spec_dir=spec_dir)
+    return specs, dicts
 
 
 def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download_latest_specs: bool) -> None:
     """
     Function that calls threads to download and pickle specs.
-    Cuts wait time for 9 specs from 4s to 0.7s
+    Not parallel: 4s for 9 specs
+    Threads: Untested
+    Multiprocessing: 0.7s for 9 specs
     """
     # Get list of specs and check which we need to download
     # We download if the file name requested does not exist
@@ -129,12 +146,19 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
             if not full_spec_name in os.listdir(spec_dir):
                 urls_to_download.append([resource_name, url, spec_path])
     
+    # Set off some parallel threads cause it's quick.
+    # Switched from multiprocessing due to some startup warnings when import Tapipy in scripts
+    if urls_to_download:
+        POOL_SIZE = os.environ.get('POOL_SIZE', 16)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=POOL_SIZE) as executor:
+            executor.map(_thread_download_spec_dict, urls_to_download)
+
     # Set off some parallel processes cause it's quick.
-    POOL_SIZE = os.environ.get('POOL_SIZE', 16)
-    pool = multiprocessing.Pool(processes=POOL_SIZE)
-    pool.map(_thread_download_spec_dict, urls_to_download)
-    pool.close()
-    pool.join()
+    #POOL_SIZE = os.environ.get('POOL_SIZE', 16)
+    #pool = multiprocessing.Pool(processes=POOL_SIZE)
+    #pool.map(_thread_download_spec_dict, urls_to_download)
+    #pool.close()
+    #pool.join()
 
 
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
@@ -183,6 +207,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     Can't be threaded, map doesn't allow spec object to be sent back.
     """
     specs = {}
+    dicts = {}
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
         if "local:" in url:
@@ -191,6 +216,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                 with open(spec_path, 'rb') as spec_file:
                     spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
                 specs.update({resource_name: create_spec(spec_dict)})
+                dicts.update({resource_name: spec_dict})
             except Exception as e:
                 print(f'Error reading local "{resource_name}" resource. '
                       f'Ensure path is absolute. e:{e}')
@@ -201,6 +227,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
             with open(spec_path, 'rb') as spec_file:
                 spec_dict = pickle.load(spec_file)
             specs.update({resource_name: create_spec(spec_dict)})
+            dicts.update({resource_name: spec_dict})
         except Exception as e:
             print(f'Got exception trying to unpickle and create spec for '
                   f'spec_path: "{resource_name}"; exception: {e}')
@@ -216,11 +243,12 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                     with open(spec_path, 'rb') as spec_file:
                         spec_dict = pickle.load(spec_file)
                     specs.update({resource_name: create_spec(spec_dict)})
+                    dicts.update({resource_name: spec_dict})
                 except Exception as e:
                     print('Error opening tapipy prod spec. This is bad.')
             else:
                 print(f'No "{resource_name}" spec was found to fallback on')
-    return specs
+    return specs, dicts
 
 
 def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
@@ -231,16 +259,11 @@ def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None
     If a folder is specified, all urls specified are updated there.
     """
     if not resources:
-        # Get base resources from RESOURCES if resoruces not inputted
-        url_list = []
-        for resource_set in RESOURCES:
-            url_list.extend(list(RESOURCES[resource_set].values()))
-    else:
-        # Get just the URL's from the resources given
-        url_list = resources.values()
+        # Get base resources from RESOURCES if resources not inputted
+        resources = RESOURCES['tapipy']
 
     spec_dir = get_spec_dir(spec_dir)
-    download_and_pickle_spec_dicts(url_list, spec_dir=spec_dir, download_latest_specs=True)
+    download_and_pickle_spec_dicts(resources, spec_dir=spec_dir, download_latest_specs=True)
 
 
 def get_file_info_from_url(url: str, spec_dir: str):
@@ -279,7 +302,7 @@ def get_spec_dir(spec_dir: str):
     return spec_dir
     
 
-RESOURCE_SPECS = _get_specs(RESOURCES['tapipy'])
+RESOURCE_SPECS, RESOURCE_DICTS = _get_specs(RESOURCES['tapipy'])
 
 
 def get_basic_auth_header(username: str, password: str) -> str:
@@ -350,7 +373,9 @@ class Tapis(object):
                  download_latest_specs: bool = False,
                  spec_dir: str = None,
                  tenants: Tenants = None,
-                 is_tapis_service: bool = False
+                 is_tapis_service: bool = False,
+                 debug_prints: bool = True,
+                 resource_dicts: dict = {}
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -370,9 +395,17 @@ class Tapis(object):
             self.account_type = 'user'
 
         # the access token to use -- should be an honest TapisResult access token.
+        if access_token and type(access_token) == str:
+            # if the access_token passed is a string, convert it to an honest TapisResult token:
+            tok = TapisResult(**{'access_token': access_token})
+            access_token = self.add_claims_to_token(tok)
         self.access_token = access_token
 
         # the refresh token to use -- should be an honest TapisResult refresh token.
+        if refresh_token and type(refresh_token) == str:
+            # if the access_token passed is a string, convert it to an honest TapisResult token:
+            tok = TapisResult(**{'refresh_token': refresh_token})
+            refresh_token = self.add_claims_to_token(tok)
         self.refresh_token = refresh_token
 
         # pass in a "raw" JWT directly. This is only used if the access_token is not set.
@@ -397,6 +430,9 @@ class Tapis(object):
         # tenant_id and username.
         self.x_tenant_id = x_tenant_id
         self.x_username = x_username
+
+        # allows users to turn off debug_prints
+        self.debug_prints = debug_prints
 
         # Allows a user to specify which set of resources to pull from.
         # Only used when download_lastest_specs is used.
@@ -433,11 +469,11 @@ class Tapis(object):
         # Valuable so users don't overwrite their base specs.
         self.spec_dir = spec_dir
 
-        # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs. 
+        # Uses module instantiated RESOURCE_SPECS if there are no changes to the specs.
         if self.custom_spec_dict or self.spec_dir or self.download_latest_specs or not self.resource_set == 'tapipy':
-            resource_specs = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
+            resource_specs, self.resource_dicts = _get_specs(RESOURCES[resource_set], spec_dir=self.spec_dir, download_latest_specs=self.download_latest_specs)
         else:
-            resource_specs = RESOURCE_SPECS
+            resource_specs, self.resource_dicts = RESOURCE_SPECS, RESOURCE_DICTS
 
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
@@ -585,7 +621,7 @@ class Tapis(object):
                 raise errors.BaseTapyException(f"Could not generate service tokens for service: {username}; "
                                                f"exception: {e};"
                                                f"function args:"
-                                               f"token_usermame: {self.username}; "
+                                               f"token_username: {self.username}; "
                                                f"account_type: {self.account_type}; "
                                                f"target_site_id: {target_site_id}; ")
             self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
@@ -628,18 +664,33 @@ class Tapis(object):
     def add_claims_to_token(self, token):
         """
         Adds claims and a callable expires_in() function to a Tapis token object.
-        :param tokne: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
+        :param token: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
         """
         def _expires_in():
-            return access_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
+            return token_with_claims.expires_at - datetime.datetime.now(datetime.timezone.utc)
 
-        access_token = token
-        access_token.claims = self.validate_token(access_token.access_token)
-        access_token.original_ttl = access_token.expires_in
-        access_token.expires_at = datetime.datetime.fromtimestamp(access_token.claims['exp'],
+        token_with_claims = token
+        # we could have been passed an access or a refresh token, so that will dictate which attribute is
+        # available:
+        try:
+            token_str = token_with_claims.access_token
+        except AttributeError:
+            token_str = token_with_claims.refresh_token
+        # we do not validate the token because we may not have the cache of tenant objects (with corresponding
+        # public keys) yet, in which case validation will fail
+        token_with_claims.claims = jwt.decode(token_str, verify=False)
+        # access_token.expires_in will not exist if the token is a string type... need to compute it from the
+        # claims...
+        if hasattr(token_with_claims, 'expires_in'):
+            token_with_claims.original_ttl = token_with_claims.expires_in
+        else:
+            # otherwise, we have no way of computing the original_ttl because all we have is the exp claim (an int)
+            # and the ttl would require also knowing when the token was created.
+            token_with_claims.original_ttl = -1
+        token_with_claims.expires_at = datetime.datetime.fromtimestamp(token_with_claims.claims['exp'],
                                                                   datetime.timezone.utc)
-        access_token.expires_in = _expires_in
-        return access_token
+        token_with_claims.expires_in = _expires_in
+        return token_with_claims
 
     def set_access_token(self, token):
         """
@@ -956,10 +1007,12 @@ class Operation(object):
         """
         Determines the tenant_id for a service request from the kwargs to said
         request and the application context (flask thread-local), if available.
+        This value is used to set the X-Tapis-Tenant header.
         """
         # we need to determine the tenant id for the request.
         tenant_id = None
-        # first, requests to the Tenants API always go to the primary site.
+        # first, requests to the Tenants API are special, as there is not always a single tenant associated with
+        # the request (for example, when listing tenants) and the Tenants API only runs at the primary site.
         if self.resource_name == 'tenants':
             # in this case, we would ideally set it to the admin tenant of the primary site, however,
             # to use get_base_url_admin_tenant_primary_site() we require a fully formed service tenant_cache (i.e.,
@@ -1039,7 +1092,8 @@ class Operation(object):
                 pass
         # finally, look a username on the tapis client itself
         if not user:
-            print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
+            if self.tapis_client.debug_prints:
+                print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
             user = self.tapis_client.username
         return user
 
@@ -1072,12 +1126,6 @@ class Operation(object):
                                                                                                              self.resource_name)
             except:
                 pass
-            # if we got a tenant_id, use it to look up the base_url:
-            if tenant_id:
-                try:
-                    base_url = self.tapis_client.tenant_cache.get_base_url_for_service_request(tenant_id, self.resource_name)
-                except:
-                    pass
             # if all else fails, use the base_url for the client
             if not base_url:
                 base_url = self.tapis_client.base_url
@@ -1135,20 +1183,9 @@ class Operation(object):
             # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
             # service tokens are stored by admin tenant, so we need to get the admin tenant for the
             # owning site of the tenant.
-            try:
-                request_tenant = self.tapis_client.tenant_cache.get_tenant_config(tenant_id=tenant_id)
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request tenant for tenant {tenant_id}; e: {e}")
-            try:
-                request_site = request_tenant.site
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request site for tenant {tenant_id}; e: {e}")
-            try:
-                request_site_admin_tenant_id = request_site.site_admin_tenant_id
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not lookup the request site_admin tenant for "
-                                               f"tenant {tenant_id}; e: {e}")
-
+            for tn in self.tapis_client.tenant_cache.tenants:
+                if tn.site.site_id == site_id:
+                    request_site_admin_tenant_id = tn.site.site_admin_tenant_id
             # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
             # the service's first set of tokens.
             if request_site_admin_tenant_id in self.tapis_client.service_tokens.keys() \
@@ -1160,6 +1197,8 @@ class Operation(object):
                                                    f"tenant {request_site_admin_tenant_id};")
             else:
                 pass
+        elif self.tapis_client.access_token:
+            access_token = self.tapis_client.access_token
         elif self.tapis_client.get_access_jwt():
             access_token = self.tapis_client.get_access_jwt()
         # if we got an access token, check if we need to refresh it
@@ -1176,7 +1215,9 @@ class Operation(object):
             if datetime.timedelta(seconds=5) > time_remaining:
                 # if the access token is about to expire, try to use refresh, unless this is a call to
                 # refresh (otherwise this would never terminate!)
-                if self.resource_name == 'tokens' and self.operation_id == 'refresh_token':
+                if (self.resource_name == 'tokens' and self.operation_id == 'refresh_token')\
+                        or (self.resource_name == 'authenticator' and self.operation_id == 'create_token'):
+
                     pass
                 else:
                     try:

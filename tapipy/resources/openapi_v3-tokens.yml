@@ -75,6 +75,32 @@ paths:
                   result:
                     $ref: '#/components/schemas/NewTokenResponse'
 
+  /v3/tokens/keys:
+    put:
+      tags:
+      - Tokens
+      - Keys
+      summary: Update the signing key pair for a tenant.
+      description: Generates a new public/private key pair for token signatures and updates the tenant definition accordingly. Returns the public key.
+      operationId: update_keys
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewSigningKeysRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/NewSigningKeysResponse'
+
 
 
 components:
@@ -177,3 +203,17 @@ components:
         expires_in:
           type: integer
           description: The time, in seconds, when the generated refresh token expires.
+
+    NewSigningKeysRequest:
+      type: object
+      properties:
+        tenant_id:
+          type: string
+          description: The tenant to generate the new signing key pair for.
+
+    NewSigningKeysResponse:
+      type: object
+      properties:
+        public_key:
+          type: string
+          description: The newly generated public key.

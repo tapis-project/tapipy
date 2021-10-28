@@ -1,0 +1,17 @@
+# Image to interact with Tapis v3 API in a Jupyter notebook
+# image: tapis/jupyter
+
+# Usage: run a container using this image:
+#  docker run --rm -it -p 8888:8888 tapis/jupyter
+# optionally mount a directory for persistent data:
+#  docker run --rm -it -p 8888:8888 -v $(pwd)/notebook-data:/home/jovyan/data tapis/jupyter
+
+from python:3.8
+add requirements-jupyter.txt /requirements.txt
+run pip install --upgrade pip
+run pip install --upgrade setuptools
+run pip install -r /requirements.txt
+ENTRYPOINT ["jupyter-notebook", "--ip", "0.0.0.0", "--allow-root"]
+ENV JUPYTER_ENABLE_LAB yes
+WORKDIR "/home"
+

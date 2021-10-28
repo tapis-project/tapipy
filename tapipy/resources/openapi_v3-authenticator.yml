@@ -26,6 +26,47 @@ servers:
   description: catch-all server definition for other Tapis instances.
 
 paths:
+  /v3/oauth2/admin/config:
+    get:
+      tags:
+        - Admin
+      operationId: get_config
+      description: Get the authenticator configuraion for the tenant; restricted to Tenant admins.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/TenantConfig'
+    put:
+      tags:
+        - Admin
+      operationId: update_config
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTenantConfig'
+      description: Update the authenticator configuraion for the tenant; restricted to Tenant admins.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/TenantConfig'
+
+
   /v3/oauth2/clients:
     get:
       tags:
@@ -150,7 +191,25 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                   result:
-                    $ref: '#/components/schemas/Token'
+                    $ref: '#/components/schemas/TokenResponse'
+
+  /v3/oauth2/userinfo:
+    get:
+      tags:
+        - Profiles
+      operationId: get_userinfo
+      description: Return the user profile associated with the Tapis Token. Also can be used to validate the token.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Profile'
 
   /v3/oauth2/profiles:
     get:
@@ -219,6 +278,72 @@ components:
           type: string
           description: Whether the request was a success or failure.
           enum: [success, failure]
+        metadata:
+          type: object
+          description: Metadata about the result object, including pagination information
+
+    TenantConfig:
+      type: object
+      properties:
+        allowable_grant_types:
+          type: array
+          items:
+            type: string
+          description: JSON-serializable list of allowable grant types
+        use_ldap:
+          type: boolean
+          description: whether to use the LDAP configured in the Tenants API for this tenant.
+        use_token_webapp:
+          type: boolean
+          description: whether to make the Authenticator token web app available
+        mfa_config:
+          type: object
+          description: JSON-serializable object which includes various details such as which MFA system to use (e.g., TACC MFA or another MFA) and configurations for it.
+        default_access_token_ttl:
+          type: integer
+          description: The access token TTL, in seconds, for standard grant types, such as authorization code.
+        default_refresh_token_ttl:
+          type: integer
+          description: The refresh token TTL, in seconds, for standard grant types, such as authorization code.
+        max_access_token_ttl:
+          type: integer
+          description: The maxiumum access token TTL, in seconds, for grant types that allow the caller to specify the TTL.
+        max_refresh_token_ttl:
+          type: integer
+          description: The maxiumum refresh token TTL, in seconds, for grant types that allow the caller to specify the TTL.
+        custom_idp_configuration:
+          type: object
+          description: JSON-serializable object which includes various configuration details for tenants using an IdP that is not LDAP/AD.
+
+    NewTenantConfig:
+      type: object
+      properties:
+        allowable_grant_types:
+          type: array
+          items:
+            type: string
+          description: JSON-serializable list of allowable grant types
+        use_ldap:
+          type: boolean
+          description: whether to use the LDAP configured in the Tenants API for this tenant.
+        use_token_webapp:
+          type: boolean
+          description: whether to make the Authenticator token web app available
+        default_access_token_ttl:
+          type: integer
+          description: The access token TTL, in seconds, for standard grant types, such as authorization code.
+        default_refresh_token_ttl:
+          type: integer
+          description: The refresh token TTL, in seconds, for standard grant types, such as authorization code.
+        max_access_token_ttl:
+          type: integer
+          description: The maxiumum access token TTL, in seconds, for grant types that allow the caller to specify the TTL.
+        max_refresh_token_ttl:
+          type: integer
+          description: The maxiumum refresh token TTL, in seconds, for grant types that allow the caller to specify the TTL.
+        custom_idp_configuration:
+          type: object
+          description: Configuration for customizing the IdP integration, including custom ldap search filters and alternative IdPs like github OAuth of Custos; must be a JSON-serializable object.
 
     NewClient:
       type: object
@@ -287,12 +412,42 @@ components:
           type: string
           description: A description of this client.
 
-    Token:
+    TokenResponse:
       type: object
+      required: [access_token]
       properties:
-        token:
-          type: string
-          description: A jwt token.
+        access_token:
+          type: object
+          description: A Tapis access token object.
+          properties:
+            access_token:
+              type: string
+              description: The actual access token as a JWT
+            expires_at:
+              type: string
+              description: The time, as a string in UTC, when the token expires.
+            expires_in:
+              type: integer
+              description: The amount of time, in seconds, when the token will expire.
+            jti:
+              type: string
+              description: Unique identifier for the token
+        refresh_token:
+          type: object
+          description: A Tapis refresh token object.
+          properties:
+            refresh_token:
+              type: string
+              description: The actual refresh token as a JWT
+            expires_at:
+              type: string
+              description: The time, as a string in UTC, when the token expires.
+            expires_in:
+              type: integer
+              description: The amount of time, in seconds, when the token will expire.
+            jti:
+              type: string
+              description: Unique identifier for the token
 
     arrayOfClients:
       type: array

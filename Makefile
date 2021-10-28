@@ -11,6 +11,10 @@ build:
 	rm -rf dist
 	poetry build
 
+install: build
+	pip3 uninstall tapipy -y
+	pip3 install dist/*.whl
+
 test: build
 	docker build -t tapis/tapipy-tests -f Dockerfile-tests .
 	docker run $$interactive --rm  tapis/tapipy-tests

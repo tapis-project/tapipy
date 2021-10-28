@@ -1,6 +1,198 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.0.2 - 2021-10-20 (target)
+### Added
+- No change.
+
+### Changed
+- Downgraded jsonschema version due to slowdown caused by 4.0+ releases in spec parsing.
+
+### Removed
+- No change.
+
+
+## 1.0.1 - 2021-09-29 (target)
+### Added
+- No change.
+
+### Changed
+- Rebuild to ensure new specs working (PgREST was using previous spec still).
+
+### Removed
+- No change.
+
+
+## 1.0.0 - 2021-09-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for pgrest, apps, jobs, tokens.
+
+### Removed
+- No change.
+
+
+## Tapis V3 in Production, moving from 0.3.34 -> 1.0.0
+
+
+## 0.3.34 - 2021-09-20 (target)
+### Added
+- No change.
+
+### Changed
+- Bugfix for debug prints.
+
+### Removed
+- No change.
+
+
+## 0.3.33 - 2021-09-20 (target)
+### Added
+- Added "debug_prints" flag to Tapipy object to get rid of some annoying print statements. Purely QOL.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
+## 0.3.32 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- Syntax fix.
+
+### Removed
+- No change.
+
+
+## 0.3.31 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- No change.
+
+### Removed
+- Remove test exception.
+
+
+## 0.3.30 - 2021-08-06 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for systems, apps.
+
+### Removed
+- No change.
+
+
+## 0.3.29 - 2021-07-22 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for streams.
+
+### Removed
+- No change.
+
+
+## 0.3.28 - 2021-07-22 (target)
+### Added
+- No change.
+
+### Changed
+- Updating specs for sk, streams, systems, tenants, jobs, apps.
+
+### Removed
+- No change.
+
+
+## 0.3.27 - 2021-06-29 (target)
+### Added
+- Added `resource_dicts` to Tapis object. This allows you to view the specs in dictionary form that Tapipy is using.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
+## 0.3.26 - 2021-06-23 (target)
+### Added
+- No change.
+
+### Changed
+- Changed multiprocessing to threads library.
+
+### Removed
+- No change.
+
+
+## 0.3.25 - 2021-06-23 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fixes in __call__
+- Bug fix in `add_claims_to_token` function.
+
+### Removed
+- No change.
+
+
+## 0.3.24 - 2021-06-22 (target)
+### Added
+- No change.
+
+### Changed
+- Updating apps, authenticator, and systems specs.
+
+### Removed
+- No change.
+
+
+## 0.3.23 - 2021-06-22 (target)
+### Added
+- No change.
+
+### Changed
+- Utilizing threads library rather than multiprocessing for spec downloading.
+
+### Removed
+- No change.
+
+
+## 0.3.22 - 2021-06-03 (target)
+### Added
+- Adding set of staging specs accessible with 'resource_set' = 'staging'.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
+## 0.3.21 - 2021-05-28 (target)
+### Added
+- No change.
+
+### Changed
+- Updating systems and apps specs.
+
+### Removed
+- No change.
+
+
 ## 0.3.20 - 2021-05-20 (target)
 ### Added
 - Adding back support for inputted access/refresh tokens at Tapis() initialization.

@@ -2,11 +2,14 @@
 # Build the test docker image: docker build -t tapis/pysdk-tests -f Dockerfile-tests .
 # Run these tests using the built docker image: docker run -it --rm  tapis/pysdk-tests
 
-import pytest
+import subprocess
+import time
 
-from common.config import conf
+import pytest
 from common.auth import tenants
-from tapipy.tapis import TapisResult, Tapis
+from common.config import conf
+from tapipy.tapis import Tapis, TapisResult
+
 
 @pytest.fixture
 def client():
@@ -171,13 +174,19 @@ def test_create_token(client):
 
 def test_list_tenants(client):
     tenants = client.tenants.list_tenants()
+    sites = client.tenants.list_sites()
+    admin_tenants = set()
+    for s in sites:
+        admin_tenants.add(s.site_admin_tenant_id)
     for t in tenants:
         assert hasattr(t, 'base_url')
         assert hasattr(t, 'tenant_id')
         assert hasattr(t, 'public_key')
         assert hasattr(t, 'token_service')
         assert hasattr(t, 'security_kernel')
-        assert hasattr(t, 'token_gen_services')
+        # Only non-admin tenants require `token_gen_services` key
+        if not t.tenant_id in admin_tenants:
+            assert hasattr(t, 'token_gen_services')
 
 def test_get_tenant_by_id(client):
     t = client.tenants.get_tenant(tenant_id='dev')
@@ -271,6 +280,79 @@ def test_debug_flag_tenants(client):
     assert hasattr(debug, 'response')
     assert hasattr(debug.request, 'url')
     assert hasattr(debug.response, 'content')
+
+
+# -----------------------
+# Tapipy import timing test -
+# -----------------------
+
+def test_import_timing():
+    start = time.time()
+    subprocess.call(['python', '-c', 'from tapipy.tapis import Tapis'])
+    import_time = time.time() - start
+    assert import_time <= 2
+
+
+# -----------------------
+# Download spec tests -
+# -----------------------
+
+def test_download_prod_specs():
+    try:
+        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
+        username = getattr(conf, 'username', 'pysdk')
+        account_type = getattr(conf, 'account_type', 'service')
+        tenant_id = getattr(conf, 'tenant_id', 'admin')
+        service_password = getattr(conf, 'service_password', None)
+        t = Tapis(base_url=base_url,
+                username=username,
+                account_type=account_type,
+                tenant_id=tenant_id,
+                service_password=service_password,
+                tenants=tenants,
+                is_tapis_service=True,
+                resource_set='prod')
+        t.get_tokens()
+    except Exception as e:
+        raise
+
+def test_download_staging_specs():
+    try:
+        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
+        username = getattr(conf, 'username', 'pysdk')
+        account_type = getattr(conf, 'account_type', 'service')
+        tenant_id = getattr(conf, 'tenant_id', 'admin')
+        service_password = getattr(conf, 'service_password', None)
+        t = Tapis(base_url=base_url,
+                username=username,
+                account_type=account_type,
+                tenant_id=tenant_id,
+                service_password=service_password,
+                tenants=tenants,
+                is_tapis_service=True,
+                resource_set='staging')
+        t.get_tokens()
+    except Exception as e:
+        raise
+
+def test_download_dev_specs():
+    try:
+        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
+        username = getattr(conf, 'username', 'pysdk')
+        account_type = getattr(conf, 'account_type', 'service')
+        tenant_id = getattr(conf, 'tenant_id', 'admin')
+        service_password = getattr(conf, 'service_password', None)
+        t = Tapis(base_url=base_url,
+                username=username,
+                account_type=account_type,
+                tenant_id=tenant_id,
+                service_password=service_password,
+                tenants=tenants,
+                is_tapis_service=True,
+                resource_set='dev')
+        t.get_tokens()
+    except Exception as e:
+        raise
 
 
 # ---------------------
