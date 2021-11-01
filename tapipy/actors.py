@@ -1,5 +1,4 @@
 import ast
-import getpass
 import json
 import os
 import socket
