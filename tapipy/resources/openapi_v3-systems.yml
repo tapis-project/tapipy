@@ -1,8 +1,8 @@
 openapi: 3.0.3
 info:
   title: Tapis Systems API
-  description: The Tapis Systems API provides for management of Tapis Systems including permissions and credentials.
-  version: '1.0.0-rc1'
+  description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
+  version: '1.0.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -24,8 +24,16 @@ servers:
 security:
   - TapisJWT: []
 tags:
+  - name: General
+    description: General service health and readiness
   - name: Systems
-    description: manage Systems
+    description: Manage Tapis system resources. Create, retrieve, update, etc.
+  - name: Credentials
+    description: Manage Tapis system user access credentials. Create, update, remove, etc.
+  - name: Permissions
+    description: Manage Tapis permissions for system resources. Grant, revoke and retrieve.
+  - name: Scheduler Profiles
+    description: Manage Tapis scheduler profile resources. Create, retrieve and delete.
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------
@@ -150,6 +158,9 @@ paths:
         Name must begin with an alphabetic character and can be no more than 80 characters in length.
         Description is optional with a maximum length of 2048 characters.
 
+        By default any credentials provided for LINUX type systems are verified. Use query parameter
+        skipCredentialCheck=true to bypass initial verification of credentials.
+
         Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
         may be modified and used when making a POST request to create a system.
         The attributes that are allowed but ignored are
@@ -160,6 +171,13 @@ paths:
           - created
           - updated
       operationId: createSystem
+      parameters:
+        - name: skipCredentialCheck
+          in: query
+          description: Bypass initial check for valid credentials. Default is false.
+          schema:
+            type: boolean
+            default: false
       requestBody:
         required: true
         description: A JSON object specifying information for the system to be created.
@@ -206,6 +224,16 @@ paths:
       description: Retrieve details for systems. Use query parameters to specify search conditions. For example owner.eq=jdoe&port.gt=1024
       operationId: searchSystemsQueryParameters
       parameters:
+        - name: freeFormParameterName
+          in: query
+          description: Free form query parameters.
+          explode: true
+          allowEmptyValue: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+          style: form
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -520,6 +548,9 @@ paths:
       description: |
         Update all updatable attributes of a system using a request body identical to POST. System must exist.
 
+        By default any credentials provided for LINUX type systems are verified. Use query parameter
+        skipCredentialCheck=true to bypass initial verification of credentials.
+
         Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
         may be modified and used when making a PUT request to update a system.
 
@@ -550,6 +581,12 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/IdString'
+        - name: skipCredentialCheck
+          in: query
+          description: Bypass initial check for valid credentials. Default is false.
+          schema:
+            type: boolean
+            default: false
       requestBody:
         required: true
         description: A JSON object specifying changes to be applied.
@@ -902,6 +939,9 @@ paths:
 
         Note that user making the request and *target user* may be different and frequently are different.
 
+        By default any credentials provided for LINUX type systems are verified. Use query parameter
+        skipCredentialCheck=true to bypass initial verification of credentials.
+
         Note that the attribute authnMethod is allowed but ignored so that the JSON result returned by a GET
         may be modified and used when making a POST to update credentials.
       operationId: createUserCredential
@@ -916,6 +956,12 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/UserNameString'
+        - name: skipCredentialCheck
+          in: query
+          description: Bypass initial check for valid credentials. Default is false.
+          schema:
+            type: boolean
+            default: false
       requestBody:
         required: true
         description: A JSON object specifying credentials.
@@ -1195,6 +1241,180 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
 
+  # --- Paths for /schedulerProfile ------------------------------------------------
+  '/v3/systems/schedulerProfile':
+    get:
+      tags:
+        - Scheduler Profiles
+      summary: Retrieve scheduler profiles
+      description: Retrieve list of scheduler profiles.
+      operationId: getSchedulerProfiles
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSchedulerProfiles'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Scheduler Profiles
+      summary: Create a scheduler profile
+      description: |
+        Create a scheduler profile using a request body. Name must be unique within a tenant and can be composed of
+        alphanumeric characters and the following special characters [-._~].
+        Name must begin with an alphabetic character and can be no more than 80 characters in length.
+        Description is optional with a maximum length of 2048 characters.
+
+        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        may be modified and used when making a POST request to create a profile.
+        The attributes that are allowed but ignored are
+
+          - tenant
+          - uuid
+          - created
+          - updated
+      operationId: createSchedulerProfile
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the profile to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqCreateSchedulerProfile'
+      responses:
+        '201':
+          description: Scheduler profile created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '409':
+          description: Scheduler profile already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/schedulerProfile/{name}':
+    get:
+      tags:
+        - Scheduler Profiles
+      summary: Retrieve a scheduler profile
+      description: |
+        Retrieve information for a scheduler profile given the profile name.
+      operationId: getSchedulerProfile
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSchedulerProfile'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Scheduler profile not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - Scheduler Profiles
+      summary: Delete a scheduler profile
+      description: |
+        Remove a scheduler profile given the profile name. Requester must be owner of the profile.
+      operationId: deleteSchedulerProfile
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: Scheduler profile deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
 # ------------------------------------------------------------------------------
 # --- Components ---------------------------------------------------------------
 components:
@@ -1259,6 +1479,9 @@ components:
           default: false
         canExec:
           type: boolean
+        canRunBatch:
+          type: boolean
+          default: false
         jobRuntimes:
           type: array
           minItems: 1
@@ -1277,9 +1500,6 @@ components:
         jobMaxJobsPerUser:
           type: integer
           default: 2147483647
-        jobIsBatch:
-          type: boolean
-          default: false
         batchScheduler:
           $ref: '#/components/schemas/SchedulerTypeEnum'
         batchLogicalQueues:
@@ -1288,6 +1508,8 @@ components:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
           $ref: '#/components/schemas/QueueNameString'
+        batchSchedulerProfile:
+          $ref: '#/components/schemas/IdString'
         jobCapabilities:
           type: array
           items:
@@ -1298,6 +1520,8 @@ components:
             $ref: '#/components/schemas/TagString'
         notes:
           type: object
+        importRefId:
+          type: string
         uuid:
           type: string
           format: uuid
@@ -1317,6 +1541,33 @@ components:
           $ref: '#/components/schemas/RuntimeTypeEnum'
         version:
           type: string
+    # --- SchedulerProfile ------------------------------------------------------------------
+    SchedulerProfile:
+      type: object
+      required:
+        - name
+        - moduleLoadCommand
+      properties:
+        tenant:
+          type: string
+        name:
+          $ref: '#/components/schemas/IdString'
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        owner:
+          $ref: '#/components/schemas/UserNameApiDefaultString'
+        moduleLoadCommand:
+          type: string
+          minLength: 1
+        modulesToLoad:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        hiddenOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchedulerHiddenOptionEnum'
     # --- LogicalQueue ------------------------------------------------------------------
     LogicalQueue:
       type: object
@@ -1397,6 +1648,7 @@ components:
           minLength: 1
         value:
           type: string
+          default: ""
 
     # --- String types with constraints ------------------------------------
     HostString:
@@ -1489,6 +1741,9 @@ components:
           default: false
         canExec:
           type: boolean
+        canRunBatch:
+          type: boolean
+          default: false
         jobRuntimes:
           type: array
           minItems: 1
@@ -1504,9 +1759,6 @@ components:
           type: integer
         jobMaxJobsPerUser:
           type: integer
-        jobIsBatch:
-          type: boolean
-          default: false
         batchScheduler:
           $ref: '#/components/schemas/SchedulerTypeEnum'
         batchLogicalQueues:
@@ -1515,6 +1767,8 @@ components:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
           $ref: '#/components/schemas/QueueNameString'
+        batchSchedulerProfile:
+          $ref: '#/components/schemas/IdString'
         jobCapabilities:
           type: array
           items:
@@ -1525,6 +1779,8 @@ components:
             $ref: '#/components/schemas/TagString'
         notes:
           type: object
+        importRefId:
+          type: string
     ReqPutSystem:
       type: object
       properties:
@@ -1555,6 +1811,9 @@ components:
           type: string
         dtnMountSourcePath:
           type: string
+        canRunBatch:
+          type: boolean
+          default: false
         jobRuntimes:
           type: array
           minItems: 1
@@ -1570,9 +1829,6 @@ components:
           type: integer
         jobMaxJobsPerUser:
           type: integer
-        jobIsBatch:
-          type: boolean
-          default: false
         batchScheduler:
           $ref: '#/components/schemas/SchedulerTypeEnum'
         batchLogicalQueues:
@@ -1581,6 +1837,8 @@ components:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
           $ref: '#/components/schemas/QueueNameString'
+        batchSchedulerProfile:
+          $ref: '#/components/schemas/IdString'
         jobCapabilities:
           type: array
           items:
@@ -1591,6 +1849,8 @@ components:
             $ref: '#/components/schemas/TagString'
         notes:
           type: object
+        importRefId:
+          type: string
     ReqPatchSystem:
       type: object
       properties:
@@ -1618,6 +1878,8 @@ components:
           type: string
         dtnMountSourcePath:
           type: string
+        canRunBatch:
+          type: boolean
         jobRuntimes:
           type: array
           minItems: 1
@@ -1633,8 +1895,6 @@ components:
           type: integer
         jobMaxJobsPerUser:
           type: integer
-        jobIsBatch:
-          type: boolean
         batchScheduler:
           $ref: '#/components/schemas/SchedulerTypeEnum'
         batchLogicalQueues:
@@ -1643,6 +1903,8 @@ components:
             $ref: '#/components/schemas/LogicalQueue'
         batchDefaultLogicalQueue:
           $ref: '#/components/schemas/QueueNameString'
+        batchSchedulerProfile:
+          $ref: '#/components/schemas/IdString'
         jobCapabilities:
           type: array
           items:
@@ -1653,6 +1915,8 @@ components:
             $ref: '#/components/schemas/TagString'
         notes:
           type: object
+        importRefId:
+          type: string
     ReqCreateCredential:
       type: object
       properties:
@@ -1698,6 +1962,31 @@ components:
           minItems: 1
           items:
             type: string
+    ReqCreateSchedulerProfile:
+      type: object
+      required:
+        - name
+        - moduleLoadCommand
+      properties:
+        name:
+          $ref: '#/components/schemas/IdString'
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        owner:
+          type: string
+        moduleLoadCommand:
+          type: string
+          minLength: 1
+        modulesToLoad:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        hiddenOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchedulerHiddenOptionEnum'
+
     # -------------------------------------------------------------------------
     # --- Response objects ----------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1843,6 +2132,34 @@ components:
           $ref: '#/components/schemas/Credential'
         metadata:
           type: object
+    RespSchedulerProfile:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/SchedulerProfile'
+        metadata:
+          type: object
+    RespSchedulerProfiles:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchedulerProfile'
+        metadata:
+          type: object
     # -------------------------------------------------------------------------
     # --- Enums ---------------------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1851,6 +2168,8 @@ components:
       enum:
         - LINUX
         - S3
+        - IRODS
+        - GLOBUS
     AuthnEnum:
       type: string
       enum:
@@ -1891,3 +2210,7 @@ components:
         - SGE
         - UGE
         - TORQUE
+    SchedulerHiddenOptionEnum:
+      type: string
+      enum:
+        - MEM

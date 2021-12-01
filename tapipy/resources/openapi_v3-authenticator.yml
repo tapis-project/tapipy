@@ -26,6 +26,24 @@ servers:
   description: catch-all server definition for other Tapis instances.
 
 paths:
+  /v3/oauth2/.well-known/oauth-authorization-server:
+    get:
+      tags:
+        - Metadata
+      operationId: get_server_metadata
+      description: Get the OAuth2 server metadata for the tenant.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/OAuth2Metadata'
+
   /v3/oauth2/admin/config:
     get:
       tags:
@@ -181,6 +199,9 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NewToken'
       responses:
         '201':
           description: Created
@@ -281,6 +302,31 @@ components:
         metadata:
           type: object
           description: Metadata about the result object, including pagination information
+
+    OAuth2Metadata:
+      type: object
+      properties:
+        issuer:
+          type: string
+          description: The authorization server's issuer identifier.
+        authorization_endpoint:
+          type: string
+          description: URL of the authorization server's authorization endpoint.
+        token_endpoint:
+          type: string
+          description: URL of the authorization server's token endpoint.
+        jwks_uri:
+          type: string
+          description: URL to the public key used to check signatures for the tokens issued by this server.
+        registration_endpoint:
+          type: string
+          description: URL of the authorization server's OAuth 2.0 Dynamic Client Registration endpoint
+        grant_types_supported:
+          type: array
+          items:
+            type: string
+          description: JSON-serializable list of grant types supported by this server.
+
 
     TenantConfig:
       type: object

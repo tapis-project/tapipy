@@ -7,13 +7,13 @@ info:
     email: cicsupport@tacc.utexas.edu
   license:
     name: 3-Clause BSD License
-    url: 'https://opensource.org/licenses/BSD-3-Clause'
+    url: https://opensource.org/licenses/BSD-3-Clause
   version: '0.1'
 externalDocs:
   description: Tapis Home
-  url: 'https://tacc-cloud.readthedocs.io/projects/agave/en/latest/'
+  url: https://tacc-cloud.readthedocs.io/projects/agave/en/latest/
 servers:
-  - url: 'http://localhost:8080/v3'
+  - url: http://localhost:8080/v3
     description: Local test environment
     variables: {}
 tags:
@@ -125,77 +125,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  /security/role/replacePathPrefix:
-    post:
-      tags:
-        - role
-      description: |-
-        Replace the text in a permission specification when its last component defines an *extended path attribute*.  Extended path attributes enhance the standard Shiro matching algorithm with one that treats designated components in a permission specification as a path name, such as a posix file or directory path name.  This request is useful when files or directories have been renamed or moved and their authorizations need to be adjusted.  Consider, for example, permissions that conform to the following specification:
-
-              files:tenantId:op:systemId:path
-
-        By definition, the last component is an extended path attribute whose content can be changed by replacePathPrefix requests.  Specifically, paths that begin with the oldPrefix will have that prefix replaced with the newPrefix value.  Replacement only occurs on permissions that also match the schema and oldSystemId parameter values.  The systemId attribute is required to immediately precede the path attribute, which must be the last attribute.
-
-        Additionally, the oldSystemId is replaced with the newSystemId when a match is found.  If a roleName is provided, then replacement is limited to permissions defined only in that role.  Otherwise, permissions in all roles that meet the other matching criteria will be considered.
-
-        The optional parameters are roleName, oldPrefix and newPrefix. No wildcards are defined for the path prefix parameters.  When roleName is specified then only permissions assigned to that role are considered.
-
-        When the oldPrefix parameter is provided, it's used to filter out permissions whose paths do not begin with the specified string; when not provided, no path prefix filtering occurs.
-
-        When the newPrefix parameter is not provided no new characters are prepended to the new path, effectively just removing the oldPrefix from the new path. When neither oldPrefix nor newPrefix are provided, no path transformation occurs, though system IDs can still be transformed.
-
-        The previewPathPrefix request provides a way to do a dry run using the same input as this request. The preview call calculates the permissions that would change and what their new values would be, but it does not actually change those permissions as replacePathPrefix does.
-
-        The input parameters are passed in the payload of this request.  The response indicates the number of changed permission specifications.
-
-        The path prefix replacement operation is authorized if the user@tenant in the JWT represents a tenant administrator or the Files service.
-      operationId: replacePathPrefix
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqReplacePathPrefix'
-        required: true
-      responses:
-        '200':
-          description: Path prefixes replaced.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '404':
-          description: Named role not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespName'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  '/security/role/{roleName}':
+  /security/role/{roleName}:
     get:
       tags:
         - role
@@ -299,7 +229,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/role/{roleName}/perms':
+  /security/role/{roleName}/perms:
     get:
       tags:
         - role
@@ -361,7 +291,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/role/updateName/{roleName}':
+  /security/role/updateName/{roleName}:
     post:
       tags:
         - role
@@ -420,7 +350,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/role/updateOwner/{roleName}':
+  /security/role/updateOwner/{roleName}:
     post:
       tags:
         - role
@@ -479,7 +409,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/role/updateDesc/{roleName}':
+  /security/role/updateDesc/{roleName}:
     post:
       tags:
         - role
@@ -851,7 +781,77 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/role/defaultRole/{user}':
+  /security/role/replacePathPrefix:
+    post:
+      tags:
+        - role
+      description: |-
+        Replace the text in a permission specification when its last component defines an *extended path attribute*.  Extended path attributes enhance the standard Shiro matching algorithm with one that treats designated components in a permission specification as a path name, such as a posix file or directory path name.  This request is useful when files or directories have been renamed or moved and their authorizations need to be adjusted.  Consider, for example, permissions that conform to the following specification:
+
+              files:tenantId:op:systemId:path
+
+        By definition, the last component is an extended path attribute whose content can be changed by replacePathPrefix requests.  Specifically, paths that begin with the oldPrefix will have that prefix replaced with the newPrefix value.  Replacement only occurs on permissions that also match the schema and oldSystemId parameter values.  The systemId attribute is required to immediately precede the path attribute, which must be the last attribute.
+
+        Additionally, the oldSystemId is replaced with the newSystemId when a match is found.  If a roleName is provided, then replacement is limited to permissions defined only in that role.  Otherwise, permissions in all roles that meet the other matching criteria will be considered.
+
+        The optional parameters are roleName, oldPrefix and newPrefix. No wildcards are defined for the path prefix parameters.  When roleName is specified then only permissions assigned to that role are considered.
+
+        When the oldPrefix parameter is provided, it's used to filter out permissions whose paths do not begin with the specified string; when not provided, no path prefix filtering occurs.
+
+        When the newPrefix parameter is not provided no new characters are prepended to the new path, effectively just removing the oldPrefix from the new path. When neither oldPrefix nor newPrefix are provided, no path transformation occurs, though system IDs can still be transformed.
+
+        The previewPathPrefix request provides a way to do a dry run using the same input as this request. The preview call calculates the permissions that would change and what their new values would be, but it does not actually change those permissions as replacePathPrefix does.
+
+        The input parameters are passed in the payload of this request.  The response indicates the number of changed permission specifications.
+
+        The path prefix replacement operation is authorized if the user@tenant in the JWT represents a tenant administrator or the Files service.
+      operationId: replacePathPrefix
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqReplacePathPrefix'
+        required: true
+      responses:
+        '200':
+          description: Path prefixes replaced.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Named role not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/role/defaultRole/{user}:
     get:
       tags:
         - role
@@ -1008,25 +1008,6 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  /security/ready:
-    get:
-      tags:
-        - general
-      description: Lightwieght readiness check. No authorization required.
-      operationId: ready
-      responses:
-        '200':
-          description: Service ready.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespProbe'
-        '503':
-          description: Service unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespProbe'
   /security/hello:
     get:
       tags:
@@ -1067,6 +1048,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespProbe'
+  /security/ready:
+    get:
+      tags:
+        - general
+      description: Lightwieght readiness check. No authorization required.
+      operationId: ready
+      responses:
+        '200':
+          description: Service ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+  /security/user/isPermitted:
+    post:
+      tags:
+        - user
+      description: |-
+        Check whether specified permission matches a permission assigned to the user, either directly or transitively.
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: isPermitted
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqUserIsPermitted'
+        required: true
+      responses:
+        '200':
+          description: Check completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespAuthorized'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
   /security/user/hasRole:
     post:
       tags:
@@ -1115,7 +1163,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/user/defaultRole/{user}':
+  /security/user/defaultRole/{user}:
     get:
       tags:
         - user
@@ -1160,600 +1208,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-  /security/user:
-    get:
-      tags:
-        - user
-      description: |-
-        Get the names of all users in the tenant that have been granted a role or permission.
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: getUserNames
-      parameters:
-        - name: tenant
-          in: query
-          schema:
-            type: string
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: Sorted list of user names.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespNameArray'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  '/security/user/roles/{user}':
-    get:
-      tags:
-        - user
-      description: |-
-        Get the roles assigned to a user in the specified tenant, including those assigned transively.
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: getUserRoles
-      parameters:
-        - name: user
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: tenant
-          in: query
-          schema:
-            type: string
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: List of roles names assigned to the user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespNameArray'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  '/security/user/perms/{user}':
-    get:
-      tags:
-        - user
-      description: |-
-        Get the permissions assigned to a user in a tenant, including those assigned transively.  The result list can be optionally filtered by the one or both of the query parameters: implies and impliedBy.
-
-        The implied parameter removes permissions from the result list that the specified permission do not imply. The impliedBy parameter removes permissions from the result list that the specified permission are not implied by. Below are some examples.Consider a user that is assigned these permissions:
-
-            stream:dev:read:project1
-            stream:dev:read,write:project1
-            stream:dev:read,write,exec:project1
-
-        **Using the *implies* Query Parameter**
-
-        When _implies=stream:dev:*:project1_, this endpoint returns:
-
-            stream:dev:read:project1
-            stream:dev:read,write:project1
-            stream:dev:read,write,exec:project1
-
-        When _implies=stream:dev:write:project1_, this endpoint returns an empty list.
-
-        **Using the *impliedBy* Query Parameter**
-
-        When _impliedBy=stream:dev:*:project1_, this endpoint returns an empty list.
-
-        When _impliedBy=stream:dev:write:project1_, this endpoint returns:
-
-            stream:dev:read,write:project1
-            stream:dev:read,write,exec:project1
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: getUserPerms
-      parameters:
-        - name: user
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: tenant
-          in: query
-          schema:
-            type: string
-        - name: implies
-          in: query
-          schema:
-            type: string
-            default: ''
-        - name: impliedBy
-          in: query
-          schema:
-            type: string
-            default: ''
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: List of permissions assigned to the user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespNameArray'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  /security/user/grantRole:
-    post:
-      tags:
-        - user
-      description: |-
-        Grant a user the specified role.  A valid tenant and user must be specified in the request body.
-
-        This request is authorized only if the requestor is the role owner or an administrator.  The user and the role must be in the same tenant.
-      operationId: grantRole
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqGrantUserRole'
-        required: true
-      responses:
-        '200':
-          description: Role assigned to user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '404':
-          description: Named role not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespName'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  /security/user/revokeUserRole:
-    post:
-      tags:
-        - user
-      description: |-
-        Revoke a previously granted role from a user. No action is taken if the user is not currently assigned the role. This request is idempotent.
-
-        This request is authorized only if the requestor is the role owner or an administrator.
-      operationId: revokeUserRole
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqRevokeUserRole'
-        required: true
-      responses:
-        '200':
-          description: Role removed from user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  /security/user/grantAdminRole:
-    post:
-      tags:
-        - user
-      description: Grant a user the tenant administrator role.  A valid tenant and user must be specified in the request body.  The user specified in the JWT must be an administrator in the tenant specified in the request body.
-      operationId: grantAdminRole
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqGrantAdminRole'
-        required: true
-      responses:
-        '200':
-          description: Role assigned to user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '404':
-          description: Named role not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespName'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  /security/user/revokeAdminRole:
-    post:
-      tags:
-        - user
-      description: |-
-        Revoke the previously granted tenant administrator role from a user. No action is taken if the user is not currently assigned the role (the request is idempotent).  The request will not be honored if revoking the role would leave the tenant with no administrator.
-
-        The user specified in the JWT must themselves be an administrator and a valid tenant and user must be specified in the request body.
-      operationId: revokeAdminRole
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqRevokeAdminRole'
-        required: true
-      responses:
-        '200':
-          description: Role removed from user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  /security/user/isAdmin:
-    post:
-      tags:
-        - user
-      description: |-
-        Check whether a user in a tenant has been assigned the tenant administrator role, either directly or transitively.
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: isAdmin
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqUserIsAdmin'
-        required: true
-      responses:
-        '200':
-          description: Check completed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespAuthorized'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  '/security/user/admins/{tenant}':
-    get:
-      tags:
-        - user
-      description: |-
-        Get all users assigned the tenant administrator role ($!tenant_admin).
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: getAdmins
-      parameters:
-        - name: tenant
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: Sorted list of administrator users.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespNameArray'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '404':
-          description: Named role not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespName'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  '/security/user/withRole/{roleName}':
-    get:
-      tags:
-        - user
-      description: |-
-        Get all users assigned a role.  The role must exist in the tenant.
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: getUsersWithRole
-      parameters:
-        - name: roleName
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: tenant
-          in: query
-          schema:
-            type: string
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: Sorted list of users assigned a role.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespNameArray'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '404':
-          description: Named role not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespName'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
-  /security/user/grantUserPermission:
-    post:
-      tags:
-        - user
-      description: |-
-        Grant a user the specified permission by assigning that permission to to the user's default role.  If the user's default role does not exist,this request will create that role and grant it to the user before assigning the permission to the role.
-
-        A user's default role name is discoverable by calling either of the user/defaultRole or role/defaultRole endpoints.
-
-        The change count returned can range from zero to three depending on how many insertions and updates were actually required
-
-        The caller must be an administrator or service allowed to perform updates in the user's tenant.
-      operationId: grantUserPermission
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqGrantUserPermission'
-        required: true
-      responses:
-        '200':
-          description: Permission assigned to user.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespChangeCount'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
   /security/user/revokeUserPermission:
     post:
       tags:
@@ -1954,54 +1408,6 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  /security/user/isPermitted:
-    post:
-      tags:
-        - user
-      description: |-
-        Check whether specified permission matches a permission assigned to the user, either directly or transitively.
-
-        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
-      operationId: isPermitted
-      parameters:
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqUserIsPermitted'
-        required: true
-      responses:
-        '200':
-          description: Check completed.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespAuthorized'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
   /security/user/isPermittedAny:
     post:
       tags:
@@ -2098,7 +1504,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/user/withPermission/{permSpec}':
+  /security/user/withPermission/{permSpec}:
     get:
       tags:
         - user
@@ -2159,7 +1565,603 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/{secretType}/{secretName}':
+  /security/user:
+    get:
+      tags:
+        - user
+      description: |-
+        Get the names of all users in the tenant that have been granted a role or permission.
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: getUserNames
+      parameters:
+        - name: tenant
+          in: query
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Sorted list of user names.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespNameArray'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/roles/{user}:
+    get:
+      tags:
+        - user
+      description: |-
+        Get the roles assigned to a user in the specified tenant, including those assigned transively.
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: getUserRoles
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tenant
+          in: query
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of roles names assigned to the user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespNameArray'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/perms/{user}:
+    get:
+      tags:
+        - user
+      description: |-
+        Get the permissions assigned to a user in a tenant, including those assigned transively.  The result list can be optionally filtered by the one or both of the query parameters: implies and impliedBy.
+
+        When implies is set, the filter _implies_ each entry in the result set. When impliedBy is set, each entry in the result set is _implied by_ the filter. Below are some examples.
+
+        Consider a user that is assigned these permissions:
+
+            stream:dev:read:project1
+            stream:dev:read,write:project1
+            stream:dev:read,write,exec:project1
+
+        **Using the *implies* Query Parameter**
+
+        When _implies=stream:dev:*:project1_, this endpoint returns:
+
+            stream:dev:read:project1
+            stream:dev:read,write:project1
+            stream:dev:read,write,exec:project1
+
+        When _implies=stream:dev:write:project1_, this endpoint returns an empty list.
+
+        **Using the *impliedBy* Query Parameter**
+
+        When _impliedBy=stream:dev:*:project1_, this endpoint returns an empty list.
+
+        When _impliedBy=stream:dev:write:project1_, this endpoint returns:
+
+            stream:dev:read,write:project1
+            stream:dev:read,write,exec:project1
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: getUserPerms
+      parameters:
+        - name: user
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tenant
+          in: query
+          schema:
+            type: string
+        - name: implies
+          in: query
+          schema:
+            type: string
+            default: ''
+        - name: impliedBy
+          in: query
+          schema:
+            type: string
+            default: ''
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of permissions assigned to the user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespNameArray'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/grantRole:
+    post:
+      tags:
+        - user
+      description: |-
+        Grant a user the specified role.  A valid tenant and user must be specified in the request body.
+
+        This request is authorized only if the requestor is the role owner or an administrator.  The user and the role must be in the same tenant.
+      operationId: grantRole
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqGrantUserRole'
+        required: true
+      responses:
+        '200':
+          description: Role assigned to user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Named role not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/revokeUserRole:
+    post:
+      tags:
+        - user
+      description: |-
+        Revoke a previously granted role from a user. No action is taken if the user is not currently assigned the role. This request is idempotent.
+
+        This request is authorized only if the requestor is the role owner or an administrator.
+      operationId: revokeUserRole
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqRevokeUserRole'
+        required: true
+      responses:
+        '200':
+          description: Role removed from user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/revokeAdminRole:
+    post:
+      tags:
+        - user
+      description: |-
+        Revoke the previously granted tenant administrator role from a user. No action is taken if the user is not currently assigned the role (the request is idempotent).  The request will not be honored if revoking the role would leave the tenant with no administrator.
+
+        The user specified in the JWT must themselves be an administrator and a valid tenant and user must be specified in the request body.
+      operationId: revokeAdminRole
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqRevokeAdminRole'
+        required: true
+      responses:
+        '200':
+          description: Role removed from user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/admins/{tenant}:
+    get:
+      tags:
+        - user
+      description: |-
+        Get all users assigned the tenant administrator role ($!tenant_admin).
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: getAdmins
+      parameters:
+        - name: tenant
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Sorted list of administrator users.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespNameArray'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Named role not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/withRole/{roleName}:
+    get:
+      tags:
+        - user
+      description: |-
+        Get all users assigned a role.  The role must exist in the tenant.
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: getUsersWithRole
+      parameters:
+        - name: roleName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: tenant
+          in: query
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Sorted list of users assigned a role.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespNameArray'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Named role not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/grantUserPermission:
+    post:
+      tags:
+        - user
+      description: |-
+        Grant a user the specified permission by assigning that permission to to the user's default role.  If the user's default role does not exist,this request will create that role and grant it to the user before assigning the permission to the role.
+
+        A user's default role name is discoverable by calling either of the user/defaultRole or role/defaultRole endpoints.
+
+        The change count returned can range from zero to three depending on how many insertions and updates were actually required
+
+        The caller must be an administrator or service allowed to perform updates in the user's tenant.
+      operationId: grantUserPermission
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqGrantUserPermission'
+        required: true
+      responses:
+        '200':
+          description: Permission assigned to user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/grantAdminRole:
+    post:
+      tags:
+        - user
+      description: Grant a user the tenant administrator role.  A valid tenant and user must be specified in the request body.  The user specified in the JWT must be an administrator in the tenant specified in the request body.
+      operationId: grantAdminRole
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqGrantAdminRole'
+        required: true
+      responses:
+        '200':
+          description: Role assigned to user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Named role not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/user/isAdmin:
+    post:
+      tags:
+        - user
+      description: |-
+        Check whether a user in a tenant has been assigned the tenant administrator role, either directly or transitively.
+
+        This request is authorized if the requestor is a user that has access to the specified tenant or if the requestor is a service.
+      operationId: isAdmin
+      parameters:
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqUserIsAdmin'
+        required: true
+      responses:
+        '200':
+          description: Check completed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespAuthorized'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/vault/secret/{secretType}/{secretName}:
     get:
       tags:
         - vault
@@ -2440,7 +2442,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/delete/{secretType}/{secretName}':
+  /security/vault/secret/delete/{secretType}/{secretName}:
     post:
       tags:
         - vault
@@ -2570,7 +2572,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/undelete/{secretType}/{secretName}':
+  /security/vault/secret/undelete/{secretType}/{secretName}:
     post:
       tags:
         - vault
@@ -2700,7 +2702,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/destroy/{secretType}/{secretName}':
+  /security/vault/secret/destroy/{secretType}/{secretName}:
     post:
       tags:
         - vault
@@ -2830,7 +2832,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/read/meta/{secretType}/{secretName}':
+  /security/vault/secret/read/meta/{secretType}/{secretName}:
     get:
       tags:
         - vault
@@ -2950,7 +2952,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/list/meta/{secretType}':
+  /security/vault/secret/list/meta/{secretType}:
     get:
       tags:
         - vault
@@ -3065,7 +3067,71 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/destroy/meta/{secretType}/{secretName}':
+  /security/vault/secret/validateServicePassword/{secretName}:
+    post:
+      tags:
+        - vault
+      description: |-
+        Validate a service's password. The JSON payload contains the password that needs to be validated against the password stored in the vault for the service specifiedin the X-Tapis-User header. The secret name is the path under whichthe password was stored.
+
+        A valid tenant and user must also be specified in the payload.
+
+        ### Naming Secrets
+        Secrets can be arranged hierarchically by using the "+" characters in the *secretName*.  These characters will be converted to slashes upon receipt, allowing secrets to be arranged in folders.
+
+        Only services can make this request.
+      operationId: validateServicePassword
+      parameters:
+        - name: secretName
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqValidateServicePwd'
+        required: true
+      responses:
+        '200':
+          description: Secret written.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespAuthorized'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+  /security/vault/secret/destroy/meta/{secretType}/{secretName}:
     delete:
       tags:
         - vault
@@ -3185,70 +3251,6 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
       security:
         - TapisJWT: []
-  '/security/vault/secret/validateServicePassword/{secretName}':
-    post:
-      tags:
-        - vault
-      description: |-
-        Validate a service's password. The JSON payload contains the password that needs to be validated against the password stored in the vault for the service specifiedin the X-Tapis-User header. The secret name is the path under whichthe password was stored.
-
-        A valid tenant and user must also be specified in the payload.
-
-        ### Naming Secrets
-        Secrets can be arranged hierarchically by using the "+" characters in the *secretName*.  These characters will be converted to slashes upon receipt, allowing secrets to be arranged in folders.
-
-        Only services can make this request.
-      operationId: validateServicePassword
-      parameters:
-        - name: secretName
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: pretty
-          in: query
-          schema:
-            type: boolean
-            default: false
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqValidateServicePwd'
-        required: true
-      responses:
-        '200':
-          description: Secret written.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespAuthorized'
-        '400':
-          description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '403':
-          description: Forbidden.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '500':
-          description: Server error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-      security:
-        - TapisJWT: []
 components:
   schemas:
     RespResourceUrl:
@@ -3292,60 +3294,6 @@ components:
         roleName:
           type: string
         description:
-          type: string
-    RespChangeCount:
-      type: object
-      properties:
-        status:
-          type: string
-        message:
-          type: string
-        version:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/ResultMetadata'
-        result:
-          $ref: '#/components/schemas/ResultChangeCount'
-    ResultChangeCount:
-      type: object
-      properties:
-        changes:
-          type: integer
-          format: int32
-    RespName:
-      type: object
-      properties:
-        status:
-          type: string
-        message:
-          type: string
-        version:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/ResultMetadata'
-        result:
-          $ref: '#/components/schemas/ResultName'
-    ResultName:
-      type: object
-      properties:
-        name:
-          type: string
-    ReqReplacePathPrefix:
-      type: object
-      properties:
-        tenant:
-          type: string
-        schema:
-          type: string
-        roleName:
-          type: string
-        oldSystemId:
-          type: string
-        newSystemId:
-          type: string
-        oldPrefix:
-          type: string
-        newPrefix:
           type: string
     RespNameArray:
       type: object
@@ -3408,6 +3356,43 @@ components:
           type: string
         updatedbyTenant:
           type: string
+    RespName:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/ResultName'
+    ResultName:
+      type: object
+      properties:
+        name:
+          type: string
+    RespChangeCount:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/ResultChangeCount'
+    ResultChangeCount:
+      type: object
+      properties:
+        changes:
+          type: integer
+          format: int32
     ReqUpdateRoleName:
       type: object
       properties:
@@ -3509,6 +3494,23 @@ components:
           type: string
         newPrefix:
           type: string
+    ReqReplacePathPrefix:
+      type: object
+      properties:
+        tenant:
+          type: string
+        schema:
+          type: string
+        roleName:
+          type: string
+        oldSystemId:
+          type: string
+        newSystemId:
+          type: string
+        oldPrefix:
+          type: string
+        newPrefix:
+          type: string
     ReqRemovePermissionFromAllRoles:
       type: object
       properties:
@@ -3559,6 +3561,17 @@ components:
       properties:
         isAuthorized:
           type: boolean
+    ReqUserIsPermitted:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
+        permSpec:
+          type: string
+        orAdmin:
+          type: boolean
     ReqUserHasRole:
       type: object
       properties:
@@ -3570,54 +3583,6 @@ components:
           type: string
         orAdmin:
           type: boolean
-    ReqGrantUserRole:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-        roleName:
-          type: string
-    ReqRevokeUserRole:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-        roleName:
-          type: string
-    ReqGrantAdminRole:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-    ReqRevokeAdminRole:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-    ReqUserIsAdmin:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-    ReqGrantUserPermission:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-        permSpec:
-          type: string
     ReqRevokeUserPermission:
       type: object
       properties:
@@ -3651,17 +3616,6 @@ components:
             type: string
         orAdmin:
           type: boolean
-    ReqUserIsPermitted:
-      type: object
-      properties:
-        tenant:
-          type: string
-        user:
-          type: string
-        permSpec:
-          type: string
-        orAdmin:
-          type: boolean
     ReqUserIsPermittedMulti:
       type: object
       properties:
@@ -3675,6 +3629,54 @@ components:
             type: string
         orAdmin:
           type: boolean
+    ReqGrantUserRole:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
+        roleName:
+          type: string
+    ReqRevokeUserRole:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
+        roleName:
+          type: string
+    ReqRevokeAdminRole:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
+    ReqGrantUserPermission:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
+        permSpec:
+          type: string
+    ReqGrantAdminRole:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
+    ReqUserIsAdmin:
+      type: object
+      properties:
+        tenant:
+          type: string
+        user:
+          type: string
     RespSecretMeta:
       type: object
       properties:
@@ -3747,28 +3749,6 @@ components:
           items:
             type: integer
             format: int32
-    RespSecret:
-      type: object
-      properties:
-        status:
-          type: string
-        message:
-          type: string
-        version:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/ResultMetadata'
-        result:
-          $ref: '#/components/schemas/SkSecret'
-    SkSecret:
-      type: object
-      properties:
-        secretMap:
-          type: object
-          additionalProperties:
-            type: string
-        metadata:
-          $ref: '#/components/schemas/SkSecretMetadata'
     RespSecretVersionMetadata:
       type: object
       properties:
@@ -3845,6 +3825,28 @@ components:
           type: string
         password:
           type: string
+    RespSecret:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          $ref: '#/components/schemas/SkSecret'
+    SkSecret:
+      type: object
+      properties:
+        secretMap:
+          type: object
+          additionalProperties:
+            type: string
+        metadata:
+          $ref: '#/components/schemas/SkSecretMetadata'
   securitySchemes:
     TapisJWT:
       type: apiKey
