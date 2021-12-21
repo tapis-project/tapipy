@@ -1147,6 +1147,10 @@ class Operation(object):
                 if param.name not in kwargs:
                     raise errors.InvalidInputError(msg=f"{param.name} is a required argument.")
             p_val = kwargs.pop(param.name)
+            if isinstance(p_val, int):
+                p_val = str(p_val)
+            if isinstance(p_val, float):
+                p_val = str(p_val)
             if param.required and not p_val:
                 raise errors.InvalidInputError(msg=f"{param.name} is a required argument and cannot be None.")
             # replace the parameter in the path template with the parameter value

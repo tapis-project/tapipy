@@ -22,25 +22,6 @@ tags:
   - name: general
     description: informational endpoints
 paths:
-  /jobs/ready:
-    get:
-      tags:
-        - general
-      description: Lightwieght readiness check. No authorization required.
-      operationId: ready
-      responses:
-        '200':
-          description: Service ready.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespProbe'
-        '503':
-          description: Service unavailable.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespProbe'
   /jobs/hello:
     get:
       tags:
@@ -71,6 +52,25 @@ paths:
       responses:
         '200':
           description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+  /jobs/ready:
+    get:
+      tags:
+        - general
+      description: Lightwieght readiness check. No authorization required.
+      operationId: ready
+      responses:
+        '200':
+          description: Service ready.
           content:
             application/json:
               schema:
@@ -133,9 +133,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespName'
         '409':
-          description: >-
-            Job is already in Terminal State (CANCELLED, FINISHED or FAILED).
-            Job state conflicts with the cancel request. No action taken
+          description: Job is already in Terminal State (CANCELLED, FINISHED or FAILED). Job state conflicts with the cancel request. No action taken
           content:
             application/json:
               schema:
@@ -357,13 +355,10 @@ paths:
     get:
       tags:
         - jobs
-      description: >-
-        Download job's output files for previously submitted job by its UUID.
-        The job must be in a terminal state - FINISHED or FAILED.  
-
+      description: |-
+        Download job's output files for previously submitted job by its UUID. The job must be in a terminal state - FINISHED or FAILED.  
 
         The caller must be the job owner, creator or a tenant administrator.
-
         The URL must ends with '/' even if there is no outputPath is specified. 
       operationId: getJobOutputDownload
       parameters:
@@ -437,14 +432,10 @@ paths:
     get:
       tags:
         - jobs
-      description: >-
-        Retrieve job's output files list for previously submitted job by its
-        UUID. The job must be in a terminal state (FINISHED or FAILED or
-        CANCELLED)  
-
+      description: |-
+        Retrieve job's output files list for previously submitted job by its UUID. The job must be in a terminal state (FINISHED or FAILED or CANCELLED)  
 
         The caller must be the job owner, creator or a tenant administrator.
-
         The URL must ends with '/' even if there is no outputPath is specified. 
       operationId: getJobOutputList
       parameters:
@@ -517,10 +508,8 @@ paths:
     get:
       tags:
         - jobs
-      description: >-
-        Retrieve list of jobs for the user based on search conditions in the
-        query paramter on the dedicated search end-point.
-
+      description: |-
+        Retrieve list of jobs for the user based on search conditions in the query paramter on the dedicated search end-point.
 
         The caller must be the job owner, creator or a tenant administrator.
       operationId: getJobSearchList
@@ -557,6 +546,91 @@ paths:
           schema:
             type: boolean
             default: false
+      responses:
+        '200':
+          description: Jobs Search List retrieved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespJobSearchAllAttributes'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Jobs not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespName'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+      security:
+        - TapisJWT: []
+    post:
+      tags:
+        - jobs
+      description: |-
+        Retrieve list of jobs for the user based on search conditions in the request body and pagination information from the query paramter on the dedicated search end-point.
+
+        The caller must be the job owner, creator or a tenant administrator.
+      operationId: getJobSearchListByPostSqlStr
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: startAfter
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: orderBy
+          in: query
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          schema:
+            type: boolean
+        - name: select
+          in: query
+          schema:
+            type: string
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+            default: false
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
       responses:
         '200':
           description: Jobs Search List retrieved.
@@ -719,9 +793,8 @@ paths:
     post:
       tags:
         - jobs
-      description: >
-        Resubmit a job for execution using the original parameters.  The main
-        phases of job execution are:
+      description: |
+        Resubmit a job for execution using the original parameters.  The main phases of job execution are:
 
           - validate input
           - check resource availability
@@ -777,6 +850,21 @@ paths:
         - TapisJWT: []
 components:
   schemas:
+    RespBasic:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        metadata:
+          $ref: '#/components/schemas/ResultMetadata'
+        result:
+          type: object
+    ResultMetadata:
+      type: object
     JobsProbe:
       type: object
       properties:
@@ -802,21 +890,6 @@ components:
           $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/JobsProbe'
-    ResultMetadata:
-      type: object
-    RespBasic:
-      type: object
-      properties:
-        status:
-          type: string
-        message:
-          type: string
-        version:
-          type: string
-        metadata:
-          $ref: '#/components/schemas/ResultMetadata'
-        result:
-          type: object
     JobCancelDisplay:
       type: object
       properties:
@@ -995,6 +1068,11 @@ components:
           type: array
           items:
             type: string
+        jobType:
+          type: string
+          enum:
+            - FORK
+            - BATCH
     RespGetJob:
       type: object
       properties:
@@ -1185,26 +1263,6 @@ components:
           $ref: '#/components/schemas/ResultMetadata'
         result:
           $ref: '#/components/schemas/Job'
-    ArgMetaSpec:
-      type: object
-      properties:
-        name:
-          type: string
-        description:
-          type: string
-        required:
-          type: boolean
-        kv:
-          type: array
-          items:
-            $ref: '#/components/schemas/KeyValuePair'
-    ArgSpec:
-      type: object
-      properties:
-        arg:
-          type: string
-        meta:
-          $ref: '#/components/schemas/ArgMetaSpec'
     IncludeExcludeFilter:
       type: object
       properties:
@@ -1218,32 +1276,58 @@ components:
             type: string
         includeLaunchFiles:
           type: boolean
-    InputSpec:
+    JobArgSpec:
       type: object
       properties:
+        name:
+          type: string
+        description:
+          type: string
+        include:
+          type: boolean
+        arg:
+          type: string
+    JobFileInput:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        autoMountLocal:
+          type: boolean
         sourceUrl:
           type: string
         targetPath:
           type: string
-        inPlace:
-          type: boolean
-        meta:
-          $ref: '#/components/schemas/ArgMetaSpec'
+    JobFileInputArray:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        sourceUrls:
+          type: array
+          items:
+            type: string
+        targetDir:
+          type: string
     JobParameterSet:
       type: object
       properties:
         appArgs:
           type: array
           items:
-            $ref: '#/components/schemas/ArgSpec'
+            $ref: '#/components/schemas/JobArgSpec'
         containerArgs:
           type: array
           items:
-            $ref: '#/components/schemas/ArgSpec'
+            $ref: '#/components/schemas/JobArgSpec'
         schedulerOptions:
           type: array
           items:
-            $ref: '#/components/schemas/ArgSpec'
+            $ref: '#/components/schemas/JobArgSpec'
         envVariables:
           type: array
           items:
@@ -1299,6 +1383,8 @@ components:
           type: string
         appVersion:
           type: string
+        jobType:
+          type: string
         archiveOnAppError:
           type: boolean
         dynamicExecSystem:
@@ -1332,7 +1418,11 @@ components:
         fileInputs:
           type: array
           items:
-            $ref: '#/components/schemas/InputSpec'
+            $ref: '#/components/schemas/JobFileInput'
+        fileInputArrays:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobFileInputArray'
         parameterSet:
           $ref: '#/components/schemas/JobParameterSet'
         execSystemConstraints:

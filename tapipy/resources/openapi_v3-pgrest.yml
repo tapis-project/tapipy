@@ -8,7 +8,7 @@ info:
   license:
     name: 3-Clause BSD License
     url: 'https://opensource.org/licenses/BSD-3-Clause'
-  version: '0.1'
+  version: '1.0.0'
 externalDocs:
   description: Tapis on readthedocs.io
   url: 'https://tapis.readthedocs.io/en/latest/technical/pgrest.html'
@@ -84,9 +84,9 @@ paths:
     get:
       tags:
         - Manage Tables
-      summary: get_manage_table
+      summary: get_table
       description: Get details about a specific table.
-      operationId: get_manage_table
+      operationId: get_table
       x-swagger-router-controller: connexContr
       parameters:
       - name: table_id
@@ -111,6 +111,48 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/Table'
+    put:
+      tags:
+        - Manage Tables
+      summary: update_table
+      description: Update a table definition with specific table operations.
+      operationId: update_table
+      x-swagger-router-controller: connexContr
+      parameters:
+      - name: table_id
+        in: path
+        description: The id of the table.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTable'
+            examples:
+              table_name:
+                summary: An example of updating a table's name.
+                value: {"table_name": "new_table_name"}
+              root_url:
+                summary: An example of updating a table's root_url.
+                value: {"root_url": "new_root_url"}
+              add_column:
+                summary: An example of adding a column to a table.
+                value: {"add_column": {"new_col_name": {"data_type": "varchar", "char_len": 255}}}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Table'
+
     delete:
       tags:
         - Manage Tables
@@ -135,15 +177,15 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
 
 
-  /v3/pgrest/data/{collection}:
+  /v3/pgrest/data/{root_url}:
     get:
       tags:
         - Tables
-      summary: get_table
-      description: List objects in the table with specified root_url {collection}.
-      operationId: get_table
+      summary: get_table_rows
+      description: List objects in the table with specified root_url {root_url}.
+      operationId: get_table_rows
       parameters:
-      - name: collection
+      - name: root_url
         in: path
         description: The root_url parameter of the table.
         required: true
@@ -174,10 +216,10 @@ paths:
       tags:
         - Tables
       summary: add_table_row
-      description: Create a new object in the table with specified root_url {collection}.
+      description: Create a new object in the table with specified root_url {root_url}.
       operationId: add_table_row
       parameters:
-      - name: collection
+      - name: root_url
         in: path
         description: The root_url parameter of the table.
         required: true
@@ -189,6 +231,10 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewTableRow'
+            examples:
+              table_name:
+                summary: An example of adding a row to a table.
+                value: {"col1": "val1", "col2": "val2", "col3": "val3"}
       responses:
         '201':
           description: Created
@@ -207,7 +253,7 @@ paths:
       description: Update multiple rows in a table atomically based on filter, if no filter, update all.
       operationId: update_table_rows
       parameters:
-      - name: collection
+      - name: root_url
         in: path
         description: The root_url parameter of the table.
         required: true
@@ -229,15 +275,52 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
 
 
-  /v3/pgrest/data/{collection}/{item}:
+  /v3/pgrest/data//{root_url}:
+    post:
+      tags:
+        - Tables
+      summary: add_table_rows
+      description: Create new objects in the table with specified root_url {root_url}.
+      operationId: add_table_rows
+      parameters:
+      - name: root_url
+        in: path
+        description: The root_url parameter of the table.
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTableRows'
+            examples:
+              table_name:
+                summary: An example of adding rows to a table.
+                value: [{"col1": "val1", "col2": "val2", "col3": "val3"}, {"col1": "val111", "col2": "val222", "col3": "val333"}]
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/TableRows'
+
+
+  /v3/pgrest/data/{root_url}/{item}:
     get:
       tags:
         - Tables
       summary: get_table_row
-      description: Get details about the specific object with id {item} on the table with root_url {collection}.
+      description: Get details about the specific object with id {item} on the table with root_url {root_url}.
       operationId: get_table_row
       parameters:
-      - name: collection
+      - name: root_url
         in: path
         description: The root_url parameter of the table.
         required: true
@@ -245,7 +328,7 @@ paths:
           type: string
       - name: item
         in: path
-        description: The id of an item (i.e., a row) on the table whose root_url is given by {collection}.
+        description: The id of an item (i.e., a row) on the table whose root_url is given by {root_url}.
         required: true
         schema:
           type: string
@@ -264,10 +347,10 @@ paths:
       tags:
         - Tables
       summary: update_table_row
-      description: Update a specific object with id {item} from the table with root_url {collection}.
+      description: Update a specific object with id {item} from the table with root_url {root_url}.
       operationId: update_table_row
       parameters:
-      - name: collection
+      - name: root_url
         in: path
         description: The root_url parameter of the table.
         required: true
@@ -275,7 +358,7 @@ paths:
           type: string
       - name: item
         in: path
-        description: The id of an item (i.e., a row) on the table whose root_url is given by {collection}.
+        description: The id of an item (i.e., a row) on the table whose root_url is given by {root_url}.
         required: true
         schema:
           type: string
@@ -300,10 +383,10 @@ paths:
       tags:
         - Tables
       summary: delete_table_row
-      description: Delete a specific object with id {item} from the table with root_url {collection}.
+      description: Delete a specific object with id {item} from the table with root_url {root_url}.
       operationId: delete_table_row
       parameters:
-      - name: collection
+      - name: root_url
         in: path
         description: The root_url parameter of the table.
         required: true
@@ -311,7 +394,7 @@ paths:
           type: string
       - name: item
         in: path
-        description: The id of an item (i.e., a row) on the table whose root_url is given by {collection}.
+        description: The id of an item (i.e., a row) on the table whose root_url is given by {root_url}.
         required: true
         schema:
           type: string
@@ -609,7 +692,7 @@ components:
           description: The name of the table.
         root_url:
           type: string
-          description: The url path used for the root collection associated with the records in the table.
+          description: The url path used for the root_url associated with the records in the table.
 
     arrayOfTables:
       type: array
@@ -624,12 +707,16 @@ components:
           description: The name to be used for the table.
         root_url:
           type: string
-          description: The url path to use for the root collection associated with the records in the table.
+          description: The url path to use for the root_url associated with the records in the table.
         columns:
           $ref: '#/components/schemas/TableColumns'
         comments:
           type: string
           description: Text area to describe table. Returned when calling manage endpoints.
+        constraints:
+          $ref: '#/components/schemas/TableConstraints'
+        enums:
+          $ref: '#/components/schemas/TableEnums'
         create:
           type: boolean
           description: Whether the "created" endpoint (HTTP verb "POST") for creating new rows is available.
@@ -651,6 +738,18 @@ components:
           description: Whether the "update" endpoint (HTTP verb "PUT") for updating a specific row is available.
           default: True
       required: [table_name, root_url, columns]
+
+    TableEnums:
+      type: object
+      description: Definition for enum to create. {enum_name":" [enum_val_1, ...]}
+
+    TableConstraints:
+      type: object
+      description: A description of the table constraints. Unique constraint is the only current constraint.
+      properties:
+        unique:
+          type: object
+          description: Object of constraint_name as key and list of columns to keep unique as value.
 
     TableColumns:
       type: object
@@ -694,14 +793,54 @@ components:
           type: string
           description: Only if foreign_key, sets which event action to call when on_event event occurs.
           enum: [CASCADE, SET NULL, SET DEFAULT, RESTRICT, NO ACTION]
+        serial_start:
+          type: integer
+          description: Only if data_type is serial. Delegates what number the data_type will start at.
+        serial_increment:
+          type: integer
+          description: Only if data_type is serial. Delegates what the serial increment between rows will be.
       additionalProperties:
         type: object
       required: [data_type]
+
+    UpdateTable:
+      type: object
+      properties:
+        table_name:
+          type: string
+          description: Operation to change the table_name currently associated with the table.
+        root_url:
+          type: string
+          description: Operation to change the root_url currently associated with the table.
+        comments:
+          type: string
+          description: Operation to change the comments currently associated with the table (Overwrites existing).
+        endpoints:
+          type: array
+          items:
+            type: string
+          description: Operation to change the endpoints a table currently has available.
+        column_type:
+          type: string
+          description: Operation to change the column_type of a particular column in table ("col_name, new_type" format).
+        add_column:
+          $ref: '#/components/schemas/TableColumns'
+          description: Operation to add a column to a table.
+        drop_column:
+          type: string
+          description: Operation to drop a column in a table (Not reversible).
+        set_default:
+          type: string
+          description: Operation to set a new default on a column in a table ("col_name, new_default" format).
+        drop_default:
+          type: string
+          description: Operation to drop a default currently set on a column in a table.
 
 
     #=== TABLE ROWS ===#
     TableRow:
       type: object
+      description: The values row.
 
     TableRows:
       type: array
@@ -714,6 +853,15 @@ components:
         data:
           type: object
           description: The values of the row to add.
+
+    NewTableRows:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            description: The values of the row to add.
 
     UpdateTableRow:
       type: object
@@ -753,7 +901,7 @@ components:
           description: The name of the view.
         root_url:
           type: string
-          description: The url path used for the root collection associated with the view.
+          description: The url path used for the root root_url associated with the view.
         endpoints:
           type: string
           description: Which endpoints are available for the view. (This doesn't work/doesn't mean anything)
@@ -792,7 +940,10 @@ components:
           items:
             type: string
           description: Roles users who access this view must have in security kernel to have permission to see this view.
-      required: [view_name, select_query, from_table]
+        raw_sql:
+          type: string
+          description: Admin only. Full support of SQL when creating complex views.
+      required: [view_name]
 
 
     #=== ROLES ===#

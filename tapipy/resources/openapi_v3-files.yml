@@ -69,6 +69,8 @@ paths:
       responses:
         "200":
           description: OK
+        "400":
+          description: Bad Request
         "401":
           description: Not Authenticated
         "404":
@@ -94,7 +96,7 @@ paths:
       tags:
       - file operations
       summary: List files/objects in a storage system.
-      description: List files in a bucket
+      description: List files in a storage system
       operationId: listFiles
       parameters:
       - name: systemId
@@ -127,6 +129,13 @@ paths:
           format: int64
           default: 0
         example: 1000
+      - name: recurse
+        in: query
+        description: recursive listing
+        schema:
+          type: boolean
+          default: false
+        example: false
       responses:
         "200":
           description: A list of files
@@ -134,6 +143,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileListingResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
         "401":
           description: Not Authenticated
           content:
@@ -161,9 +176,9 @@ paths:
     put:
       tags:
       - file operations
-      summary: Move/copy/rename a file or folder
-      description: Move/Rename a file in {systemID} at path {path}.
-      operationId: moveCopyRename
+      summary: Move/copy a file or folder
+      description: Move/copy a file in {systemID} at path {path}.
+      operationId: moveCopy
       parameters:
       - name: systemId
         in: path
@@ -181,10 +196,16 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MoveCopyRenameRequest'
+              $ref: '#/components/schemas/MoveCopyRequest'
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "400":
+          description: Bad Request
           content:
             application/json:
               schema:
@@ -251,6 +272,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
         "401":
           description: Not Authenticated
           content:
@@ -291,6 +318,12 @@ paths:
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "400":
+          description: Bad Request
           content:
             application/json:
               schema:
@@ -341,6 +374,12 @@ paths:
       responses:
         "200":
           description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "400":
+          description: Bad Request
           content:
             application/json:
               schema:
@@ -660,6 +699,142 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TransferTaskResponse'
+  /v3/files/utils/linux/{systemId}/{path}:
+    get:
+      tags:
+      - file operations
+      summary: Get stat information for a file or directory.
+      description: Get stat information for a file or directory.
+      operationId: getStatInfo
+      parameters:
+      - name: systemId
+        in: path
+        description: System ID
+        required: true
+        schema:
+          type: string
+        example: system123
+      - name: path
+        in: path
+        description: Path to a file or directory
+        required: true
+        schema:
+          type: string
+        example: /folderA/file1
+      - name: followLinks
+        in: query
+        description: When path is a symbolic link whether to get information about
+          the link (false) or the link target (true)
+        schema:
+          type: boolean
+          default: false
+        example: true
+      responses:
+        "200":
+          description: Linux stat information for the file or directory.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStatInfoResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "401":
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+    post:
+      tags:
+      - file operations
+      summary: Run a native operation
+      description: 'Run a native operation: chmod, chown or chgrp.'
+      operationId: runLinuxNativeOp
+      parameters:
+      - name: systemId
+        in: path
+        description: System ID
+        required: true
+        schema:
+          type: string
+      - name: path
+        in: path
+        description: Path to a file or directory
+        required: true
+        schema:
+          type: string
+      - name: recursive
+        in: query
+        description: If path is a directory this indicates whether or not to apply
+          the changes recursively
+        schema:
+          type: boolean
+          default: false
+        example: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NativeLinuxOpRequest'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NativeLinuxOpResultResponse'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "401":
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "403":
+          description: Not Authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        "500":
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
 components:
   schemas:
     HeaderByteRange:
@@ -746,7 +921,7 @@ components:
           type: string
         metadata:
           type: object
-    MoveCopyRenameRequest:
+    MoveCopyRequest:
       required:
       - newPath
       - operation
@@ -757,7 +932,6 @@ components:
           enum:
           - MOVE
           - COPY
-          - RENAME
         newPath:
           type: string
           description: Paths must be absolute, ../.. is not allowed
@@ -948,6 +1122,8 @@ components:
         retries:
           type: integer
           format: int32
+        dir:
+          type: boolean
         uuid:
           type: string
           description: Unique ID of the task.
@@ -1084,3 +1260,82 @@ components:
           type: string
         metadata:
           type: object
+    FileStatInfo:
+      type: object
+      properties:
+        absolutePath:
+          type: string
+        uid:
+          type: integer
+          format: int32
+        gid:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int64
+        perms:
+          type: string
+        accessTime:
+          type: integer
+          format: int64
+        modifyTime:
+          type: integer
+          format: int64
+        dir:
+          type: boolean
+        link:
+          type: boolean
+    FileStatInfoResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/FileStatInfo'
+        version:
+          type: string
+        metadata:
+          type: object
+    NativeLinuxOpResult:
+      type: object
+      properties:
+        command:
+          type: string
+        exitCode:
+          type: integer
+          format: int32
+        stdOut:
+          type: string
+        stdErr:
+          type: string
+    NativeLinuxOpResultResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/NativeLinuxOpResult'
+        version:
+          type: string
+        metadata:
+          type: object
+    NativeLinuxOpRequest:
+      required:
+      - argument
+      - operation
+      type: object
+      properties:
+        operation:
+          type: string
+          enum:
+          - CHMOD
+          - CHOWN
+          - CHGRP
+        argument:
+          type: string
+          description: Argument for native linux operation
