@@ -1,0 +1,31 @@
+# This is a basic workflow that is manually triggered
+
+name: Manual merge dev -> prod.
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+
+#  push:
+#    branches: [ dev ]
+
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "merge"
+  merge:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Manual merge staging -> prod.
+      uses: devmasx/merge-branch@master
+      with:
+        type: now
+        from_branch: dev
+        target_branch: prod
+        github_token: ${{ github.token }}
+        message: 'Manual merge staging -> prod.'
