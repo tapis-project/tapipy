@@ -21,11 +21,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Manual merge staging -> prod.
+    - name: Manual merge dev -> prod.
       uses: devmasx/merge-branch@master
       with:
         type: now
         from_branch: dev
         target_branch: prod
         github_token: ${{ github.token }}
-        message: 'Manual merge staging -> prod.'
+        message: 'Manual merge dev -> prod.'
