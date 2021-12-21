@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.0.5 - 2021-12-20 (target)
+### Added
+- No change.
+
+### Changed
+- Updating spec for PgREST and meta.
+- Fixed bug in receiving int or float types as parameter values in '__call__'
+
+### Removed
+- No change.
+
+
 ## 1.0.4 - 2021-12-20 (target)
 ### Added
 - No change.

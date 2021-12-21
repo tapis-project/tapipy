@@ -230,9 +230,11 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/NewTableRow'
-                - $ref: '#/components/schemas/NewTableRows'
+              $ref: '#/components/schemas/NewTableRow'
+            examples:
+              table_name:
+                summary: An example of adding a row to a table.
+                value: {"col1": "val1", "col2": "val2", "col3": "val3"}
       responses:
         '201':
           description: Created
@@ -278,7 +280,7 @@ paths:
       tags:
         - Tables
       summary: add_table_rows
-      description: Create new objects in the table with specified root_url {root_url}. ()
+      description: Create new objects in the table with specified root_url {root_url}.
       operationId: add_table_rows
       parameters:
       - name: root_url
@@ -292,9 +294,11 @@ paths:
         content:
           application/json:
             schema:
-              oneOf:
-                - $ref: '#/components/schemas/NewTableRow'
-                - $ref: '#/components/schemas/NewTableRows'
+              $ref: '#/components/schemas/NewTableRows'
+            examples:
+              table_name:
+                summary: An example of adding rows to a table.
+                value: [{"col1": "val1", "col2": "val2", "col3": "val3"}, {"col1": "val111", "col2": "val222", "col3": "val333"}]
       responses:
         '201':
           description: Created
@@ -836,6 +840,7 @@ components:
     #=== TABLE ROWS ===#
     TableRow:
       type: object
+      description: The values row.
 
     TableRows:
       type: array
@@ -850,9 +855,13 @@ components:
           description: The values of the row to add.
 
     NewTableRows:
-      type: array
-      items:
-        $ref: '#/components/schemas/NewTableRow'
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            description: The values of the row to add.
 
     UpdateTableRow:
       type: object
