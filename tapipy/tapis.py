@@ -994,8 +994,14 @@ class Operation(object):
                 # refresh (otherwise this would never terminate!)
                 if (self.resource_name == 'tokens' and self.operation_id == 'refresh_token')\
                         or (self.resource_name == 'authenticator' and self.operation_id == 'create_token'):
-
                     pass
+                else:
+                    try:
+                        self.tapis_client.refresh_user_tokens()
+                    except:
+                        # for now, if we get an error trying to refresh the tokens, we ignore it and try the
+                        # request anyway.
+                        pass
         # we may have refreshed the token, so we get it one more time --        
         jwt = self.tapis_client.get_access_jwt()
         if jwt:
