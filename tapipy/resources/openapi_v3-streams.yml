@@ -231,9 +231,7 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                   result:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Project'
+                    $ref: '#/components/schemas/Project'
 
         '400':
           description: Input error.
@@ -1443,9 +1441,7 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                  result:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Measurements'
+                  $ref: '#/components/schemas/Measurements'
 
         '400':
           description: Input error.
@@ -1527,9 +1523,7 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                   result:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Measurements'
+                    $ref: '#/components/schemas/Measurements'
 
         '400':
           description: Input error.
@@ -1556,7 +1550,7 @@ paths:
     get:
       tags:
         - Measurements
-      summary: List measurments.
+      summary: List measurements.
       description: List measurements.
       operationId: list_measurements
       parameters:
@@ -1605,7 +1599,7 @@ paths:
             type: string
         - name: geojson
           in: query
-          description: geojson polygon to spatiall search
+          description: geojson polygon to spatial search
           schema:
             type: object
         - name: format
@@ -1628,8 +1622,6 @@ paths:
                   - $ref: '#/components/schemas/BasicResponse'
                 properties:
                    result:
-                    type: array
-                    items:
                       $ref: '#/components/schemas/Measurements'
 
         '400':
@@ -3090,14 +3082,14 @@ components:
           type: object
           description: User defined metadata for the site
         longitude:
-              type: number
-              description: longitude
+          type: number
+          description: longitude
         latitude:
-              type: number
-              description: latitude
+          type: number
+          description: latitude
         elevation:
-              type: number
-              description: elevation
+          type: number
+          description: elevation
 
     NewSiteRequest:
       type: array
@@ -3127,7 +3119,7 @@ components:
         metadata:
           type: object
           description: User defined metadata for the site
-      required: [site_name, latitude, longitude, elevation, description]
+      required: [site_name, site_id, latitude, longitude, elevation, description]
 
     Instrument:
       type: object
@@ -3159,7 +3151,7 @@ components:
             type: string
           description: arrays of tags on the instruments
         metadata:
-          type: string
+          type: object
           description: User entered metadata for the instruments
 
     NewInstRequest:
@@ -3188,8 +3180,9 @@ components:
           items:
             type: string
         metadata:
-          type: string
+          type: object
           description: User enetered metadata on instruments
+      required: [inst_name, inst_id, inst_description]
 
     UpdateInstRequest:
       type: array
@@ -3217,7 +3210,7 @@ components:
           items:
             type: string
         metadata:
-          type: string
+          type: object
           description: user metadata on instruments
       required: [inst_id, site_id, inst_name]
 
@@ -3242,11 +3235,12 @@ components:
           type: number
           description: Id of the Property measured by the variable type
         metadata:
-          type: string
+          type: object
           description: User entered metadata for the variable
         shortname:
           type: string
           description: User entered short name
+      required: [var_id, var_name]
 
     Variable:
       type: object
@@ -3276,7 +3270,7 @@ components:
           type: string
           description: The property measured by variable.
         metadata:
-          type: string
+          type: object
           description: User entered metadata for the variable
         chords_id:
           type: integer
@@ -3296,31 +3290,39 @@ components:
         measurements_in_file:
           type: integer
           description: The count of measurements records.
-        additionalProperties:
-          type: object
-          items:
-            type: object
-            description: example "ph":[{"2021-05-15T15:23:00+05:00":7.2,"2021-05-15T25:23:00+05:00":7.3}]
-          example: {"2021-05-15T15:23:00+05:00":7.2,"2021-05-15T25:23:00+05:00":7.3}
+      #unexpected typing behavior, still works (assigns to type any rather than generating DatetimeValues type)
+      additionalProperties:
+        $ref: '#/components/schemas/DatetimeValues'
+      example: {"2021-05-15T15:23:00+05:00":7.2,"2021-05-15T25:23:00+05:00":7.3}
+
+    DatetimeValues:
+      type: object
+      additionalProperties:
+        type: number
+      description: example "ph":{"2021-05-15T15:23:00+05:00":7.2,"2021-05-15T25:23:00+05:00":7.3}
+      
 
     NewMeasurement:
       type: object
       properties:
         inst_id:
-          type: integer
-          description: Associate instrument id.
+          type: string
         vars:
           type: array
-          description: Array of measurement objects. Example [{"temp1":"75.0","pc_hmd":"34","datatime":"2021-05-15T15:23:00+05:00"},{"temp1":"77.0","pc_hmd":"36","datatime":"2021-05-15T15:54:00+05:00"}]
           items:
-            type: object
-            properties:
-              datetime:
-                type: string
-                description: Datetime ISO8601 formated string
-              additionalProperties:
-                type: number
-                description: this is a key:value pair of var_id:value
+            $ref: '#/components/schemas/MeasurementValues'
+      required: [inst_id, vars]
+
+    MeasurementValues:
+      type: object
+      description: Measurement objects. Example [{"temp1":"75.0","pc_hmd":"34","datetime":"2021-05-15T15:23:00+05:00"},{"temp1":"77.0","pc_hmd":"36","datetime":"2021-05-15T15:54:00+05:00"}]
+      properties:
+        datetime:
+          type: string
+          description: Datetime ISO8601 formated string
+      additionalProperties:
+        type: number
+      required: [datetime]
 
     NewOntology:
       type: object

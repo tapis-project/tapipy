@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.0.2'
+  version: '1.1.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -37,6 +37,7 @@ tags:
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 paths:
 
   # --- Paths for /systems -----------------------------------------------------
@@ -161,8 +162,8 @@ paths:
         By default any credentials provided for LINUX type systems are verified. Use query parameter
         skipCredentialCheck=true to bypass initial verification of credentials.
 
-        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
-        may be modified and used when making a POST request to create a system.
+        Note that certain attributes in the request body (such as tenant) are allowed but ignored so that the JSON
+        result returned by a GET may be modified and used when making a POST request to create a system.
         The attributes that are allowed but ignored are
 
           - tenant
@@ -184,7 +185,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCreateSystem'
+              $ref: '#/components/schemas/ReqPostSystem'
       responses:
         '201':
           description: System created.
@@ -551,8 +552,8 @@ paths:
         By default any credentials provided for LINUX type systems are verified. Use query parameter
         skipCredentialCheck=true to bypass initial verification of credentials.
 
-        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
-        may be modified and used when making a PUT request to update a system.
+        Note that certain attributes in the request body (such as tenant) are allowed but ignored so that the JSON
+        result returned by a GET may be modified and used when making a PUT request to update a system.
 
         The attributes that are allowed but ignored for both PUT and POST are
 
@@ -968,7 +969,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCreateCredential'
+              $ref: '#/components/schemas/ReqPostCredential'
       responses:
         '200':
           description: Credentials updated.
@@ -1299,7 +1300,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCreateSchedulerProfile'
+              $ref: '#/components/schemas/ReqPostSchedulerProfile'
       responses:
         '201':
           description: Scheduler profile created.
@@ -1482,6 +1483,10 @@ components:
         canRunBatch:
           type: boolean
           default: false
+        mpiCmd:
+          type: string
+          minLength: 1
+          maxLength: 126
         jobRuntimes:
           type: array
           minItems: 1
@@ -1687,7 +1692,7 @@ components:
     # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
     # -------------------------------------------------------------------------
-    ReqCreateSystem:
+    ReqPostSystem:
       type: object
       required:
         - id
@@ -1714,7 +1719,7 @@ components:
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
-          $ref: '#/components/schemas/ReqCreateCredential'
+          $ref: '#/components/schemas/ReqPostCredential'
         bucketName:
           type: string
         rootDir:
@@ -1744,6 +1749,10 @@ components:
         canRunBatch:
           type: boolean
           default: false
+        mpiCmd:
+          type: string
+          minLength: 1
+          maxLength: 126
         jobRuntimes:
           type: array
           minItems: 1
@@ -1793,7 +1802,7 @@ components:
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
-          $ref: '#/components/schemas/ReqCreateCredential'
+          $ref: '#/components/schemas/ReqPostCredential'
         port:
           type: integer
           format: int32
@@ -1814,6 +1823,10 @@ components:
         canRunBatch:
           type: boolean
           default: false
+        mpiCmd:
+          type: string
+          minLength: 1
+          maxLength: 126
         jobRuntimes:
           type: array
           minItems: 1
@@ -1880,6 +1893,10 @@ components:
           type: string
         canRunBatch:
           type: boolean
+        mpiCmd:
+          type: string
+          minLength: 1
+          maxLength: 126
         jobRuntimes:
           type: array
           minItems: 1
@@ -1917,7 +1934,7 @@ components:
           type: object
         importRefId:
           type: string
-    ReqCreateCredential:
+    ReqPostCredential:
       type: object
       properties:
         password:
@@ -1962,7 +1979,7 @@ components:
           minItems: 1
           items:
             type: string
-    ReqCreateSchedulerProfile:
+    ReqPostSchedulerProfile:
       type: object
       required:
         - name

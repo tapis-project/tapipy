@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.0.6 - 2022-02-02 (target)
+### Added
+- No change.
+
+### Changed
+- Updating spec for actors, streams, app, systems.
+
+### Removed
+- No change.
+
+
 ## 1.0.5 - 2021-12-20 (target)
 ### Added
 - No change.
