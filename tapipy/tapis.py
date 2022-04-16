@@ -1,6 +1,7 @@
 from base64 import b64encode
 from collections.abc import Sequence
 import datetime
+import importlib
 import json
 import jwt
 import os
@@ -358,14 +359,10 @@ class Tapis(object):
                  username: Optional[str]=None,
                  password: Optional[str]=None,
                  tenant_id: Optional[str]=None,
-                 account_type: Optional[str]=None,
                  access_token: Optional[str]=None,
                  refresh_token: Optional[str]=None,
                  jwt: Optional[str]=None,
-                 x_tenant_id: Optional[str]=None,
-                 x_username: Optional[str]=None,
                  verify: Optional[bool]=True,
-                 service_password: Optional[str]=None,
                  client_id: Optional[str]=None,
                  client_key: Optional[str]=None,
                  resource_set: str = 'tapipy',
@@ -373,9 +370,10 @@ class Tapis(object):
                  download_latest_specs: bool = False,
                  spec_dir: str = None,
                  tenants: Tenants = None,
-                 is_tapis_service: bool = False,
                  debug_prints: bool = True,
-                 resource_dicts: dict = {}
+                 resource_dicts: dict = {},
+                 plugins = [], # list[str] <-- this type doesn't compile in python < 3.9
+                 **kwargs
                  ):
         # the base_url for the server this Tapis client should interact with
         self.base_url = base_url
@@ -383,16 +381,11 @@ class Tapis(object):
         # the username associated with this Tapis client
         self.username = username
 
-        # the password associated with a user account; use service_password for service accounts.
+        # the password associated with a user account
         self.password = password
 
         # the tenant id associated with this Tapis client
         self.tenant_id = tenant_id
-
-        # the account_type ("user" or "service") associated with this Tapis client
-        self.account_type = account_type
-        if not self.account_type:
-            self.account_type = 'user'
 
         # the access token to use -- should be an honest TapisResult access token.
         if access_token and type(access_token) == str:
@@ -410,12 +403,10 @@ class Tapis(object):
 
         # pass in a "raw" JWT directly. This is only used if the access_token is not set.
         self.jwt = jwt
+        self.access_token = jwt
 
         # whether to verify the TLS certificate at the base_url
         self.verify = verify
-
-        # the service password, for service accounts to retrieve a token with.
-        self.service_password = service_password
 
         # the client id of an OAuth2 client to use for generating tokens
         self.client_id = client_id
@@ -425,11 +416,6 @@ class Tapis(object):
 
         # the requests.Session object this client will use to prepare requests
         self.requests_session = requests.Session()
-
-        # use the following two parameters to set headers to make requests on behalf of a different
-        # tenant_id and username.
-        self.x_tenant_id = x_tenant_id
-        self.x_username = x_username
 
         # allows users to turn off debug_prints
         self.debug_prints = debug_prints
@@ -480,8 +466,16 @@ class Tapis(object):
             # each API is a top-level attribute on the DynaTapy object, a Resource object constructed as follows:
             setattr(self, resource_name, Resource(resource_name, spec.paths, self))
 
-        # whether or not this tapis client is running inside a Tapis service.
-        self.is_tapis_service = is_tapis_service
+        # deal with plugins
+        self.plugins = plugins
+        # callables plugins can set that get executed within self.<resource>.<operation>.__call__() BEFORE the 
+        # prepared request is sent to the Tapis API server.
+        # method signature should be def fn(op: Opertaion, request: PreparedRequest, **kwargs)
+        self.plugin_on_call_pre_request_callables = []
+        # callables plugins can set that get executed within self.<resource>.<operation>.__call__() AFTER the 
+        # prepared request is sent to the Tapis API server.
+        # method signature should be def fn(op: Opertaion, response: Response, **kwargs)
+        self.plugin_on_call_post_request_callables = []
 
         # we lazy-load the tenant_cache to prevent making a call to the Tenants API when not needed.
         if tenants:
@@ -489,19 +483,33 @@ class Tapis(object):
         else:
             self.tenant_cache = Tenants(self)
         # if the user passed just base_url, try to get the list of tenants and derive the tenant_id from it.
-        if not self.is_tapis_service and base_url and not tenant_id:
+        if base_url and not tenant_id:
             self.tenant_cache.reload_tenants()
             for tid, t in self.tenant_cache.tenants.items():
                 if t.base_url == base_url:
                     self.tenant_id = t.tenant_id
 
-        # it the caller did not explicitly set the x_tenant_id and x_username headers, and this is a service token
-        # set them for the caller.
-        if not self.x_tenant_id and not self.x_username:
-            if self.account_type == 'service':
-                self.x_tenant_id = self.tenant_id
-                self.x_username = self.username
-
+        for p in plugins:
+            # call each plugin's on_tapis_client_instantiation() function with all args passed in.
+            importlib.import_module(p).on_tapis_client_instantiation(self,
+                                                                     base_url=base_url,
+                                                                     username=username,
+                                                                     password=password,
+                                                                     tenant_id=tenant_id,
+                                                                     access_token=access_token,
+                                                                     refresh_token=refresh_token,
+                                                                     jwt=jwt,
+                                                                     verify=verify,
+                                                                     client_id=client_id,
+                                                                     client_key=client_key,
+                                                                     resource_set=resource_set,
+                                                                     custom_spec_dict=custom_spec_dict,
+                                                                     download_latest_specs=download_latest_specs,
+                                                                     spec_dir=spec_dir,
+                                                                     tenants=tenants,
+                                                                     debug_prints=debug_prints,
+                                                                     plugins=plugins,
+                                                                     **kwargs)
 
     def update_spec_cache(self):
         """
@@ -521,11 +529,9 @@ class Tapis(object):
 
     def get_tokens(self, **kwargs):
         """
-        Convenience wrapper to get either service tokens (tokengen Tokens API) or user tokens (Authenticator/OAuth2 API)
-        based on the account_type on this client instance.
+        Convenience wrapper to get user tokens (Authenticator/OAuth2 API). Pluggins can override this function to 
+        add custom behaior (e.g., in tapisservice to get service tokens directly from Tokens API).
         """
-        if self.account_type == 'service':
-            return self.get_service_tokens(**kwargs)
         return self.get_user_tokens(**kwargs)
 
     def get_user_tokens(self, **kwargs):
@@ -572,61 +578,6 @@ class Tapis(object):
         if hasattr(tokens, 'refresh_token'):
             self.set_refresh_token(tokens.refresh_token)
 
-    def get_service_tokens(self, **kwargs):
-        """
-        Calls the Tapis Tokens API to get access and refresh tokens for a service and set them on the client.
-        :return:
-        """
-        if not 'username' in kwargs:
-            username = self.username
-        else:
-            username = kwargs['username']
-        # tapis services manage a set ot tokens, one for each of the tenants for which we need to interact with.
-        self.service_tokens = {}
-        # if the caller passed a tenant_id explicitly, we just use that
-        if 'tenant_id' in kwargs:
-            self.service_tokens = {kwargs['tenant_id']: {}}
-        # otherwise, we compute all the tenant's that this service could need to interact with.
-        else:
-            try:
-                self.service_tokens = {t: {} for t in self.tenant_cache.get_site_admin_tenants_for_service()}
-            except AttributeError:
-                raise errors.BaseTapyException("Unable to retrieve target tenants for a service. "
-                                               "Are you really a Tapis service? "
-                                               "Did you pass in your Tenants instance?")
-        if not 'access_token_ttl' in kwargs:
-            # default to a 24 hour access token -
-            access_token_ttl = 86400
-        else:
-            access_token_ttl = kwargs['access_token_ttl']
-        if not 'refresh_token_ttl' in kwargs:
-            # default to 1 year refresh token -
-            refresh_token_ttl = 3153600000
-        else:
-            refresh_token_ttl = kwargs['refresh_token_ttl']
-        for tenant_id in self.service_tokens.keys():
-            try:
-                target_site_id = self.tenant_cache.get_tenant_config(tenant_id=tenant_id).site_id
-            except Exception as e:
-                raise errors.BaseTapyException(f"Got exception computing target site id; e:{e}")
-            try:
-                tokens = self.tokens.create_token(token_username=username,
-                                                  token_tenant_id=self.tenant_id,
-                                                  account_type=self.account_type,
-                                                  access_token_ttl=access_token_ttl,
-                                                  generate_refresh_token=True,
-                                                  refresh_token_ttl=refresh_token_ttl,
-                                                  target_site_id=target_site_id)
-            except Exception as e:
-                raise errors.BaseTapyException(f"Could not generate service tokens for service: {username}; "
-                                               f"exception: {e};"
-                                               f"function args:"
-                                               f"token_username: {self.username}; "
-                                               f"account_type: {self.account_type}; "
-                                               f"target_site_id: {target_site_id}; ")
-            self.service_tokens[tenant_id] = {'access_token': self.add_claims_to_token(tokens.access_token),
-                                              'refresh_token': tokens.refresh_token}
-
     def validate_token(self, token):
         """
         Validate a Tapis token.
@@ -659,7 +610,6 @@ class Tapis(object):
             return jwt.decode(token, public_key_str, algorithm='RS256')
         except Exception as e:
             raise errors.TokenInvalidError("Invalid Tapis token.")
-
 
     def add_claims_to_token(self, token):
         """
@@ -703,13 +653,10 @@ class Tapis(object):
         except:
             pass
 
-
     def refresh_tokens(self, tenant_id=None):
         """
         Use the refresh token on this client to get a new access and refresh token pair.
         """
-        if self.account_type == 'service':
-            return self.refresh_service_tokens(tenant_id)
         if not self.refresh_token:
             raise errors.TapyClientConfigurationError(msg="No refresh token found.")
         return self.refresh_user_tokens()
@@ -742,34 +689,6 @@ class Tapis(object):
         self.set_access_token(tokens.access_token)
         self.set_refresh_token(tokens.refresh_token)
 
-    def refresh_service_tokens(self, tenant_id):
-        """
-        Use the refresh token operation for tokens of type "service".
-        """
-        refresh_token = self.service_tokens[tenant_id]['refresh_token'].refresh_token
-        tokens = self.tokens.refresh_token(refresh_token=refresh_token)
-        self.service_tokens[tenant_id]['access_token'] = self.add_claims_to_token(tokens.access_token)
-        self.service_tokens[tenant_id]['refresh_token'] = tokens.refresh_token
-
-    def set_refresh_token(self, token):
-        """
-        Set the refresh token to be used in this session.
-        :param token: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
-        :return:
-        """
-
-        def _expires_in():
-            return self.refresh_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
-
-        self.refresh_token = token
-        try:
-            self.refresh_token.claims = self.validate_token(self.refresh_token.refresh_token)
-            self.refresh_token.original_ttl = self.refresh_token.expires_in
-            self.refresh_token.expires_in = _expires_in
-            self.refresh_token.expires_at = datetime.datetime.fromtimestamp(self.refresh_token.claims['exp'],
-                                                                            datetime.timezone.utc)
-        except:
-            pass
 
     def set_jwt(self, jwt):
         """
@@ -801,8 +720,6 @@ class Tapis(object):
         :return:
         """
         self.tenant_id = tenant_id
-        if self.account_type == 'service':
-            self.x_tenant_id = tenant_id
         self.base_url = base_url
 
     def upload(self, source_file_path, system_id, dest_file_path, **kwargs):
@@ -834,12 +751,6 @@ class Tapis(object):
             headers = {'X-Tapis-Token': self.get_access_jwt(), }
 
         headers['Accept'] = 'application/json'
-        # the X-Tapis-Tenant and X-Tapis-Username headers can be set when the token represents a service account and the
-        # service is making a request on behalf of another user/tenant.
-        if self.x_tenant_id:
-            headers['X-Tapis-Tenant'] = self.x_tenant_id
-        if self.x_username:
-            headers['X-Tapis-User'] = self.x_username
 
         # allow arbitrary headers to be passed in via the special "headers" kwarg -
         try:
@@ -1003,100 +914,6 @@ class Operation(object):
         self.query_parameters = [p for _, p in op_desc.parameters.items() if p.location == ParameterLocation.QUERY]
         self.request_body = op_desc.request_body
 
-    def determine_tenant_id_for_service_request(self, **kwargs):
-        """
-        Determines the tenant_id for a service request from the kwargs to said
-        request and the application context (flask thread-local), if available.
-        This value is used to set the X-Tapis-Tenant header.
-        """
-        # we need to determine the tenant id for the request.
-        tenant_id = None
-        # first, requests to the Tenants API are special, as there is not always a single tenant associated with
-        # the request (for example, when listing tenants) and the Tenants API only runs at the primary site.
-        if self.resource_name == 'tenants':
-            # in this case, we would ideally set it to the admin tenant of the primary site, however,
-            # to use get_base_url_admin_tenant_primary_site() we require a fully formed service tenant_cache (i.e.,
-            # the tenant_cache from flaskbase that has been initialized. if that function is not available, then
-            # we return None here. in most cases this should be fine. the tenant_id is not actually used when
-            # determining other aspects of a service request to tenants (such as the base URL).
-            try:
-                return self.tapis_client.tenant_cache.primary_site.site_admin_tenant_id
-            except:
-                return None
-        # to begin, look for it in the parameters. if the caller explicitly set
-        # it, always use that.
-        try:
-            tenant_id = kwargs.get('_tapis_tenant_id')
-        except:
-            pass
-        # if the caller did not explicitly set the _tapis_tenant_id variable,
-        # we can look on the flask thread local for data about the request.
-        if not tenant_id:
-            try:
-                from flask import g
-                # g.x_tapis_tenant corresponds to the X-Tapis-Tenant OBO header. if this
-                # is set, it is always the tenant_id of the request.
-                tenant_id = getattr(g, 'x_tapis_tenant', None)
-                # g.request_tenant_id, if set, incorporates the tenant_id claim from
-                # the token and the OBO headers.
-                if not tenant_id:
-                    tenant_id = getattr(g, 'request_tenant_id', None)
-                # finally, the g.tenant_id represents the tenant_id claim in the access token.
-                # we should only use this if nothing else is set.
-                if not tenant_id:
-                    tenant_id = getattr(g, 'tenant_id', None)
-            # note that flask will throw a RuntimeError if attempting to access the thread local object, j, outside
-            # of an application context.
-            except (ImportError, RuntimeError):
-                pass
-        # check the headers to see if X-Tapis-Tenant is being set; if so, use that:
-        if not tenant_id and 'headers' in kwargs:
-            try:
-                tenant_id = kwargs['headers']['X-Tapis-Tenant']
-            except:
-                pass
-        # finally, look for a tenant_id on the tapis client itself
-        if not tenant_id:
-            tenant_id = self.tapis_client.tenant_id
-        return tenant_id
-
-    def determine_user_for_service_request(self, **kwargs):
-        """
-        Determines the username for a service request from the kwargs to said
-        request and the application context (flask thread-local), if available.
-        """
-        # we need to determine the user for the request.
-        user = None
-        # to begin, look for it in the parameters. if the caller explicitly set
-        # it, always use that.
-        try:
-            user = kwargs.get('_tapis_user')
-        except:
-            pass
-        # if the caller did not explicitly set the _tapis_user variable,
-        # we can look on the flask thread local for data about the request.
-        if not user:
-            try:
-                from flask import g
-                # g.x_tapis_user corresponds to the X-Tapis-User OBO header. if this
-                # is set, it is always the user of the request.
-                user = getattr(g, 'x_tapis_user', None)
-
-                # the g.username corresponds to the tapis/username claim in the access token.
-                # we should only use this if x_tapis_user was not set.
-                if not user:
-                    user = getattr(g, 'username', None)
-            # note that flask will throw a RuntimeError if attempting to access attributes on the thread local object,
-            # g, outside of an application context.
-            except (ImportError, RuntimeError):
-                pass
-        # finally, look a username on the tapis client itself
-        if not user:
-            if self.tapis_client.debug_prints:
-                print(f"no user object, returning username on the tapis_client: '{self.tapis_client.username}'")
-            user = self.tapis_client.username
-        return user
-
     def __call__(self, **kwargs):
         """
         Turns the operation object into a callable. Arguments must be passed as kwargs, where the name of each kwarg
@@ -1110,29 +927,9 @@ class Operation(object):
         # the http method is defined by the operation -
         http_method = self.http_method.upper()
 
-        # determine base_url --
-        base_url = None
+        # use the base_url set on the client --
+        base_url = self.tapis_client.base_url
 
-        # tenant_id for the request; mostly just important for service requests; for user requests,
-        # the base_url is all that is needed.
-        tenant_id = None
-
-        # if this call is coming from another tapis service,
-        # we must determine base_url for a service to service request.
-        if self.tapis_client.is_tapis_service:
-            tenant_id = self.determine_tenant_id_for_service_request(**kwargs)
-            try:
-                site_id, base_url = self.tapis_client.tenant_cache.get_site_and_base_url_for_service_request(tenant_id,
-                                                                                                             self.resource_name)
-            except:
-                pass
-            # if all else fails, use the base_url for the client
-            if not base_url:
-                base_url = self.tapis_client.base_url
-
-        # otherwise, just use the base_url passed into the tapis client --
-        else:
-            base_url = self.tapis_client.base_url
         # construct the http path -
         # some API definitions, such as SK, chose to not include the "/v3/" at the beginning of their paths,
         # so we add it in:
@@ -1182,26 +979,7 @@ class Operation(object):
 
         # set the X-Tapis-Token header using the client
         access_token = None
-        request_site_admin_tenant_id = None    # used for looking up the service token
-        if self.tapis_client.is_tapis_service and hasattr(self.tapis_client, 'service_tokens'):
-            # the tenant_id for the request could be a user tenant (e.g., "tacc" or "dev") but the
-            # service tokens are stored by admin tenant, so we need to get the admin tenant for the
-            # owning site of the tenant.
-            for tn in self.tapis_client.tenant_cache.tenants:
-                if tn.site.site_id == site_id:
-                    request_site_admin_tenant_id = tn.site.site_admin_tenant_id
-            # service_tokens may be defined but still be empty dictionaries... this __call__ could be to get
-            # the service's first set of tokens.
-            if request_site_admin_tenant_id in self.tapis_client.service_tokens.keys() \
-                    and 'access_token' in self.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
-                try:
-                    access_token = self.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token']
-                except KeyError:
-                    raise errors.BaseTapyException(f"Did not find service tokens for "
-                                                   f"tenant {request_site_admin_tenant_id};")
-            else:
-                pass
-        elif self.tapis_client.access_token:
+        if self.tapis_client.access_token:
             access_token = self.tapis_client.access_token
         elif self.tapis_client.get_access_jwt():
             access_token = self.tapis_client.get_access_jwt()
@@ -1221,40 +999,18 @@ class Operation(object):
                 # refresh (otherwise this would never terminate!)
                 if (self.resource_name == 'tokens' and self.operation_id == 'refresh_token')\
                         or (self.resource_name == 'authenticator' and self.operation_id == 'create_token'):
-
                     pass
                 else:
                     try:
-                        self.tapis_client.refresh_tokens(tenant_id=request_site_admin_tenant_id)
+                        self.tapis_client.refresh_user_tokens()
                     except:
-                        # for now, if we get an error trying to refresh the tokens,s, we ignore it and try the
+                        # for now, if we get an error trying to refresh the tokens, we ignore it and try the
                         # request anyway.
                         pass
-        # we may have refreshed the token, so we get it one more time --
-        if self.tapis_client.is_tapis_service \
-                and hasattr(self.tapis_client, 'service_tokens') \
-                and request_site_admin_tenant_id \
-                and 'access_token' in self.tapis_client.service_tokens[request_site_admin_tenant_id].keys():
-            try:
-                jwt = self.tapis_client.service_tokens[request_site_admin_tenant_id]['access_token'].access_token
-            except Exception as e:
-                msg = f"Could not get JWT from access_token; e: {e}"
-                raise errors.BaseTapyException(msg)
-        else:
-            jwt = self.tapis_client.get_access_jwt()
+        # we may have refreshed the token, so we get it one more time --        
+        jwt = self.tapis_client.get_access_jwt()
         if jwt:
             headers = {'X-Tapis-Token':  jwt}
-
-        # the X-Tapis-Tenant and X-Tapis-Username headers must be set when the token represents a service account.
-        # if this is a tapis service, we should have derived the correct tenant_id when we determined the tenant_id
-        # for the request, above.
-        if self.tapis_client.is_tapis_service:
-            if tenant_id:
-                headers['X-Tapis-Tenant'] = tenant_id
-            # similarly for username, we first look in the request content:
-            x_username = self.determine_user_for_service_request(**kwargs)
-            if x_username:
-                headers['X-Tapis-User'] = x_username
 
         # allow arbitrary headers to be passed in via the special "headers" kwarg -
         try:
@@ -1316,7 +1072,10 @@ class Operation(object):
                              params=params,
                              data=data,
                              headers=headers).prepare()
-
+        # call the plugins' pre-request callables:
+        for f in self.tapis_client.plugin_on_call_pre_request_callables:
+            f(self, r, **kwargs)
+        
         # the create_token operation requires HTTP basic auth, though some services, such as the authenticator, need to
         # use create_token to generate tokens on behalf of other users; in these cases, it is important to not set the
         # BasicAuth header, so we look for a special kwarg in this case
@@ -1346,6 +1105,11 @@ class Operation(object):
             version = resp.json().get('version')
         except:
             version = None
+
+        # call the plugins' post-request callables:
+        for f in self.tapis_client.plugin_on_call_post_request_callables:
+            f(self, resp, **kwargs)
+
         # for any kind of non-20x response, we need to raise an error.
         if resp.status_code in (400, 404):
             raise errors.InvalidInputError(msg=error_msg, version=version, request=r, response=resp)

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.0.1'
+  version: '1.1.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -170,7 +170,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqCreateApp'
+              $ref: '#/components/schemas/ReqPostApp'
       responses:
         '201':
           description: Application created.
@@ -1130,6 +1130,17 @@ components:
         archiveOnAppError:
           type: boolean
           default: true
+        isMpi:
+          type: boolean
+          default: false
+        mpiCmd:
+          type: string
+          minLength: 1
+          maxLength: 126
+        cmdPrefix:
+          type: string
+          minLength: 1
+          maxLength: 126
         parameterSet:
           $ref: '#/components/schemas/ParameterSet'
         fileInputs:
@@ -1331,7 +1342,7 @@ components:
     # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
     # -------------------------------------------------------------------------
-    ReqCreateApp:
+    ReqPostApp:
       type: object
       required:
         - id

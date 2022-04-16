@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tapipy"
-version = "1.0.5"
+version = "1.1.0"
 description = "Python lib for interacting with an instance of the Tapis API Framework"
 license = "BSD-4-Clause"
 authors = ["Joe Stubbs <jstubbs@tacc.utexas.edu>"]

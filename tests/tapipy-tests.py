@@ -154,7 +154,8 @@ def test_create_token(client):
                                       access_token_ttl=14400,
                                       generate_refresh_token=True,
                                       target_site_id='tacc',
-                                      refresh_token_ttl=9999999)
+                                      refresh_token_ttl=9999999,
+                                      use_basic_auth=False)
     assert hasattr(toks, 'access_token')
     access_token= toks.access_token
     assert hasattr(access_token, 'access_token')

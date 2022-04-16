@@ -1,5 +1,39 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+ 
+
+ ## 1.1.0 - 2022-04-04 (target)
+### Added
+- No change.
+
+### Changed
+- Bug fix. tapipy.actors.get_client() wrongly instantiated with jwt rather than access_token.
+- Setting jwt in Tapis object now also sets access_token (jwt is an alias for access_token).
+- Fix for create_token test - basic_auth should be false to create tokens on other tenants.
+
+### Removed
+- No change.
+
+## 1.0.7 - 2022-02-08 (target)
+### Added
+- No change.
+
+### Changed
+- Updating spec for actors.
+
+### Removed
+- No change.
+
+
+## 1.0.6 - 2022-02-02 (target)
+### Added
+- No change.
+
+### Changed
+- Updating spec for actors, streams, app, systems.
+
+### Removed
+- No change.
 
 
 ## 1.0.5 - 2021-12-20 (target)
