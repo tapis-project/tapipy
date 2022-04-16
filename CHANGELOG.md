@@ -2,7 +2,19 @@
 All notable changes to this project will be documented in this file.
  
 
- ## 1.1.0 - 2022-04-04 (target)
+## 1.1.1 - 2022-04-16
+### Added
+- No change
+
+### Changed
+- This update converts tapipy to using a plugins architecture. In particular, functionality related to tapis services
+has been moved to the tapipy-tapisservice repository, in the form of a plugin.
+
+### Removed
+- No change.
+
+
+## 1.1.0 - 2022-04-04 (target)
 ### Added
 - No change.
 
@@ -13,6 +25,7 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - No change.
+
 
 ## 1.0.7 - 2022-02-08 (target)
 ### Added
