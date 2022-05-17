@@ -1,5 +1,5 @@
 numpy
-tapipy==1.0.5
+tapipy
 pymongo
 jupyterlab
 cloudpickle
