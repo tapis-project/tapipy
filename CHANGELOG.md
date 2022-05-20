@@ -2,6 +2,20 @@
 All notable changes to this project will be documented in this file.
  
 
+## 1.2.1 - 2022-05-20
+### Added
+- No change
+
+### Changed
+- Broadened dependencies allowed. Tapipy compatible with Python 3.10 now.
+- Tests now only cover tapipy. Not tapisservice. Tapisservice tests done by tapipy-tapisservice repo.
+- Tests now use user account.
+- Test user and password configured in Makefile now.
+
+### Removed
+- No change.
+
+
 ## 1.2.0 - 2022-05-19
 ### Added
 - No change

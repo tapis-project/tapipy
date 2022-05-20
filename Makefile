@@ -17,7 +17,7 @@ install: build
 
 test: build
 	docker build -t tapis/tapipy-tests -f Dockerfile-tests .
-	docker run $$interactive --rm  tapis/tapipy-tests
+	docker run -e username=user -e password=pass $$interactive --rm  tapis/tapipy-tests
 
 pull_specs:
 	python3 repo_spec_pull_script.py

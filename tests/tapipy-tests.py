@@ -1,23 +1,25 @@
 # A suite of integrations tests for the Tapis Python SDK.
 # Build the test docker image: docker build -t tapis/pysdk-tests -f Dockerfile-tests .
 # Run these tests using the built docker image: docker run -it --rm  tapis/pysdk-tests
-
-import subprocess
+import os
 import time
-
+import subprocess
 import pytest
 from tapipy.tapis import Tapis, TapisResult
-from tapisservice.config import conf
-from tapisservice.tenants import TenantCache
-from tapisservice.auth import get_service_tapis_client
 
-Tenants = TenantCache()
+
+BASE_URL = os.getenv("base_url", "https://tacc.develop.tapis.io")
+USERNAME = os.environ["username"]
+PASSWORD = os.environ["password"]
+
 
 @pytest.fixture
 def client():
-    t = get_service_tapis_client(tenants=Tenants)
+    t = Tapis(base_url=BASE_URL,
+              username=USERNAME,
+              password=PASSWORD)
+    t.get_tokens()
     return t
-
 
 # -----------------------------------------------------
 # Tests to check parsing of different result structures -
@@ -102,51 +104,27 @@ def test_tapisresult_self_in_response():
 
 def test_client_has_tokens(client):
     # the fixture should have already created tokens on the client.
-    # service clients have to manage tokens for every site they will interact with --
-    if client.account_type == 'service':
-        assert  hasattr(client, 'service_tokens')
-        service_tokens = client.service_tokens
-        assert type(service_tokens) == dict
-        assert client.tenant_id in service_tokens.keys()
-        # each tenant is its own dict
-        assert type(service_tokens[client.tenant_id]) == dict
-        tenant_tokens = service_tokens[client.tenant_id]
-        assert 'access_token' in tenant_tokens.keys()
-        assert 'refresh_token' in tenant_tokens.keys()
-        # each token is actually a TapisResult object and therefore has attributes like
-        # access_token, claims, etc...
-        assert type(tenant_tokens['access_token']) == TapisResult
-        assert hasattr(tenant_tokens['access_token'], 'access_token')
-        assert hasattr(tenant_tokens['access_token'], 'claims')
-    else:
-        # the access token object
-        assert hasattr(client, 'access_token')
-        access_token = client.access_token
-        # the actual JWT
-        assert hasattr(access_token, 'access_token')
-        # the expiry fields
-        assert hasattr(access_token, 'expires_at')
-        assert hasattr(access_token, 'expires_in')
+    # the access token object
+    assert hasattr(client, 'access_token')
+    access_token = client.access_token
+    # the actual JWT
+    assert hasattr(access_token, 'access_token')
+    # the expiry fields
+    assert hasattr(access_token, 'expires_at')
+    assert hasattr(access_token, 'expires_in')
 
-        # the refresh token object
-        assert hasattr(client, 'refresh_token')
-        # the actual JWT -
-        refresh_token = client.refresh_token
-        # the expiry fields
-        assert hasattr(refresh_token, 'expires_at')
-        assert hasattr(refresh_token, 'expires_in')
+    # the refresh token object - Users refresh_token obj should be empty.
+    assert hasattr(client, 'refresh_token')
 
 
 def test_create_token(client):
     toks = client.tokens.create_token(token_username=client.username,
                                       token_tenant_id=client.tenant_id,
-                                      account_type=client.account_type,
+                                      account_type="user",
                                       access_token_ttl=14400,
                                       generate_refresh_token=True,
                                       target_site_id='tacc',
-                                      refresh_token_ttl=9999999,
-                                      use_basic_auth=False,
-                                      _tapis_set_x_headers_from_service=True)
+                                      refresh_token_ttl=9999999)
     assert hasattr(toks, 'access_token')
     access_token= toks.access_token
     assert hasattr(access_token, 'access_token')
@@ -165,8 +143,8 @@ def test_create_token(client):
 # -----------------
 
 def test_list_tenants(client):
-    tenants = client.tenants.list_tenants(_tapis_set_x_headers_from_service=True)
-    sites = client.tenants.list_sites(_tapis_set_x_headers_from_service=True)
+    tenants = client.tenants.list_tenants()
+    sites = client.tenants.list_sites()
     admin_tenants = set()
     for s in sites:
         admin_tenants.add(s.site_admin_tenant_id)
@@ -181,7 +159,7 @@ def test_list_tenants(client):
             assert hasattr(t, 'token_gen_services')
 
 def test_get_tenant_by_id(client):
-    t = client.tenants.get_tenant(tenant_id='dev', _tapis_set_x_headers_from_service=True)
+    t = client.tenants.get_tenant(tenant_id='dev')
     assert t.base_url == 'https://dev.develop.tapis.io'
     assert t.tenant_id == 'dev'
     assert t.public_key.startswith('-----BEGIN PUBLIC KEY-----')
@@ -189,7 +167,7 @@ def test_get_tenant_by_id(client):
     assert t.security_kernel == 'https://dev.develop.tapis.io/v3/security'
 
 def test_list_owners(client):
-    owners = client.tenants.list_owners(_tapis_set_x_headers_from_service=True)
+    owners = client.tenants.list_owners()
     for o in owners:
         assert hasattr(o, 'create_time')
         assert hasattr(o, 'email')
@@ -197,7 +175,7 @@ def test_list_owners(client):
         assert hasattr(o, 'name')
 
 def test_get_owner(client):
-    owner = client.tenants.get_owner(email='CICSupport@tacc.utexas.edu', _tapis_set_x_headers_from_service=True)
+    owner = client.tenants.get_owner(email='CICSupport@tacc.utexas.edu')
     assert owner.email == 'CICSupport@tacc.utexas.edu'
     assert owner.name == 'CIC Support'
 
@@ -207,68 +185,11 @@ def test_get_owner(client):
 # ---------------------
 
 def test_list_roles(client):
-    roles = client.sk.getRoleNames(tenant='admin', _tapis_set_x_headers_from_service=True)
+    roles = client.sk.getRoleNames(tenant=client.tenant_id)
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     if len(roles.names) > 0:
         assert type(roles.names[0]) == str
-
-def test_create_role(client):
-    # first, make sure role is not there -
-    try:
-        client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants',
-                                   _tapis_set_x_headers_from_service=True)
-    except:
-        pass
-    # create the test role -
-    role = client.sk.createRole(roleTenant='admin', roleName='pysdk_test_role',
-                                description='test role created by pysdk', user='tenants',
-                                _tapis_set_x_headers_from_service=True)
-    assert hasattr(role, 'url')
-
-def test_role_user_list_initially_empty(client):
-    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role',
-                                       _tapis_set_x_headers_from_service=True)
-    assert users.names == []
-
-def test_add_user_to_role(client):
-    result = client.sk.grantRole(tenant='admin', roleName='pysdk_test_role', user='tenants',
-                                 _tapis_set_x_headers_from_service=True)
-    assert hasattr(result, 'changes')
-    assert result.changes == 1
-
-def test_user_has_role(client):
-    roles = client.sk.getUserRoles(tenant='admin', user='tenants',
-                                   _tapis_set_x_headers_from_service=True)
-    assert hasattr(roles, 'names')
-    assert type(roles.names) == list
-    assert 'pysdk_test_role' in roles.names
-
-def test_user_in_role_user_list(client):
-    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role',
-                                       _tapis_set_x_headers_from_service=True)
-    assert hasattr(users, 'names')
-    assert type(users.names) == list
-    assert 'tenants' in users.names
-
-def test_revoke_user_from_role(client):
-    result = client.sk.revokeUserRole(tenant='admin', roleName='pysdk_test_role', user='tenants',
-                                      _tapis_set_x_headers_from_service=True)
-    assert hasattr(result, 'changes')
-    assert result.changes == 1
-
-def test_user_no_longer_in_role(client):
-    roles = client.sk.getUserRoles(tenant='admin', user='tenants',
-                                   _tapis_set_x_headers_from_service=True)
-    assert hasattr(roles, 'names')
-    assert type(roles.names) == list
-    assert 'tenants' not in roles.names
-
-def test_delete_role(client):
-    result = client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants',
-                                        _tapis_set_x_headers_from_service=True)
-    assert hasattr(result, 'changes')
-    assert result.changes == 1
 
 
 # --------------------
@@ -276,7 +197,7 @@ def test_delete_role(client):
 # --------------------
 
 def test_debug_flag_tenants(client):
-    result, debug = client.tenants.list_tenants(_tapis_debug=True, _tapis_set_x_headers_from_service=True)
+    result, debug = client.tenants.list_tenants(_tapis_debug=True)
     assert hasattr(debug, 'request')
     assert hasattr(debug, 'response')
     assert hasattr(debug.request, 'url')
@@ -299,35 +220,9 @@ def test_import_timing():
 # -----------------------
 
 def test_download_service_dev_specs():
-    try:
-        t = get_service_tapis_client(resource_set='dev', tenants=Tenants)
-    except Exception as e:
-        raise
-
-
-# ---------------------
-# Metadata tests -
-# ---------------------
-# metadata tests currently fail with permissions errors, but we leave them here to demonstrate the intended
-# functionality...
-#
-# def test_create_coll(client):
-#     result,debug = client.meta.createCollection(db='testdb', collection='testcoll',_tapis_debug=True)
-#     assert debug.response.status_code == 201
-#
-# def test_get_coll_names(client):
-#     result = client.meta.listCollectionNames(db='testdb')
-#     assert 'testcoll' in str(result)
-
-#delete collection cannot be exercised as it needs additional header If-Match
-
-#def test_create_doc(client):
- #   result = client.meta.createDocument(db='testdb', collection='testcoll')
- #   assert str(result)!= ''
-
-#def test_get_doc_(client):
- #   result = client.meta.getDocument(db='testdb', collection='testcoll', docId='5e45b2cca93eebf39fbe1043')
- #   assert 'testdoc' in str(result)
-
-
-
+    t = Tapis(base_url=BASE_URL,
+              username=USERNAME,
+              password=PASSWORD,
+              resource_set="dev")
+    t.get_tokens()
+    return t
