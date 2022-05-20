@@ -2,6 +2,19 @@
 All notable changes to this project will be documented in this file.
  
 
+## 1.2.0 - 2022-05-19
+### Added
+- No change
+
+### Changed
+- Added compatibility for PyJWT > 2.0.0. Still only requiring > 1.7.1.
+- Fixed tests for Tapipy to include plugins rework.
+- Tests now using pip install of tapisservice plugin.
+
+### Removed
+- No change.
+
+
 ## 1.1.1 - 2022-04-16
 ### Added
 - No change

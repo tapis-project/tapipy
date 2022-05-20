@@ -7,18 +7,15 @@
 #    docker run -it --rm -v $(pwd)/test/resource_examples:/home/tapis/resource_examples tapis/tapipy bash
 #    docker run -it --network tenants-api_tenants --rm tapis/tapipy bash
 
-from tapis/flaskbase
-
-USER root
+from python:3.7
 
 # Moving files
-ADD . /home/tapis/tapipy-install-dir
 ADD tests/tapipy-tests.py /home/tapis/tapipy-tests.py
 ADD tests/configschema.json /home/tapis/configschema.json
 ADD tests/config-dev-develop.json /home/tapis/config.json
 
-# Build
-RUN pip uninstall -y tapipy
+# Add tapipy files and build with Poetry build.
+ADD . /home/tapis/tapipy-install-dir
 RUN pip install -r /home/tapis/tapipy-install-dir/requirements.txt
 WORKDIR /home/tapis/tapipy-install-dir
 RUN poetry build
@@ -26,9 +23,9 @@ WORKDIR /home/tapis/tapipy-install-dir/dist
 RUN pip install *.whl
 WORKDIR /home/tapis
 
-# Permissions
-RUN chown -R tapis:tapis /home/tapis
-USER tapis
+# Install tapisservice to do testing with service account as we do.
+RUN pip3 install tapisservice
+
 
 # Testing
 ENTRYPOINT ["pytest", "--verbose", "/home/tapis/tapipy-tests.py"]

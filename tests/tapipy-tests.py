@@ -6,26 +6,16 @@ import subprocess
 import time
 
 import pytest
-from common.auth import tenants
-from common.config import conf
 from tapipy.tapis import Tapis, TapisResult
+from tapisservice.config import conf
+from tapisservice.tenants import TenantCache
+from tapisservice.auth import get_service_tapis_client
 
+Tenants = TenantCache()
 
 @pytest.fixture
 def client():
-    base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
-    username = getattr(conf, 'username', 'pysdk')
-    account_type = getattr(conf, 'account_type', 'service')
-    tenant_id = getattr(conf, 'tenant_id', 'admin')
-    service_password = getattr(conf, 'service_password', None)
-    t = Tapis(base_url=base_url,
-              username=username,
-              account_type=account_type,
-              tenant_id=tenant_id,
-              service_password=service_password,
-              tenants=tenants,
-              is_tapis_service=True)
-    t.get_tokens()
+    t = get_service_tapis_client(tenants=Tenants)
     return t
 
 
@@ -155,7 +145,8 @@ def test_create_token(client):
                                       generate_refresh_token=True,
                                       target_site_id='tacc',
                                       refresh_token_ttl=9999999,
-                                      use_basic_auth=False)
+                                      use_basic_auth=False,
+                                      _tapis_set_x_headers_from_service=True)
     assert hasattr(toks, 'access_token')
     access_token= toks.access_token
     assert hasattr(access_token, 'access_token')
@@ -174,8 +165,8 @@ def test_create_token(client):
 # -----------------
 
 def test_list_tenants(client):
-    tenants = client.tenants.list_tenants()
-    sites = client.tenants.list_sites()
+    tenants = client.tenants.list_tenants(_tapis_set_x_headers_from_service=True)
+    sites = client.tenants.list_sites(_tapis_set_x_headers_from_service=True)
     admin_tenants = set()
     for s in sites:
         admin_tenants.add(s.site_admin_tenant_id)
@@ -190,7 +181,7 @@ def test_list_tenants(client):
             assert hasattr(t, 'token_gen_services')
 
 def test_get_tenant_by_id(client):
-    t = client.tenants.get_tenant(tenant_id='dev')
+    t = client.tenants.get_tenant(tenant_id='dev', _tapis_set_x_headers_from_service=True)
     assert t.base_url == 'https://dev.develop.tapis.io'
     assert t.tenant_id == 'dev'
     assert t.public_key.startswith('-----BEGIN PUBLIC KEY-----')
@@ -198,7 +189,7 @@ def test_get_tenant_by_id(client):
     assert t.security_kernel == 'https://dev.develop.tapis.io/v3/security'
 
 def test_list_owners(client):
-    owners = client.tenants.list_owners()
+    owners = client.tenants.list_owners(_tapis_set_x_headers_from_service=True)
     for o in owners:
         assert hasattr(o, 'create_time')
         assert hasattr(o, 'email')
@@ -206,7 +197,7 @@ def test_list_owners(client):
         assert hasattr(o, 'name')
 
 def test_get_owner(client):
-    owner = client.tenants.get_owner(email='CICSupport@tacc.utexas.edu')
+    owner = client.tenants.get_owner(email='CICSupport@tacc.utexas.edu', _tapis_set_x_headers_from_service=True)
     assert owner.email == 'CICSupport@tacc.utexas.edu'
     assert owner.name == 'CIC Support'
 
@@ -216,7 +207,7 @@ def test_get_owner(client):
 # ---------------------
 
 def test_list_roles(client):
-    roles = client.sk.getRoleNames(tenant='admin')
+    roles = client.sk.getRoleNames(tenant='admin', _tapis_set_x_headers_from_service=True)
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     if len(roles.names) > 0:
@@ -225,48 +216,57 @@ def test_list_roles(client):
 def test_create_role(client):
     # first, make sure role is not there -
     try:
-        client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants')
+        client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants',
+                                   _tapis_set_x_headers_from_service=True)
     except:
         pass
     # create the test role -
     role = client.sk.createRole(roleTenant='admin', roleName='pysdk_test_role',
-                                description='test role created by pysdk', user='tenants')
+                                description='test role created by pysdk', user='tenants',
+                                _tapis_set_x_headers_from_service=True)
     assert hasattr(role, 'url')
 
 def test_role_user_list_initially_empty(client):
-    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role')
+    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role',
+                                       _tapis_set_x_headers_from_service=True)
     assert users.names == []
 
 def test_add_user_to_role(client):
-    result = client.sk.grantRole(tenant='admin', roleName='pysdk_test_role', user='tenants')
+    result = client.sk.grantRole(tenant='admin', roleName='pysdk_test_role', user='tenants',
+                                 _tapis_set_x_headers_from_service=True)
     assert hasattr(result, 'changes')
     assert result.changes == 1
 
 def test_user_has_role(client):
-    roles = client.sk.getUserRoles(tenant='admin', user='tenants')
+    roles = client.sk.getUserRoles(tenant='admin', user='tenants',
+                                   _tapis_set_x_headers_from_service=True)
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     assert 'pysdk_test_role' in roles.names
 
 def test_user_in_role_user_list(client):
-    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role')
+    users = client.sk.getUsersWithRole(tenant='admin', roleName='pysdk_test_role',
+                                       _tapis_set_x_headers_from_service=True)
     assert hasattr(users, 'names')
     assert type(users.names) == list
     assert 'tenants' in users.names
 
 def test_revoke_user_from_role(client):
-    result = client.sk.revokeUserRole(tenant='admin', roleName='pysdk_test_role', user='tenants')
+    result = client.sk.revokeUserRole(tenant='admin', roleName='pysdk_test_role', user='tenants',
+                                      _tapis_set_x_headers_from_service=True)
     assert hasattr(result, 'changes')
     assert result.changes == 1
 
 def test_user_no_longer_in_role(client):
-    roles = client.sk.getUserRoles(tenant='admin', user='tenants')
+    roles = client.sk.getUserRoles(tenant='admin', user='tenants',
+                                   _tapis_set_x_headers_from_service=True)
     assert hasattr(roles, 'names')
     assert type(roles.names) == list
     assert 'tenants' not in roles.names
 
 def test_delete_role(client):
-    result = client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants')
+    result = client.sk.deleteRoleByName(tenant='admin', roleName='pysdk_test_role', user='tenants',
+                                        _tapis_set_x_headers_from_service=True)
     assert hasattr(result, 'changes')
     assert result.changes == 1
 
@@ -276,7 +276,7 @@ def test_delete_role(client):
 # --------------------
 
 def test_debug_flag_tenants(client):
-    result, debug = client.tenants.list_tenants(_tapis_debug=True)
+    result, debug = client.tenants.list_tenants(_tapis_debug=True, _tapis_set_x_headers_from_service=True)
     assert hasattr(debug, 'request')
     assert hasattr(debug, 'response')
     assert hasattr(debug.request, 'url')
@@ -298,60 +298,9 @@ def test_import_timing():
 # Download spec tests -
 # -----------------------
 
-def test_download_prod_specs():
+def test_download_service_dev_specs():
     try:
-        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
-        username = getattr(conf, 'username', 'pysdk')
-        account_type = getattr(conf, 'account_type', 'service')
-        tenant_id = getattr(conf, 'tenant_id', 'admin')
-        service_password = getattr(conf, 'service_password', None)
-        t = Tapis(base_url=base_url,
-                username=username,
-                account_type=account_type,
-                tenant_id=tenant_id,
-                service_password=service_password,
-                tenants=tenants,
-                is_tapis_service=True,
-                resource_set='prod')
-        t.get_tokens()
-    except Exception as e:
-        raise
-
-def test_download_staging_specs():
-    try:
-        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
-        username = getattr(conf, 'username', 'pysdk')
-        account_type = getattr(conf, 'account_type', 'service')
-        tenant_id = getattr(conf, 'tenant_id', 'admin')
-        service_password = getattr(conf, 'service_password', None)
-        t = Tapis(base_url=base_url,
-                username=username,
-                account_type=account_type,
-                tenant_id=tenant_id,
-                service_password=service_password,
-                tenants=tenants,
-                is_tapis_service=True,
-                resource_set='staging')
-        t.get_tokens()
-    except Exception as e:
-        raise
-
-def test_download_dev_specs():
-    try:
-        base_url = getattr(conf, 'base_url', 'https://dev.develop.tapis.io')
-        username = getattr(conf, 'username', 'pysdk')
-        account_type = getattr(conf, 'account_type', 'service')
-        tenant_id = getattr(conf, 'tenant_id', 'admin')
-        service_password = getattr(conf, 'service_password', None)
-        t = Tapis(base_url=base_url,
-                username=username,
-                account_type=account_type,
-                tenant_id=tenant_id,
-                service_password=service_password,
-                tenants=tenants,
-                is_tapis_service=True,
-                resource_set='dev')
-        t.get_tokens()
+        t = get_service_tapis_client(resource_set='dev', tenants=Tenants)
     except Exception as e:
         raise
 

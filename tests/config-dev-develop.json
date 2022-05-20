@@ -1,7 +1,12 @@
 {
-  "service_name": "pysdk-tests",
+  "service_name": "abaco",
+  "service_site_id": "tacc",
+  "service_tenant_id": "admin",
   "tenants": ["admin"],
-  "base_url": "https://admin.develop.tapis.io",
-  "username": "tenants",
-  "service_password": "<get from SK>"
+  "primary_site_admin_tenant_base_url": "https://admin.develop.tapis.io",
+  "username": "abaco",
+  "service_password": "",
+  "python_framework_type": "flask",
+  "log_level": "DEBUG",
+  "log_file": ""
 }

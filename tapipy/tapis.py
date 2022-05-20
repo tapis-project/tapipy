@@ -589,7 +589,7 @@ class Tapis(object):
         if not token:
             raise errors.BaseTapyException("No Tapis access token found in the request.")
         try:
-            data = jwt.decode(token, verify=False)
+            data = jwt.decode(token, options={"verify_signature": False}, algorithms=["RS256"])
         except Exception as e:
             raise errors.BaseTapyException("Could not parse the Tapis access token.")
         # get the tenant out of the jwt payload and get associated public key
@@ -607,7 +607,7 @@ class Tapis(object):
             raise errors.TokenInvalidError("Unable to process Tapis token; no public key associated with the "
                                              "tenant_id.")
         try:
-            return jwt.decode(token, public_key_str, algorithm='RS256')
+            return jwt.decode(token, public_key_str, algorithms=["RS256"])
         except Exception as e:
             raise errors.TokenInvalidError("Invalid Tapis token.")
 
@@ -628,7 +628,7 @@ class Tapis(object):
             token_str = token_with_claims.refresh_token
         # we do not validate the token because we may not have the cache of tenant objects (with corresponding
         # public keys) yet, in which case validation will fail
-        token_with_claims.claims = jwt.decode(token_str, verify=False)
+        token_with_claims.claims = jwt.decode(token_str, verify=False, options={"verify_signature": False}, algorithms=["RS256"])
         # access_token.expires_in will not exist if the token is a string type... need to compute it from the
         # claims...
         if hasattr(token_with_claims, 'expires_in'):
