@@ -170,9 +170,9 @@ paths:
         description: limit the number of records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
@@ -446,9 +446,9 @@ paths:
         description: limit the number of records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
@@ -757,9 +757,9 @@ paths:
           description: limit the number of records returned
           schema:
             type: integer
-        - name: offset
+        - name: skip
           in: query
-          description: index (offset) to start list
+          description: index (skip) to start list
           schema:
             type: integer
       responses:
@@ -1094,9 +1094,9 @@ paths:
           description: limit the number of records returned.
           schema:
             type: integer
-        - name: offset
+        - name: skip
           in: query
-          description: index (offset) to start list.
+          description: index (skip) to start list.
           schema:
             type: integer
       responses:
@@ -1488,9 +1488,9 @@ paths:
           description: limit the number of records returned.
           schema:
             type: integer
-        - name: offset
+        - name: skip
           in: query
-          description: index (offset) to start list.
+          description: index (skip) to start list.
           schema:
             type: integer
         - name: start_date
@@ -1582,9 +1582,9 @@ paths:
           description: limit the number of records returned.
           schema:
             type: integer
-        - name: offset
+        - name: skip
           in: query
-          description: index (offset) to start list.
+          description: index (skip) to start list.
           schema:
             type: integer
         - name: start_date
@@ -1666,9 +1666,9 @@ paths:
         description: limit the number of records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
@@ -1938,9 +1938,9 @@ paths:
         description: limit the number of records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
@@ -2328,9 +2328,9 @@ paths:
           description: limit the number of records returned.
           schema:
             type: integer
-        - name: offset
+        - name: skip
           in: query
-          description: index (offset) to start list.
+          description: index (skip) to start list.
           schema:
             type: integer
       responses:
@@ -2538,9 +2538,9 @@ paths:
         description: limit the number of records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
@@ -2602,9 +2602,9 @@ paths:
         description: limit the number of records returned.
         schema:
           type: integer
-      - name: offset
+      - name: skip
         in: query
-        description: index (offset) to start list.
+        description: index (skip) to start list.
         schema:
           type: integer
       responses:
@@ -3029,12 +3029,21 @@ components:
         project_url:
           type: string
           description: url of the project
+        bucket:
+          type: string
+          description: id of the infludx storage bucket
         active:
           type: boolean
           description: Current status of the project
         metadata:
           type: object
           description: User defined metadata for the site
+        created_at:
+          type: string
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
 
 
     NewProject:
@@ -3090,6 +3099,12 @@ components:
         elevation:
           type: number
           description: elevation
+        created_at:
+          type: string
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
 
     NewSiteRequest:
       type: array
@@ -3142,9 +3157,12 @@ components:
         site_id:
           type: string
           description: The CHORDS site id to which instrument attached to
-        created:
+        created_at:
           type: string
-          description: creation date of the instrument
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
         tags:
           type: array
           items:
@@ -3275,6 +3293,12 @@ components:
         chords_id:
           type: integer
           description: Variable ID in chords
+        created_at:
+          type: string
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
 
     Measurements:
       type: object
@@ -3370,7 +3394,7 @@ components:
         channel_id:
           type: string
           description: The id generated by Tapis.
-        create_time:
+        created_at:
           type: string
           description: The time of channel creation
         status:
@@ -3533,7 +3557,7 @@ components:
        channel_name:
           type: string
           description: User defined channel name
-       create_time:
+       created_at:
           type: string
           description: Time of alert creation
        execution_id:
@@ -3546,7 +3570,7 @@ components:
     Template:
      type: object
      properties:
-       create_time:
+       created_at:
          type: string
          description: Time for template creation
        last_updated:
@@ -3684,9 +3708,6 @@ components:
         created_at:
           type: string
           description: ISO8601 datetime string for object creation date
-        updated_at:
-          type: string
-          description: ISO8601 datetime string for object updated date
         owner:
           type: string
           description: Owner of this archive

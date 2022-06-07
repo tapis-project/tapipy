@@ -26,6 +26,36 @@ servers:
   description: catch-all server definition for other Tapis instances.
 
 paths:
+  /v3/oauth2/hello:
+    get:
+      tags:
+        - Health Check
+      description: Logged connectivity test. No authorization required.
+      operationId: hello
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+        '500':
+          description: Server error.
+  /v3/oauth2/ready:
+    get:
+      tags:
+        - Health Check
+      description: Logged connectivity test. No authorization required.
+      operationId: ready
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+        '500':
+          description: Server error.
   /v3/oauth2/.well-known/oauth-authorization-server:
     get:
       tags:
@@ -148,6 +178,36 @@ paths:
         required: true
         schema:
           type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Client'
+    put:
+      tags:
+      - Clients
+      summary: Update client details
+      description: Update details of a specific client by its id.
+      operationId: update_client
+      parameters:
+      - name: client_id
+        in: path
+        description: Unique ID of the client
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClient'
       responses:
         '200':
           description: OK
@@ -283,6 +343,29 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/Profile'
+  
+  /v3/oauth2/device/code:
+    post:
+      tags:
+        - Tokens
+      operationId: generate_device_code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewDeviceCode'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/DeviceCodeResposne'
 
 components:
   schemas:
@@ -428,10 +511,20 @@ components:
         code:
           type: string
           description: The authorization code associated with the request (for authorization_code grant).
+        device_code:
+          type: string
+          description: The device code associated with the request (for device_code grant)
         refresh_token:
           type: string
           description: The refresh token associated with the request (for refresh_token grant).
 
+    NewDeviceCode:
+      type: object
+      required: [client_id]
+      properties:
+        client_id:
+          type: string
+          description: The client_id requesting the device code.
 
     Client:
       type: object
@@ -457,6 +550,16 @@ components:
         description:
           type: string
           description: A description of this client.
+
+    UpdateClient:
+      type: object
+      properties:
+        callback_url:
+          type: string
+          description: URL for application to receive OAuth callbacks for executing flows such as authorization_code.
+        display_name:
+          type: string
+          description: The display name that will represent this client.
 
     TokenResponse:
       type: object
@@ -494,6 +597,26 @@ components:
             jti:
               type: string
               description: Unique identifier for the token
+
+    DeviceCodeResposne:
+      type: object
+      required: [device_code, user_code, client_id, expires_in, verification_uri]
+      properties:
+        device_code:
+          type: string
+          description: The device code generated for the client
+        user_code:
+          type: string
+          description: The user code generated for the client
+        client_id:
+          type: string
+          description: The client_id of the client
+        expires_in:
+          type: string
+          description: The expiration for the user code
+        verification_uri:
+          type: string
+          description: The url the user should go to to enter their user code
 
     arrayOfClients:
       type: array

@@ -23,6 +23,37 @@ servers:
 
 
 paths:
+
+  /v3/tokens/hello:
+    get:
+      tags:
+        - Health Check
+      description: Logged connectivity test. No authorization required.
+      operationId: hello
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+        '500':
+          description: Server error.
+  /v3/tokens/ready:
+    get:
+      tags:
+        - Health Check
+      description: Logged connectivity test. No authorization required.
+      operationId: ready
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BasicResponse'
+        '500':
+          description: Server error.
   /v3/tokens:
     post:
       security:

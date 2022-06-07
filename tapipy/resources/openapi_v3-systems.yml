@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.1.0'
+  version: '1.1.3'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -413,9 +413,9 @@ paths:
         - Systems
       summary: Retrieve system details
       description: |
-        Retrieve information for a system given the system name. Use query parameter returnCredentials=true to have
-        effectiveUserId credentials included in the response. Use query parameter authnMethod=<method> to override
+        Retrieve information for a system given the system name. Use query parameter authnMethod=<method> to override
         default authn method.
+        the response.
       operationId: getSystem
       parameters:
         - name: systemId
@@ -423,12 +423,6 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/IdString'
-        - name: returnCredentials
-          in: query
-          description: Highly restricted. Only certain Tapis services are authorized to get credentials.
-          schema:
-            type: boolean
-            default: false
         - name: authnMethod
           in: query
           description: Desired authentication method to use when fetching credentials, default method used if this is null.
@@ -447,6 +441,18 @@ paths:
           schema:
             type: string
             default: 'allAttributes'
+        - name: returnCredentials
+          in: query
+          description: Highly restricted. Only certain Tapis services are authorized to get credentials.
+          schema:
+            type: boolean
+            default: false
+        - name: skipTapisAuthorization
+          in: query
+          description: Highly restricted. Only certain services may use Tapis sharing in place of permissions.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: System found.
@@ -847,6 +853,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/{systemId}/history':
+    get:
+      tags:
+        - Systems
+      summary: Retrieve history of changes
+      description: |
+        Retrieve history of changes for a given systemId.
+      operationId: getHistory
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: History successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSystemHistory'
         '401':
           description: Not authorized.
           content:
@@ -1490,7 +1535,6 @@ components:
         jobRuntimes:
           type: array
           minItems: 1
-          uniqueItems: true
           items:
             $ref: '#/components/schemas/JobRuntime'
         jobWorkingDir:
@@ -1535,6 +1579,24 @@ components:
         created:
           type: string
         updated:
+          type: string
+    # --- SystemHistory ------------------------------------------------------------------
+    SystemHistory:
+      type: object
+      properties:
+        jwtTenant:
+          type: string
+        jwtUser:
+          $ref: '#/components/schemas/UserNameString'
+        oboTenant:
+          type: string
+        oboUser:
+          $ref: '#/components/schemas/UserNameString'
+        operation:
+          $ref: '#/components/schemas/OperationTypeEnum'
+        description:
+          type: string
+        created:
           type: string
     # --- JobRuntime ------------------------------------------------------------------
     JobRuntime:
@@ -2136,6 +2198,22 @@ components:
               type: string
             totalCount:
               type: integer
+    RespSystemHistory:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SystemHistory'
+        metadata:
+          type: object
     RespCredential:
       type: object
       properties:
@@ -2231,3 +2309,20 @@ components:
       type: string
       enum:
         - MEM
+    OperationTypeEnum:
+      type: string
+      enum:
+        - CREATE
+        - READ
+        - MODIFY
+        - EXECUTE
+        - DELETE
+        - UNDELETE
+        - CHANGE_OWNER
+        - ENABLE
+        - DISABLE
+        - GET_PERMS
+        - REVOKE_PERMS
+        - SET_CRED
+        - REMOVE_CRED
+        - GET_CRED

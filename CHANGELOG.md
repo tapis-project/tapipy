@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
- 
+
+## 1.2.2 - 2022-06-07
+### Added
+- Updating specs for authenticator, sk, streams, systems, tokens, jobs.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
 
 ## 1.2.1 - 2022-05-20
 ### Added
