@@ -694,6 +694,25 @@ class Tapis(object):
         self.set_access_token(tokens.access_token)
         self.set_refresh_token(tokens.refresh_token)
 
+    def set_refresh_token(self, token):
+        """
+        Set the refresh token to be used in this session.
+        :param token: (TapisResult) A TapisResult object returned using the t.tokens.create_token() method.
+        :return:
+        """
+
+        def _expires_in():
+            return self.refresh_token.expires_at - datetime.datetime.now(datetime.timezone.utc)
+
+        self.refresh_token = token
+        try:
+            self.refresh_token.claims = self.validate_token(self.refresh_token.refresh_token)
+            self.refresh_token.original_ttl = self.refresh_token.expires_in
+            self.refresh_token.expires_in = _expires_in
+            self.refresh_token.expires_at = datetime.datetime.fromtimestamp(self.refresh_token.claims['exp'],
+                                                                            datetime.timezone.utc)
+        except:
+            pass
 
     def set_jwt(self, jwt):
         """

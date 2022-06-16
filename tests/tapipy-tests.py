@@ -138,6 +138,68 @@ def test_create_token(client):
     assert hasattr(refresh_token, 'expires_in')
 
 
+# -----------------------------------------------
+# client + refresh token + refresh_tokens() tests -
+# -----------------------------------------------
+
+def test_refresh_tokens(client):
+    auth_clients = client.authenticator.list_clients()
+    if auth_clients:
+        testing_client = auth_clients[0]
+    if not auth_clients:
+        testing_client = client.authenticator.create_client()
+    
+    k = Tapis(base_url=BASE_URL,
+              username=USERNAME,
+              password=PASSWORD,
+              client_id=testing_client.client_id,
+              client_key=testing_client.client_key)
+
+    # k should not have access or refresh until we run k.get_tokens()
+    assert hasattr(k, 'access_token')
+    access_token= k.access_token
+    assert not hasattr(access_token, 'access_token')
+    assert not hasattr(access_token, 'expires_at')
+    assert not hasattr(access_token, 'expires_in')
+
+    assert hasattr(k, 'refresh_token')
+    refresh_token= k.refresh_token
+    assert not hasattr(refresh_token, 'refresh_token')
+    assert not hasattr(refresh_token, 'expires_at')
+    assert not hasattr(refresh_token, 'expires_in')
+
+    # We now run get_tokens(). k should now have access and refresh tokens.
+    k.get_tokens()
+
+    assert hasattr(k, 'access_token')
+    access_token= k.access_token
+    assert hasattr(access_token, 'access_token')
+    assert hasattr(access_token, 'expires_at')
+    assert hasattr(access_token, 'expires_in')
+
+    assert hasattr(k, 'refresh_token')
+    refresh_token= k.refresh_token
+    assert hasattr(refresh_token, 'refresh_token')
+    assert hasattr(refresh_token, 'expires_at')
+    assert hasattr(refresh_token, 'expires_in')
+
+    # Now we should be able to run refresh_tokens() with no problems and
+    # still have access and refresh tokens after the fact.
+    k.refresh_tokens()
+
+    assert hasattr(k, 'access_token')
+    access_token= k.access_token
+    assert hasattr(access_token, 'access_token')
+    assert hasattr(access_token, 'expires_at')
+    assert hasattr(access_token, 'expires_in')
+
+    assert hasattr(k, 'refresh_token')
+    refresh_token= k.refresh_token
+    assert hasattr(refresh_token, 'refresh_token')
+    assert hasattr(refresh_token, 'expires_at')
+    assert hasattr(refresh_token, 'expires_in')
+
+
 # -----------------
 # tenants API tests -
 # -----------------
