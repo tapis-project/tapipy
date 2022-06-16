@@ -1,0 +1,755 @@
+openapi: 3.0.2
+info:
+  title: Tapis Pods Service
+  description: |
+
+    The Pods Service is a web service and distributed computing platform providing pods-as-a-service (PaaS). The service 
+    implements a message broker and processor model that requests pods, alongside a health module to poll for pod
+    data, including logs, status, and health. The primary use of this service is to have quick to deploy long-lived
+    services based on Docker images that are exposed via HTTP or TCP endpoints listed by the API.
+
+    **The Pods service provides functionality for two types of pod solutions:**
+     * **Templated Pods** for run-as-is popular images. Neo4J is one example, the template manages TCP ports, user creation, and permissions.
+     * **Custom Pods** for arbitrary docker images with less functionality. In this case we will expose port 5000 and do nothing else.
+  contact:
+    name: CIC Support
+    email: cicsupport@tacc.utexas.edu
+  license:
+    name: BSD 3.0
+    url: https://github.com/tapis-project/pods_service
+  version: '0.30'
+paths:
+  /pods:
+    get:
+      tags:
+        - Pods
+      summary: get_pods
+      operationId: get_pods
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodsResponse'
+    post:
+      tags:
+        - Pods
+      summary: create_pod
+      operationId: create_pod
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPod'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}:
+    get:
+      tags:
+        - Pods
+      summary: get_pod
+      operationId: get_pod
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+        - Pods
+      summary: update_pod
+      operationId: update_pod
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePod'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+        - Pods
+      summary: delete_pod
+      operationId: delete_pod
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/credentials:
+    get:
+      tags:
+        - Credentials
+      summary: get_pod_credentials
+      operationId: get_pod_credentials
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodCredentialsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/logs:
+    get:
+      tags:
+        - Logs
+      summary: get_pod_logs
+      operationId: get_pod_logs
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodLogsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/permissions:
+    get:
+      tags:
+        - Permissions
+      summary: get_pod_permissions
+      operationId: get_pod_permissions
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodPermissionsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+        - Permissions
+      summary: set_pod_permission
+      operationId: set_pod_permission
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPermission'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodPermissionsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/permissions/{user}:
+    delete:
+      tags:
+        - Permissions
+      summary: delete_pod_permission
+      operationId: delete_pod_permission
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+        - required: true
+          schema:
+            title: User
+          name: user
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodPermissionsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/stop:
+    get:
+      tags:
+        - Pods
+      summary: stop_pod
+      operationId: stop_pod
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/start:
+    get:
+      tags:
+        - Pods
+      summary: start_pod
+      operationId: start_pod
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/restart:
+    get:
+      tags:
+        - Pods
+      summary: restart_pod
+      operationId: restart_pod
+      parameters:
+        - required: true
+          schema:
+            title: Pod Id
+          name: pod_id
+          in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PodResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    CredentialsModel:
+      title: CredentialsModel
+      required:
+        - user_username
+        - user_password
+      type: object
+      properties:
+        user_username:
+          title: User Username
+          type: string
+        user_password:
+          title: User Password
+          type: string
+      additionalProperties: false
+    DeletePodResponse:
+      title: DeletePodResponse
+      required:
+        - message
+        - metadata
+        - result
+        - status
+        - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          title: Result
+          type: string
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    LogsModel:
+      title: LogsModel
+      type: object
+      properties:
+        logs:
+          title: Logs
+          type: string
+          description: Logs from kubernetes pods, useful for debugging and reading results.
+          default: ''
+      additionalProperties: false
+    NewPod:
+      title: NewPod
+      required:
+        - pod_id
+        - pod_template
+      type: object
+      properties:
+        pod_id:
+          title: Pod Id
+          type: string
+          description: Name of this pod.
+        pod_template:
+          title: Pod Template
+          type: string
+          description: Which pod template to use, or which custom image to run, must be on allowlist.
+        description:
+          title: Description
+          type: string
+          description: Description of this pod.
+          default: ''
+        environment_variables:
+          title: Environment Variables
+          type: object
+          description: Environment variables to inject into k8 pod; Only for custom pods.
+          default: {}
+        data_requests:
+          title: Data Requests
+          type: array
+          items:
+            type: string
+          description: Requested pod names.
+          default: []
+        roles_required:
+          title: Roles Required
+          type: array
+          items:
+            type: string
+          description: Roles required to view this pod
+          default: []
+      additionalProperties: false
+      description: Object with fields that users are allowed to specify for the Pod class.
+    PermissionsModel:
+      title: PermissionsModel
+      type: object
+      properties:
+        permissions:
+          title: Permissions
+          type: array
+          items:
+            type: string
+          description: Pod permissions for each user.
+          default: []
+      additionalProperties: false
+    PodCredentialsResponse:
+      title: PodCredentialsResponse
+      required:
+        - message
+        - metadata
+        - result
+        - status
+        - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          $ref: '#/components/schemas/CredentialsModel'
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodLogsResponse:
+      title: PodLogsResponse
+      required:
+        - message
+        - metadata
+        - result
+        - status
+        - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          $ref: '#/components/schemas/LogsModel'
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodPermissionsResponse:
+      title: PodPermissionsResponse
+      required:
+        - message
+        - metadata
+        - result
+        - status
+        - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          $ref: '#/components/schemas/PermissionsModel'
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodResponse:
+      title: PodResponse
+      required:
+        - message
+        - metadata
+        - result
+        - status
+        - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          $ref: '#/components/schemas/PodResponseModel'
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodResponseModel:
+      title: PodResponseModel
+      required:
+        - pod_id
+        - pod_template
+      type: object
+      properties:
+        pod_id:
+          title: Pod Id
+          type: string
+          description: Name of this pod.
+        pod_template:
+          title: Pod Template
+          type: string
+          description: Which pod template to use, or which custom image to run, must be on allowlist.
+        description:
+          title: Description
+          type: string
+          description: Description of this pod.
+          default: ''
+        environment_variables:
+          title: Environment Variables
+          type: object
+          description: Environment variables to inject into k8 pod; Only for custom pods.
+          default: {}
+        data_requests:
+          title: Data Requests
+          type: array
+          items:
+            type: string
+          description: Requested pod names.
+          default: []
+        roles_required:
+          title: Roles Required
+          type: array
+          items:
+            type: string
+          description: Roles required to view this pod.
+          default: []
+        status_requested:
+          title: Status Requested
+          type: string
+          description: Status requested by user, ON or OFF.
+          default: 'ON'
+        url:
+          title: Url
+          type: string
+          description: Url used to access this database if it is running.
+        status:
+          title: Status
+          type: string
+          description: Current status of pod.
+          default: STOPPED
+        status_container:
+          title: Status Container
+          type: object
+          description: Status of container if exists. Gives phase.
+          default: {}
+        data_attached:
+          title: Data Attached
+          type: array
+          items:
+            type: string
+          description: Data attached.
+          default: []
+        roles_inherited:
+          title: Roles Inherited
+          type: array
+          items:
+            type: string
+          description: Inherited roles required to view this pod
+          default: []
+        creation_ts:
+          title: Creation Ts
+          type: string
+          description: Time (UTC) that this node was created.
+          format: date-time
+        update_ts:
+          title: Update Ts
+          type: string
+          description: Time (UTC) that this node was updated.
+          format: date-time
+      additionalProperties: false
+    PodsResponse:
+      title: PodsResponse
+      required:
+        - message
+        - metadata
+        - result
+        - status
+        - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          title: Result
+          type: array
+          items:
+            $ref: '#/components/schemas/PodResponseModel'
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    SetPermission:
+      title: SetPermission
+      required:
+        - user
+        - level
+      type: object
+      properties:
+        user:
+          title: User
+          type: string
+          description: User to modify permissions for.
+        level:
+          title: Level
+          type: string
+          description: Permission level to give the user.
+      additionalProperties: false
+      description: Object with fields that users are allowed to specify for the Pod class.
+    UpdatePod:
+      title: UpdatePod
+      required:
+        - pod_id
+        - pod_template
+      type: object
+      properties:
+        pod_id:
+          title: Pod Id
+          type: string
+          description: Name of this pod.
+        pod_template:
+          title: Pod Template
+          type: string
+          description: Which pod template to use, or which custom image to run, must be on allowlist.
+        description:
+          title: Description
+          type: string
+          description: Description of this pod.
+          default: ''
+        data_requests:
+          title: Data Requests
+          type: array
+          items:
+            type: string
+          description: Requested pod names.
+          default: []
+        roles_required:
+          title: Roles Required
+          type: array
+          items:
+            type: string
+          description: Roles required to view this pod
+          default: []
+      additionalProperties: false
+      description: Object with fields that users are allowed to specify for the Pod class.
+    ValidationError:
+      title: ValidationError
+      required:
+        - loc
+        - msg
+        - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+tags:
+  - name: Pods
+    description: Create and command pods.
+  - name: Credentials
+    description: Manage pod's credentials used.
+  - name: Logs
+    description: Manage pod logs.
+  - name: Permissions
+    description: Manage pod permissions. Grant specific TACC users **READ**, **USER**, and **ADMIN** level permissions.

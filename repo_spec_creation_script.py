@@ -121,6 +121,7 @@ RESOURCES = {
         'tenants': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-tenants.yml",
         'tokens': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-tokens.yml",
         'pgrest': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-pgrest.yml",
+        'pods': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-pods.yml",
         'jobs': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-jobs.yml",
         'apps': f"local: {os.path.join(os.path.dirname(__file__), resource_dir)}/openapi_v3-apps.yml"
     },
@@ -135,6 +136,7 @@ RESOURCES = {
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml',
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml',
+        'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-jobs.yml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml'
     },
@@ -149,6 +151,7 @@ RESOURCES = {
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/prod/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/prod/service/resources/openapi_v3.yml',
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml',
+        'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/prod/AppsAPI.yaml'
     },
@@ -163,6 +166,7 @@ RESOURCES = {
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/staging/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/staging/service/resources/openapi_v3.yml',
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/staging/pgrest/resources/openapi_v3.yml',
+        'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/staging/AppsAPI.yaml'
     },
@@ -177,6 +181,7 @@ RESOURCES = {
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tenants-api/dev/service/resources/openapi_v3.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tokens-api/dev/service/resources/openapi_v3.yml',
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/dev/pgrest/resources/openapi_v3.yml',
+        'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/dev/AppsAPI.yaml'
     }
@@ -200,6 +205,7 @@ if __name__ == "__main__":
                             RESOURCES['local']['tenants']: RESOURCES['tapipy']['tenants'],
                             RESOURCES['local']['tokens']: RESOURCES['tapipy']['tokens'],
                             RESOURCES['local']['pgrest']: RESOURCES['tapipy']['pgrest'],
+                            RESOURCES['local']['pods']: RESOURCES['tapipy']['pods'],
                             RESOURCES['local']['jobs']: RESOURCES['tapipy']['jobs'],
                             RESOURCES['local']['apps']: RESOURCES['tapipy']['apps']}
 

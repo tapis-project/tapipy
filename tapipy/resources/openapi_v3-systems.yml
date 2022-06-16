@@ -29,7 +29,7 @@ tags:
   - name: Systems
     description: Manage Tapis system resources. Create, retrieve, update, etc.
   - name: Credentials
-    description: Manage Tapis system user access credentials. Create, update, remove, etc.
+    description: Manage Tapis system user access credentials.
   - name: Permissions
     description: Manage Tapis permissions for system resources. Grant, revoke and retrieve.
   - name: Scheduler Profiles
@@ -45,7 +45,7 @@ paths:
     get:
       tags:
         - General
-      description: Health check.
+      description: Health check. Lightweight non-authenticated check that service is alive.
       operationId: healthCheck
       responses:
         '200':
@@ -60,7 +60,7 @@ paths:
     get:
       tags:
         - General
-      description: Ready check.
+      description: Ready check. Non-authenticated check that service is ready to do work.
       operationId: readyCheck
       responses:
         '200':
@@ -70,13 +70,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '503':
-          description: Service unavailable.
+          description: Service not ready.
 
   '/v3/systems':
     get:
       tags:
         - Systems
-      summary: Retrieve systems
       description: Retrieve list of systems. Use search and select query parameters to limit results.
       operationId: getSystems
       parameters:
@@ -152,12 +151,15 @@ paths:
     post:
       tags:
         - Systems
-      summary: Create a system
       description: |
         Create a system using a request body. System name must be unique within a tenant and can be composed of
         alphanumeric characters and the following special characters [-._~].
         Name must begin with an alphabetic character and can be no more than 80 characters in length.
         Description is optional with a maximum length of 2048 characters.
+
+        If the *effectiveUserId* is static (i.e. not *${apiUserId}*) then credentials may optionally be provided in the
+        *authnCredential* attribute of the request body. The Systems service does not store the secrets in its
+        database, they are persisted in the Security Kernel.
 
         By default any credentials provided for LINUX type systems are verified. Use query parameter
         skipCredentialCheck=true to bypass initial verification of credentials.
@@ -221,7 +223,6 @@ paths:
     get:
       tags:
         - Systems
-      summary: Retrieve list of systems matching search conditions specified as query parameters
       description: Retrieve details for systems. Use query parameters to specify search conditions. For example owner.eq=jdoe&port.gt=1024
       operationId: searchSystemsQueryParameters
       parameters:
@@ -296,7 +297,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Retrieve list of systems matching search conditions
       description: |
         Retrieve details for systems. Use request body to specify SQL-like search conditions.
       operationId: searchSystemsRequestBody
@@ -370,7 +370,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Retrieve systems satisfying specified constraint conditions (WARNING - not yet supported)
       description: |
         *WARNING Capability constraint matching is not yet supported.*
         Retrieve details for systems. Use request body to specify constraint conditions as an SQL-like WHERE clause.
@@ -411,7 +410,6 @@ paths:
     get:
       tags:
         - Systems
-      summary: Retrieve system details
       description: |
         Retrieve information for a system given the system name. Use query parameter authnMethod=<method> to override
         default authn method.
@@ -447,12 +445,11 @@ paths:
           schema:
             type: boolean
             default: false
-        - name: skipTapisAuthorization
+        - name: impersonationId
           in: query
-          description: Highly restricted. Only certain services may use Tapis sharing in place of permissions.
+          description: Highly restricted. Only certain services may impersonate a Tapis user.
           schema:
-            type: boolean
-            default: false
+            type: string
       responses:
         '200':
           description: System found.
@@ -487,7 +484,6 @@ paths:
     patch:
       tags:
         - Systems
-      summary: Update selected attributes of a system
       description: |
         Update selected attributes of a system. Request body may only contain updatable attributes. System must exist.
 
@@ -551,9 +547,13 @@ paths:
     put:
       tags:
         - Systems
-      summary: Update all updatable attributes of a system
       description: |
         Update all updatable attributes of a system using a request body identical to POST. System must exist.
+
+        If the *effectiveUserId* is static (i.e. not *${apiUserId}*) then credentials may optionally be provided in the
+        *authnCredential* attribute of the request body. The Systems service does not store the secrets in its
+        database, they are persisted in the Security Kernel.
+
 
         By default any credentials provided for LINUX type systems are verified. Use query parameter
         skipCredentialCheck=true to bypass initial verification of credentials.
@@ -636,7 +636,6 @@ paths:
     get:
       tags:
         - Systems
-      summary: Check if system is currently enabled
       description: |
         Check if a system is currently enabled, i.e. available for use.
       operationId: isEnabled
@@ -675,7 +674,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system availabe for use
       description: |
         Mark a system available for use.
       operationId: enableSystem
@@ -714,7 +712,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system unavailabe for use
       description: |
         Mark a system unavailable for use.
       operationId: disableSystem
@@ -753,7 +750,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system as deleted
       description: |
         Mark a system as deleted. System will not appear in queries unless explicitly requested.
       operationId: deleteSystem
@@ -792,7 +788,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Mark a system as not deleted
       description: |
         Mark a system as not deleted. System will appear in queries.
       operationId: undeleteSystem
@@ -831,7 +826,6 @@ paths:
     post:
       tags:
         - Systems
-      summary: Change system owner
       description: |
         Change owner of a system.
       operationId: changeSystemOwner
@@ -875,7 +869,6 @@ paths:
     get:
       tags:
         - Systems
-      summary: Retrieve history of changes
       description: |
         Retrieve history of changes for a given systemId.
       operationId: getHistory
@@ -916,16 +909,14 @@ paths:
     get:
       tags:
         - Credentials
-      summary: Retrieve user credentials for a system and target user
       description: |
         Highly restricted. Only certain Tapis services authorized. Retrieve credentials for given system, *target user* and authentication method.
-
-        Note that user making the request and *target user* may be different and frequently are different.
 
         Desired authentication method may be specified using query parameter authnMethod=<method>. If desired authentication method
         not specified then credentials for the system's default authentication method are returned.
 
-        The result includes the field authnMethod indicating the authentication method associated with the returned credentials.
+        The result includes the attribute *authnMethod* indicating the authentication method associated with
+        the returned credentials.
       operationId: getUserCredential
       parameters:
         - name: systemId
@@ -978,18 +969,28 @@ paths:
     post:
       tags:
         - Credentials
-      summary: Create or update user credentials for a system and target user
       description: |
         Create or update credentials in the Security Kernel for given system and *target user* using a request body.
         Requester must be owner of the system. Credentials for multiple authentication methods may be provided.
 
-        Note that user making the request and *target user* may be different and frequently are different.
+        The Systems service does not store the secrets in its database, they are persisted in the Security Kernel.
+
+        If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then *{userName}* is interpreted
+        as a Tapis user and the request body may contain the optional attribute *loginUser* which will be used to map the
+        Tapis user to a username to be used when accessing the system. If the login user is not provided then there is
+        no mapping and the Tapis user is always used when accessing the system.
+
+        If the *effectiveUserId* for the system is static (i.e. not *${apiUserId}*) then *{userName}* is interpreted
+        as the login user to be used when accessing the host.
+
+        Operation is allowed if requester is the system owner or a tenant administrator.
+        If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
+        if *{userName}* is the Tapis user making the request.
+
+        Secrets for multiple authentication methods may be provided.
 
         By default any credentials provided for LINUX type systems are verified. Use query parameter
-        skipCredentialCheck=true to bypass initial verification of credentials.
-
-        Note that the attribute authnMethod is allowed but ignored so that the JSON result returned by a GET
-        may be modified and used when making a POST to update credentials.
+        *skipCredentialCheck=true* to bypass initial verification of credentials.
       operationId: createUserCredential
       parameters:
         - name: systemId
@@ -1014,7 +1015,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqPostCredential'
+              $ref: '#/components/schemas/Credential'
       responses:
         '200':
           description: Credentials updated.
@@ -1043,11 +1044,12 @@ paths:
     delete:
       tags:
         - Credentials
-      summary: Remove user credentials for a system and target user
       description: |
         Remove credentials from the Security Kernel for given system and *target user*. Requester must be owner of the system.
 
-        Note that user making the request and *target user* may be different and frequently are different.
+        Operation is allowed if requester the system owner or a tenant administrator.
+        If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
+        if *{userName}* is the Tapis user making the request.
       operationId: removeUserCredential
       parameters:
         - name: systemId
@@ -1091,7 +1093,6 @@ paths:
     get:
       tags:
         - Permissions
-      summary: Retrieve system user permissions
       description: |
         Retrieve all system related permissions for a given system and user.
       operationId: getUserPerms
@@ -1140,7 +1141,6 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Grant system user permissions
       description: |
         Create permissions in the Security Kernel for a user. Requester must be owner of the system.
         Permissions are READ, MODIFY, EXECUTE.
@@ -1193,7 +1193,6 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Revoke system user permissions
       description: |
         Remove permissions from the Security Kernel for a user. Requester must be owner of the system.
         Permissions are READ, MODIFY, EXECUTE.
@@ -1240,7 +1239,6 @@ paths:
     delete:
       tags:
         - Permissions
-      summary: Revoke system user permission
       description: |
         Remove system user permission from the Security Kernel. Requester must be owner of the system.
         Permissions are READ, MODIFY, EXECUTE.
@@ -1292,7 +1290,6 @@ paths:
     get:
       tags:
         - Scheduler Profiles
-      summary: Retrieve scheduler profiles
       description: Retrieve list of scheduler profiles.
       operationId: getSchedulerProfiles
       responses:
@@ -1323,14 +1320,13 @@ paths:
     post:
       tags:
         - Scheduler Profiles
-      summary: Create a scheduler profile
       description: |
         Create a scheduler profile using a request body. Name must be unique within a tenant and can be composed of
         alphanumeric characters and the following special characters [-._~].
         Name must begin with an alphabetic character and can be no more than 80 characters in length.
         Description is optional with a maximum length of 2048 characters.
 
-        Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
+        Note that certain attributes (such as *tenant*) are allowed but ignored so that the JSON result returned by a GET
         may be modified and used when making a POST request to create a profile.
         The attributes that are allowed but ignored are
 
@@ -1381,7 +1377,6 @@ paths:
     get:
       tags:
         - Scheduler Profiles
-      summary: Retrieve a scheduler profile
       description: |
         Retrieve information for a scheduler profile given the profile name.
       operationId: getSchedulerProfile
@@ -1425,7 +1420,6 @@ paths:
     delete:
       tags:
         - Scheduler Profiles
-      summary: Delete a scheduler profile
       description: |
         Remove a scheduler profile given the profile name. Requester must be owner of the profile.
       operationId: deleteSchedulerProfile
@@ -1692,6 +1686,8 @@ components:
       properties:
         authnMethod:
           $ref: '#/components/schemas/AuthnEnum'
+        loginUser:
+          $ref: '#/components/schemas/UserNameString'
         password:
           type: string
         privateKey:
@@ -1781,7 +1777,7 @@ components:
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
-          $ref: '#/components/schemas/ReqPostCredential'
+          $ref: '#/components/schemas/ReqPostPutCredential'
         bucketName:
           type: string
         rootDir:
@@ -1864,7 +1860,7 @@ components:
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
-          $ref: '#/components/schemas/ReqPostCredential'
+          $ref: '#/components/schemas/ReqPostPutCredential'
         port:
           type: integer
           format: int32
@@ -1996,7 +1992,7 @@ components:
           type: object
         importRefId:
           type: string
-    ReqPostCredential:
+    ReqPostPutCredential:
       type: object
       properties:
         password:

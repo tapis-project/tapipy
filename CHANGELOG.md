@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.3 - 2022-06-15
+### Added
+- Added Pods spec.
+
+### Changed
+- Updated specs for Systems.
+
+### Removed
+- No change.
+
+
 ## 1.2.2 - 2022-06-07
 ### Added
 - Updating specs for authenticator, sk, streams, systems, tokens, jobs.
