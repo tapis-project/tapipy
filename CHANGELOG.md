@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.2.4 - 2022-06-16
+### Added
+- Added test for refresh_tokens.
+
+### Changed
+- Added back in set_refresh_tokens(). Got deleted when switching to plugins architecture.
+- Updated spec for Pods.
+
+### Removed
+- No change.
+
+
 ## 1.2.3 - 2022-06-15
 ### Added
 - Added Pods spec.

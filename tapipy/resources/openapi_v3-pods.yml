@@ -24,6 +24,10 @@ paths:
       tags:
         - Pods
       summary: get_pods
+      description: |-
+        Get all pods in your respective tenant and site that you have READ or higher access to.
+
+        Returns a list of pods.
       operationId: get_pods
       responses:
         '200':
@@ -36,6 +40,14 @@ paths:
       tags:
         - Pods
       summary: create_pod
+      description: |-
+        Create a pod with inputted information.
+
+        Notes:
+        - Author will be given ADMIN level permissions to the pod.
+        - status_requested defaults to "ON". So pod will immediately begin creation.
+
+        Returns new pod object.
       operationId: create_pod
       requestBody:
         content:
@@ -61,6 +73,10 @@ paths:
       tags:
         - Pods
       summary: get_pod
+      description: |-
+        Get a pod.
+
+        Returns retrieved pod object.
       operationId: get_pod
       parameters:
         - required: true
@@ -85,6 +101,13 @@ paths:
       tags:
         - Pods
       summary: update_pod
+      description: |-
+        Update a pod. CURRENTLY WORK IN PROGRESS. BROKEN.
+
+        Note:
+        - Pod will not be restarted, you must restart the pod for any pod-related changes to proliferate.
+
+        Returns updated pod object.
       operationId: update_pod
       parameters:
         - required: true
@@ -115,6 +138,10 @@ paths:
       tags:
         - Pods
       summary: delete_pod
+      description: |-
+        Delete a pod.
+
+        Returns None.
       operationId: delete_pod
       parameters:
         - required: true
@@ -140,6 +167,13 @@ paths:
       tags:
         - Credentials
       summary: get_pod_credentials
+      description: |-
+        Get the credentials created for a pod.
+
+        Note:
+        - These credentials are used in the case of templated pods, but for custom pods they're not.
+
+        Returns user accessible credentials.
       operationId: get_pod_credentials
       parameters:
         - required: true
@@ -165,6 +199,14 @@ paths:
       tags:
         - Logs
       summary: get_pod_logs
+      description: |-
+        Get a pods logs.
+
+        Note:
+        - These are only retrieved while pod is running.
+        - If a pod is restarted or turned off and then on, the logs will be reset.
+
+        Returns pod logs.
       operationId: get_pod_logs
       parameters:
         - required: true
@@ -190,6 +232,14 @@ paths:
       tags:
         - Permissions
       summary: get_pod_permissions
+      description: |-
+        Get a pods permissions.
+
+        Note:
+        - There are 3 levels of permissions, READ, USER, and ADMIN.
+        - Permissions are granted/revoked to individual TACC usernames.
+
+        Returns all pod permissions.
       operationId: get_pod_permissions
       parameters:
         - required: true
@@ -214,6 +264,10 @@ paths:
       tags:
         - Permissions
       summary: set_pod_permission
+      description: |-
+        Set a permission for a pod.
+
+        Returns updated pod permissions.
       operationId: set_pod_permission
       parameters:
         - required: true
@@ -245,6 +299,10 @@ paths:
       tags:
         - Permissions
       summary: delete_pod_permission
+      description: |-
+        Delete a permission from a pod.
+
+        Returns updated pod permissions.
       operationId: delete_pod_permission
       parameters:
         - required: true
@@ -275,6 +333,13 @@ paths:
       tags:
         - Pods
       summary: stop_pod
+      description: |-
+        Stop a pod.
+
+        Note:
+        - Sets status_requested to OFF. Pod will attempt to get to STOPPED status unless start_pod is ran.
+
+        Returns updated pod object.
       operationId: stop_pod
       parameters:
         - required: true
@@ -300,6 +365,13 @@ paths:
       tags:
         - Pods
       summary: start_pod
+      description: |-
+        Start a pod.
+
+        Note:
+        - Sets status_requested to ON. Pod will attempt to deploy.
+
+        Returns updated pod object.
       operationId: start_pod
       parameters:
         - required: true
@@ -325,6 +397,13 @@ paths:
       tags:
         - Pods
       summary: restart_pod
+      description: |-
+        Restart a pod. CURRENTLY WORK IN PROGRESS. BROKEN.
+
+        Note:
+        - Sets status_requested to OFF. If pod status gets to STOPPED, status_requested will be flipped to ON.
+
+        Returns updated pod object.
       operationId: restart_pod
       parameters:
         - required: true
