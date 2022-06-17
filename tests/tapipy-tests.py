@@ -200,6 +200,49 @@ def test_refresh_tokens(client):
     assert hasattr(refresh_token, 'expires_in')
 
 
+# ---------------------------------------------------
+# Instantiate Tapipy with only client + refresh_token
+# ---------------------------------------------------
+
+def test_init_with_only_client_and_refresh_token(client):
+    auth_clients = client.authenticator.list_clients()
+    if auth_clients:
+        testing_client = auth_clients[0]
+    if not auth_clients:
+        testing_client = client.authenticator.create_client()
+    
+    # Need to first get refresh_tokens(using another Tapis client in this case)
+    t2 = Tapis(base_url=BASE_URL,
+                username=USERNAME,
+                password=PASSWORD,
+                client_id=testing_client.client_id,
+                client_key=testing_client.client_key)
+
+    t2.get_tokens()
+
+    # Now only use client + refresh_token
+    k = Tapis(base_url=BASE_URL,
+              client_id=testing_client.client_id,
+              client_key=testing_client.client_key,
+              refresh_token=t2.refresh_token)
+
+    # Test that everything works.
+    k.get_tokens()
+
+    assert hasattr(k, 'access_token')
+    access_token= k.access_token
+    assert hasattr(access_token, 'access_token')
+    assert hasattr(access_token, 'expires_at')
+    assert hasattr(access_token, 'expires_in')
+
+    assert hasattr(k, 'refresh_token')
+    refresh_token= k.refresh_token
+    assert hasattr(refresh_token, 'refresh_token')
+    assert hasattr(refresh_token, 'expires_at')
+    assert hasattr(refresh_token, 'expires_in')
+
+
+
 # -----------------
 # tenants API tests -
 # -----------------

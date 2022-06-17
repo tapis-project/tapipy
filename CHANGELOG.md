@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## 1.2.5 - 2022-06-16
 ### Added
 - No change.
+- Added test to ensure you can create a Tapis client with solely client_id, client_key, and refresh_token.
 
 ### Changed
 - Fix, access_token was always being set to jwt (usually None) on instantiation. 
