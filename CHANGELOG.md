@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.6 - 2022-06-22
+### Added
+- No change.
+
+### Changed
+- Nathan Freeman added claims to jwt and proper initializing jwt when jwt received from str and not TapisResult.
+
+### Removed
+- No change.
+
+
 ## 1.2.5 - 2022-06-16
 ### Added
 - No change.
