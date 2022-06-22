@@ -408,8 +408,10 @@ class Tapis(object):
 
         # pass in a "raw" JWT directly. This is only used if the access_token is not set.
         self.jwt = jwt
-        if not self.access_token:
-            self.access_token = jwt
+        if not self.access_token and type(self.jwt) == str:
+            tok = TapisResult(**{'access_token': self.jwt})
+            self.jwt = self.add_claims_to_token(tok)
+            self.access_token = self.jwt
 
         # whether to verify the TLS certificate at the base_url
         self.verify = verify
