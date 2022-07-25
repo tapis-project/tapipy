@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.7 - 2022-07-25
+### Added
+- No change.
+
+### Changed
+- Updated systems and jobs specs.
+
+### Removed
+- No change.
+
+
 ## 1.2.6 - 2022-06-22
 ### Added
 - No change.
