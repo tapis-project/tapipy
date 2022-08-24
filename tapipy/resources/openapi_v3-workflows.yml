@@ -1,0 +1,2698 @@
+openapi: 3.0.3
+info:
+  title: Tapis Workflows API
+  description: Create and manage pipelines
+  version: '0.1'
+  termsOfService: "https://tapis-project.org"
+  contact:
+    name: "Workflows API - CICSupport"
+    url: "https://tapis-project.org"
+    email: "cicsupport@tacc.utexas.edu"
+  license:
+    name: 3-Clause BSD License
+    url: 'https://opensource.org/licenses/BSD-3-Clause'
+externalDocs:
+  description: Tapis Project
+  url: 'https://tapis-project.org'
+servers:
+  - url: 'http://localhost:8000/'
+    description: Local test environment
+    variables: {}
+  - url: 'https://dev.develop.tapis.io/'
+    description: Development environment
+    variables: {}
+  - url: 'https://raw.githubusercontent.com'
+security:
+  - TapisJWT: []
+tags:
+  - name: Workflows
+    description: Manage Pipeline and Task resources. Create, retrieve, update, etc.
+  - name: General
+    description: General service health and readiness
+  - name: Groups
+    description: Manage groups that have access to specific workflow resources. Create, retrieve, update, etc.
+  - name: Users
+    description: Manage users that belong to groups. Create, update, remove, etc.
+  - name: Identities
+    description: Manage external identities . Create, retrieve, delete.
+  - name: Pipelines
+    description: Manage collections of tasks. Create, retrieve and delete.
+  - name: Tasks
+    description: Manage tasks to be executed as part of a workflow. Create, retrieve and delete.
+  - name: Events
+    description: Trigger workflows. Create and retrieve.
+  - name: CI/CD
+    description: Create CI/CD-specific workflows (Image builds and http requests).
+
+# ------------------------------------------------------------------------------
+# --- Paths -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
+# -- Paths for groups ---
+paths:
+  '/v3/workflows/healthcheck':
+    get:
+      tags:
+        - General
+      description: Health check.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectResp'
+        '500':
+          description: Server error.
+
+  # '/v3/workflows/readycheck':
+  #   get:
+  #     tags:
+  #       - General
+  #     description: Health check.
+  #     operationId: readyCheck
+  #     responses:
+  #       '200':
+  #         description: Message received.
+  #         content:
+  #           application/json:
+  #             schema:
+  #               $ref: '#/components/schemas/ObjectResp'
+  #       '500':
+  #         description: Server error.
+          
+  '/v3/workflows/groups':
+    get:
+      tags:
+        - Groups
+      summary: Retrieve groups
+      description: |
+        Retrieve all groups to which the user belongs
+      operationId: listGroups
+      responses:
+        '200':
+          description: List groups successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupListResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    post:
+      tags:
+        - Groups
+      summary: Create a group
+      description: |
+        Create a group that perform CRUD operations on workflow resources.
+
+        The owner of the group will be made an admin by default. If you want to set other users as admins,
+        you must use the '' endpoint.
+      operationId: createGroup
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupPostReq'
+      responses:
+        '201':
+          description: Group created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '409':
+          description: Conflict. Group with provided id already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}':
+    get:
+      tags:
+        - Groups
+      summary: Retrieve group details
+      description: |
+        Retrieve details for a given group id
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: getGroup
+      responses:
+        '200':
+          description: Get group successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupDetailResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}/users':
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: |
+        List users.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: listGroupUsers
+      responses:
+        '200':
+          description: List Users successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupUserListResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot access resources for this Group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    post:
+      tags:
+        - Users
+      summary: Add a user to a group
+      description: |
+        Add a user to a group.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: addGroupUser
+      requestBody:
+        required: true
+        description: A JSON object specifying the group user to add.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUserPostReq'
+      responses:
+        '201':
+          description: Users successfully added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot add a user to this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}/users/{username}':
+    get:
+      tags:
+        - Users
+      summary: Get group user
+      description: |
+        Get a user from a group
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: username
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Username'
+      operationId: getGroupUser
+      responses:
+        '200':
+          description: Get Group User successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupUserResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot access resources for this Group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    patch:
+      tags:
+        - Users
+      summary: Update group user
+      description: |
+        Update a user for a specified group. Only group admins can perform this operation.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: username
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Username'
+      requestBody:
+        required: true
+        description: A JSON object
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUserPutPatchReq'
+      operationId: updateGroupUser
+      responses:
+        '200':
+          description: User updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupUserResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot update user permissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group or user does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    delete:
+      tags:
+        - Users
+      summary: Remove user from group
+      description: |
+        Remove a user from a group.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: username
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Username'
+      operationId: removeGroupUser
+      responses:
+        '200':
+          description: User removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupUserResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot remove a user to this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  # --- Paths for identities ---
+  '/v3/workflows/identities':
+    post:
+      tags:
+        - Identities
+      summary: Create an identity
+      description: |
+        Create a mapping between a group user and an external identity.
+
+        Users can only create identities for themselves. i.e., group admins and owners cannot
+        create identities for any user but themselves.
+      operationId: createIdentity
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityPostReq'
+      responses:
+        '201':
+          description: Identity created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '409':
+          description: Conflict. An identity already exists for this group and type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    get:
+      tags:
+        - Identities
+      summary: List user identities for a given user
+      description: |
+        Retrieve identities for the requesting user
+      operationId: listIdentities
+      responses:
+        '200':
+          description: List identities successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityListResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot access resources for this Group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/identities/{identity_uuid}':
+    delete:
+      tags:
+        - Identities
+      summary: Delete an identity
+      description: |
+        Delete an identitiy
+      parameters:
+        - name: identity_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      operationId: deleteIdentity
+      responses:
+        '200':
+          description: Identity removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot remove identities for users for this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        
+    get:
+      tags:
+        - Identities
+      summary: Get identity
+      description: |
+        Get a specific identity by its UUID
+      operationId: getIdentity
+      parameters:
+        - name: identity_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List identities successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot access resources for this Group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server Error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  # --- Paths for ci pipelines -----------------------------------------------------
+  '/v3/workflows/groups/{group_id}/ci':
+    post:
+      tags:
+        - CI/CD
+      summary: Create a CI/CD pipeline
+      description: |
+        Create a CI/CD pipeline using a request body. Pipeline id must be unique within a group and can be composed of
+        alphanumeric characters and the following special characters [-_.].
+
+        Note: When creating pipelines for the CI/CD use case(primarily building images), use this endpoint. It offers a simplified interface
+        for those who want to avoid the complexities of creating a standard workflow. This pipeline's
+        tasks may be modified later.
+      operationId: createCIPipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CIPipelinePostReq'
+      responses:
+        '201':
+          description: Pipeline created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot create a pipeline for specified group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '409':
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  # --- Paths for archives ------------------------------------------------------
+  '/v3/workflows/groups/{group_id}/archives':
+    get:
+      tags:
+        - Archives
+      summary: Retrieve archives
+      description: Retrieve a list of archives for in group
+      operationId: listArchives
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveListResp'    
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    post:
+      tags:
+        - Archives
+      summary: Create an archive
+      description: |
+        Create an Archive. Archives are used to persist the results of a pipeline run
+      operationId: createArchive
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/ID"
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the archive to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArchivePostReq'
+      responses:
+        '201':
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot create an archive for this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '409':
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}/archives/{archive_id}':
+    get:
+      tags:
+        - Archives
+      summary: Retrieve an archive
+      description: Retrieve an archive 
+      operationId: getArchive
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: archive_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveResp'    
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  
+
+  # --- Paths for pipelines -----------------------------------------------------
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/changeOwner/{username}':
+    patch:
+      tags:
+        - Pipelines
+      summary: Change pipeline owner
+      description: |
+        Change the owner of a pipeline. Requesting user must be the current owner
+      operationId: changePipelineOwner
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: username
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Username'
+      responses:
+        '200':
+          description: successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/archives':
+    get:
+      tags:
+        - Pipeline Archives
+      summary: Retrieve pipeline archives
+      description: Retrieve a list of archives attached to a pipeline
+      operationId: listPipelineArchives
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ArchiveListResp'    
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/archives/add':
+    post:
+      tags:
+        - Pipelines
+      summary: Add an archive to a pipeline
+      description: |
+        Add an archive to a pipeline.
+      operationId: addPipelineArchive
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Archive added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/archives/remove':
+    delete:
+      tags:
+        - Pipelines
+        - Archives
+      summary: Remove archive to a pipeline
+      description: |
+        Remove an archive to a pipeline.
+      operationId: removePipelineArchive
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Archive added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ObjectResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines':
+    get:
+      tags:
+        - Pipelines
+      summary: Retrieve pipelines
+      description: Retrieve a list of pipelines for all groups that the requesting user belongs to.
+      operationId: listPipelines
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineListResp'
+                  
+        '400':
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Forbidden.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Not Found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '409':
+          description: Conflict. Pipeline already exists with provided id.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+    post:
+      tags:
+        - Pipelines
+      summary: Create a pipeline
+      description: |
+        Create a pipeline using a request body. Pipeline id must be unique within a group and can be composed of
+        alphanumeric characters and the following special characters [-_.].
+      operationId: createPipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PipelinePostReq'
+      responses:
+        '201':
+          description: Pipeline created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot create a pipeline for specified group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '409':
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}':
+    get:
+      tags:
+        - Pipelines
+      summary: Retrieve pipeline details
+      description: |
+        Retrieve information for a pipeline given the pipeline id
+      operationId: getPipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Pipeline found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineResp'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Pipeline not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+    delete:
+      tags:
+        - Pipelines
+      summary: Delete a pipeline
+      description: |
+        Delete a pipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: deletePipeline
+      responses:
+        '200':
+          description: Pipeline deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringResp'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '403':
+          description: Cannot remove identities for users for this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/webhook':
+    post:
+      tags:
+        - Events
+      summary: Trigger a pipeline run
+      description: |
+        Trigger a pipeline run
+      operationId: runPipelineWebhook
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEventPostReq'
+      responses:
+        '200':
+          description: Events found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/tasks':
+    post:
+      tags:
+        - Tasks
+      summary: Create a task
+      description: |
+        Create a task for a pipeline
+      operationId: createTask
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the task to be created.
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/ImageBuildTaskReq'
+                - $ref: '#/components/schemas/RequestTaskReq'
+                - $ref: '#/components/schemas/ContainerRunTaskReq'
+                - $ref: '#/components/schemas/TapisJobTaskReq'
+                - $ref: '#/components/schemas/TapisActorTaskReq'
+                - $ref: '#/components/schemas/FunctionTaskReq'
+      responses:
+        '201':
+          description: Tasks created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+
+    get:
+      tags:
+        - Tasks
+      summary: List tasks
+      description: |
+        Retrieve all tasks for a given pipeline
+      operationId: listTasks
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Tasks found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/tasks/{task_id}':
+    get:
+      tags:
+        - Tasks
+      summary: Retrieve task details
+      description: |
+        Retrieve task details for given pipeline id and task id
+      operationId: getTask
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Task found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/events':
+    get:
+      tags:
+        - Events
+      summary: Retrieve Event details
+      description: |
+        Retrieve all events for a given pipeline
+      operationId: listEvents
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Events found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResp'
+    post:
+      tags:
+        - Events
+      summary: Trigger a pipeline run
+      description: |
+        Trigger a pipeline run
+      operationId: runPipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunPipelinePostReq'
+      responses:
+        '200':
+          description: Events found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResp'
+
+# ------------------------------------------------------------------------------
+# --- Components ---------------------------------------------------------------
+components:
+  securitySchemes:
+    TapisJWT:
+      type: apiKey
+      description: Tapis signed JWT token authentication
+      name: X-TAPIS-TOKEN
+      in: header
+  schemas:
+    # ------------------------------------------------------------------------------
+    # --- Model objects ------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    
+    # --- Pipelines ---
+    CIPipeline:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        group:
+          $ref: '#/components/schemas/ID'
+        owner:
+          $ref: '#/components/schemas/Username'
+        uuid:
+          type: string
+          format: uuid
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImageBuildTask'
+
+    ExecutionProfile:
+      type: object
+      properties:
+        max_retries:
+          type: integer
+          default: 0
+        max_exec_time:
+          type: integer
+          default: 3600
+        invocation_mode:
+          $ref: '#/components/schemas/InvocationModeEnum'
+        retry_policy:
+          $ref: '#/components/schemas/RetryPolicyEnum'
+
+    BaseArchive:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        type:
+          $ref: "#/components/schemas/ArchiveTypeEnum"
+        group:
+          type: string
+          format: uuid
+        tenant_id:
+          $ref: '#/components/schemas/ID'
+        owner:
+          $ref: '#/components/schemas/Username'
+        uuid:
+          type: string
+          format: uuid
+        archive_dir:
+          type: string
+
+    S3Archive:
+      allOf:
+        - $ref: '#/components/schemas/BaseArchive'
+        - type: object
+          required:
+            - endpoint
+            - bucket
+            - type
+          properties:
+            endpoint:
+              type: string
+            bucket:
+              type: string
+            access_key:
+              type: string
+            access_secret:
+              type: string
+
+    SystemArchive:
+      allOf:
+        - $ref: '#/components/schemas/BaseArchive'
+        - type: object
+          properties:
+            system_id:
+              $ref: '#/components/schemas/ID'
+
+    Archive:
+      oneOf:
+        - $ref: '#/components/schemas/S3Archive'
+        - $ref: '#/components/schemas/SystemArchive'
+      discriminator:
+        propertyName: type
+        mapping:
+          system: '#/components/schemas/SystemArchive'
+          s3: '#/components/schemas/S3Archive'
+
+    Pipeline:
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        group:
+          type: string
+          format: uuid
+        owner:
+          $ref: '#/components/schemas/Username'
+        uuid:
+          type: string
+          format: uuid
+        execution_profile:
+          $ref: '#/components/schemas/ExecutionProfile'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+
+    # --- Task ---
+    Task:
+      $ref: '#/components/schemas/BaseTask'
+      oneOf:
+        - $ref: '#/components/schemas/ImageBuildTask'
+        - $ref: '#/components/schemas/RequestTask'
+        - $ref: '#/components/schemas/ContainerRunTask'
+        - $ref: '#/components/schemas/TapisJobTask'
+        - $ref: '#/components/schemas/TapisActorTask'
+        - $ref: '#/components/schemas/FunctionTask'
+    
+    BaseTask:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TaskTypeEnum'
+        depends_on:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskDependency'
+        description:
+          type: string
+          default: null
+        execution_profile:
+          $ref: '#/components/schemas/ExecutionProfile'
+        input:
+          type: object
+          default: null
+        output:
+          type: object
+          default: null
+
+    ImageBuildTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTask'
+        - type: object
+          properties:
+            auto_build:
+              type: object
+              default: false
+            builder:
+              allOf:
+                - $ref: '#/components/schemas/BuilderEnum'
+                - default: "kaniko"
+            cache:
+              type: boolean
+              default: true
+            context:
+              $ref: '#/components/schemas/Context'
+            destination: 
+              $ref: '#/components/schemas/Destination'
+            type:
+              default: "image_build"
+
+    RequestTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTask'
+        - type: object
+          properties:
+            auth:
+              type: object
+              default: null
+            data:
+              type: object
+              default: null
+            headers:
+              type: object
+              default: null
+            http_method:
+              allOf:
+                - $ref: '#/components/schemas/HTTPMethodEnum'
+                - default: null
+            query_params:
+              type: object
+              default: null
+            type:
+              default: "request"
+            url:
+              type: string
+              default: null
+
+    ContainerRunTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTask'
+        - type: object
+          properties:
+            image:
+              type: string
+            type:
+              default: "container_run"
+
+    TapisJobTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTask'
+        - type: object
+          properties:
+            poll:
+              type: boolean
+              default: true
+            tapis_job_def:
+              type: object
+            type:
+              default: "tapis_job_task"
+
+    TapisActorTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            poll:
+              type: boolean
+              default: true
+            tapis_actor_id:
+              type: string
+              default: null
+            type:
+              default: "tapis_actor_task"
+
+    FunctionTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            runtime:
+              $ref: "#/components/schemas/RuntimeEnvironmentEnum"
+
+    # --- Task Dependency ---
+    TaskDependency:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        can_fail:
+          type: boolean
+        
+    # --- Context ---
+    Context:
+      type: object
+      properties:
+        branch:
+          type: string
+        credentials:
+          default: null
+        build_file_path:
+          type: string
+        sub_path:
+          type: string
+        type:
+          $ref: "#/components/schemas/ContextTypeEnum"
+        url:
+          type: string
+        visibility:
+          $ref: "#/components/schemas/ContextVisibilityEnum"
+    
+    # --- Destination ---
+    Destination:
+      type: object
+      properties:
+        credentials:
+          default: null
+        tag: 
+          type: string
+        type:
+          $ref: '#/components/schemas/DestinationTypeEnum'
+        url:
+          type: string
+
+    # --- Group and GroupUser ---
+    GroupDetail:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        owner:
+          $ref: "#/components/schemas/Username"
+        tenant_id:
+          $ref: "#/components/schemas/ID"
+        uuid:
+          type: string
+          format: uuid
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupUser"
+
+    Group:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        owner:
+          $ref: "#/components/schemas/Username"
+        tenant_id:
+          $ref: "#/components/schemas/ID"
+        uuid:
+          type: string
+          format: uuid
+
+    GroupUser:
+      type: object
+      properties:
+        group:
+          $ref: "#/components/schemas/ID"
+        username:
+          $ref: "#/components/schemas/Username"
+        is_admin:
+          type: boolean
+        uuid:
+          type: string
+          format: uuid
+
+    Identity:
+      type: object
+      properties:
+        type:
+          $ref: "#/components/schemas/ID"
+        name:
+          type: string
+        description:
+          type: string
+        owner:
+          $ref: "#/components/schemas/Username"
+        tenant_id:
+          type: string
+        uuid:
+          type: string
+          format: uuid
+        credentials:
+          type: string
+
+    Event:
+      type: object
+      properties:
+        branch:
+          type: string
+          default: null
+        commit:
+          type: string
+          default: null
+        commit_sha:
+          type: string
+          default: null
+        context_url:
+          type: string
+          default: null
+        directives:
+          type: string
+        message:
+          type: string
+        pipeline:
+          type: string
+        source:
+          type: string
+        username:
+          $ref: '#/components/schemas/Username'
+        identity:
+          type: string
+          default: null
+        uuid:
+          type: string
+          format: uuid
+
+    # --- String types with constraints ------------------------------------
+    ID:
+      type: string
+      minLength: 1
+      maxLength: 128
+    Username:
+      type: string
+      minLength: 1
+      maxLength: 64
+    DescriptionString:
+      type: string
+      maxLength: 2048
+
+    # -------------------------------------------------------------------------
+    # --- Request objects -----------------------------------------------------
+    # -------------------------------------------------------------------------
+
+    GroupPostReq:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              username:
+                $ref: '#/components/schemas/Username'
+              is_admin:
+                default: false
+                type: boolean
+
+    GroupUserPostReq:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        is_admin:
+          type: boolean
+          default: false
+
+    GroupUserPutPatchReq:
+      type: object
+      required:
+        - is_admin
+      properties:
+        is_admin:
+          type: boolean
+
+    ArchivePostReq:
+      oneOf:
+        - $ref: '#/components/schemas/TapisSystemArchivePostReqProps'
+        - $ref: '#/components/schemas/S3ArchivePostReqProps'
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        type:
+          type: string
+        archive_dir:
+          type: string
+
+    TapisSystemArchivePostReqProps:
+      type: object
+      required:
+        - system_id
+      properties:
+        system_id:
+          $ref: '#/components/schemas/ID'
+
+    S3ArchivePostReqProps:
+      type: object
+      required:
+        - endpoint
+        - bucket
+      properties:
+        endpoint:
+          type: string
+        bucket:
+          type: string
+        access_key:
+          type: string
+        access_secret:
+          type: string
+
+    IdentityPostReq:
+      type: object
+      required:
+        - type
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          $ref: '#/components/schemas/IdentityTypeEnum'
+        credentials:
+          oneOf:
+            - $ref: "#/components/schemas/GithubAuthReq"
+            - $ref: "#/components/schemas/DockerhubAuthReq"
+          
+    GithubAuthReq:
+      type: object
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        personal_access_token:
+          type: string
+
+    DockerhubAuthReq:
+      type: object
+      properties:
+        username:
+          $ref: '#/components/schemas/Username'
+        token:
+          type: string
+
+    PipelinePostReq:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        archive_ids:
+          type: array
+          items:
+            $ref: "#/components/schemas/ID"
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        type:
+          $ref: '#/components/schemas/PipelineTypeEnum'
+        execution_profile:
+          $ref: '#/components/schemas/ExecutionProfile'
+        tasks:
+          type: array
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/ImageBuildTaskReq'
+              - $ref: '#/components/schemas/RequestTaskReq'
+              - $ref: '#/components/schemas/ContainerRunTaskReq'
+              - $ref: '#/components/schemas/TapisJobTaskReq'
+              - $ref: '#/components/schemas/TapisActorTaskReq'
+
+    BaseTaskReq:
+      type: object
+      required:
+        - id
+        - type
+      properties:
+        id:
+          type: string
+        type:
+          $ref: '#/components/schemas/TaskTypeEnum'
+        depends_on:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskDependency'
+        description:
+          type: string
+          default: null
+        execution_profile:
+          $ref: "#/components/schemas/ExecutionProfile"
+        input:
+          type: object
+          default: null
+        output:
+          type: object
+          default: null
+
+    ImageBuildTaskReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            auto_build:
+              type: object
+              default: false
+            builder:
+              allOf:
+                - $ref: '#/components/schemas/BuilderEnum'
+                - default: "kaniko"
+            cache:
+              type: boolean
+              default: true
+            context:
+              $ref: '#/components/schemas/ContextReq'
+            destination: 
+              $ref: '#/components/schemas/DestinationReq'
+            type:
+              default: "image_build"
+
+    RequestTaskReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            auth:
+              type: object
+              default: null
+            data:
+              type: object
+              default: null
+            headers:
+              type: object
+              default: null
+            http_method:
+              $ref: '#/components/schemas/HTTPMethodEnum'
+              default: null
+            query_params:
+              type: object
+              default: null
+            type:
+              default: "request"
+            url:
+              type: string
+              default: null
+
+    ContainerRunTaskReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            image:
+              type: string
+            type:
+              default: "container_run"
+
+    TapisJobTaskReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            poll:
+              type: boolean
+              default: true
+            tapis_job_def:
+              $ref: '#/components/schemas/TapisJobDefReq'
+            type:
+              default: "tapis_job_task"
+
+    TapisActorTaskReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            poll:
+              type: boolean
+              default: true
+            tapis_actor_id:
+              type: string
+              default: null
+            type:
+              default: "tapis_actor_task"
+    
+    FunctionTaskReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseTaskReq'
+        - type: object
+          properties:
+            runtime:
+              $ref: "#/components/schemas/RuntimeEnvironmentEnum"
+            type:
+              default: "function_task"
+        
+    CIPipelinePostReq:
+      type: object
+      required:
+        - id
+        - type
+        - context
+        - destination
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        archive_ids:
+          type: array
+          items:
+            $ref: '#/components/schemas/ID'
+        builder:
+          $ref: '#/components/schemas/BuilderEnum'
+        type:
+          $ref: '#/components/schemas/PipelineTypeEnum'
+        context:
+          $ref: '#/components/schemas/ContextReq'
+        destination:
+          $ref: '#/components/schemas/DestinationReq'
+
+    # --- Context Request ---
+    BaseContextReq:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: "#/components/schemas/ContextTypeEnum"
+
+    LocalContextReq:
+      allOf:
+        - $ref: "#/components/schemas/BaseContextReq"
+        - type: object
+          properties:
+            filename:
+              type: string
+            type:
+              type: string
+
+    NonLocalContextReq:
+      allOf:
+        - $ref: "#/components/schemas/BaseContextReq"
+        - type: object
+          required:
+            - visibility
+            - url
+          properties: 
+            visibility:
+              $ref: "#/components/schemas/ContextVisibilityEnum"
+            credentials:
+              $ref: "#/components/schemas/ContextCredentialsReq"
+            identity_uuid:
+              type: string
+              format: uuid
+            url:
+              type: string
+          oneOf:
+            - required: [credentials]
+            - required: [identity_uuid]
+
+    RepoContextReq:
+      allOf:
+        - $ref: "#/components/schemas/NonLocalContextReq"
+        - type: object
+          required:
+            - branch
+            - build_file_path
+          properties:
+            branch:
+              type: string
+            build_file_path:
+              type: string
+            sub_path:
+              type: string
+            type:
+              type: string
+
+    RegistryContextReq:
+      allOf:
+        - $ref: "#/components/schemas/NonLocalContextReq"
+        - type: object
+          properties:
+            type:
+              type: string
+            tag:
+              type: string
+              default: latest
+
+    ContextReq:
+      oneOf:
+        - $ref: "#/components/schemas/LocalContextReq"
+        - $ref: "#/components/schemas/RepoContextReq"
+        - $ref: "#/components/schemas/RegistryContextReq"
+      discriminator:
+        propertyName: type
+        mapping:
+          github: "#/components/schemas/RepoContextReq"
+          gitlab: "#/components/schemas/RepoContextReq"
+          dockerhub: "#/components/schemas/RegistryContextReq"
+          local: "#/components/schemas/LocalContextReq"
+
+    # --- Credentials ---
+    DockerhubCred:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+    
+    GithubCred:
+      type: object
+      properties:
+        personal_access_token:
+          type: string
+        username:
+          type: string
+
+    ContextCredentialsReq:
+      oneOf:
+        - $ref: '#/components/schemas/GithubCred'
+        - $ref: '#/components/schemas/DockerhubCred'
+      
+    # --- Destination ---
+    BaseDestinationReq:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/DestinationTypeEnum'
+
+    LocalDestinationReq:
+      type: object
+      properties:
+        filename:
+          type: string
+    
+    RegistryDestinationReq:
+      type: object
+      required:
+        - url
+        - type
+      properties:
+        credentials:
+          $ref: '#/components/schemas/DestinationCredentialsReq'
+        identity_uuid:
+          type: string
+          format: uuid
+        tag: 
+          type: string
+        type:
+          $ref: '#/components/schemas/DestinationTypeEnum'
+        url:
+          type: string
+      # Mutual exclusion. credentials or identity uuid
+      oneOf:
+        - required: [credentials]
+        - required: [identity_uuid]
+
+    DestinationCredentialsReq:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+
+    DestinationReq:
+      allOf:
+        - $ref: '#/components/schemas/BaseDestinationReq'
+        - oneOf:
+          - $ref: '#/components/schemas/RegistryDestinationReq'
+          - $ref: '#/components/schemas/LocalDestinationReq'
+
+    TapisJobDefReq:
+      $ref: "https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml#components/schemas/ReqSubmitJob"
+
+    EventPostReq:
+      type: object
+      properties:
+        directives:
+          type: array
+          items:
+            type: string
+
+    WebhookEventPostReq:
+      type: object
+      properties:
+        branch:
+          type: string
+        commit:
+          type: string
+        commit_sha:
+          type: string
+        source:
+          $ref: '#/components/schemas/ContextTypeEnum'
+        context_url:
+          type: string
+        username:
+          type: string
+
+    RunPipelinePostReq:
+      type: object
+      properties:
+        directives:
+          type: array
+          items:
+            type: string
+
+    # -------------------------------------------------------------------------
+    # --- Response objects ----------------------------------------------------
+    # -------------------------------------------------------------------------
+    BaseResp:
+      type: object
+      required:
+        - status
+        - message
+        - result
+        - version
+        - metadata
+      properties:
+        status:
+          type: string
+          default: success
+        message:
+          type: string
+          default: success
+        result:
+          type: object
+        version:
+          type: string
+        metadata:
+          type: object
+          default: {}
+
+    ResourceURLResp:
+      allOf:
+        - $ref: "#/components/schemas/BaseResp"
+        - type: object
+          properties:
+            message:
+              type: string
+              default: 'created'
+            result:
+              $ref: '#/components/schemas/ResourceUrlResult'
+
+    ResourceUrlResult:
+      type: object
+      properties:
+        url:
+          type: string
+
+    StringResp:
+      allOf:
+        - $ref: "#/components/schemas/BaseResp"
+        - type: object
+          properties:
+            result:
+              type: string
+
+    ObjectResp:
+      $ref: "#/components/schemas/BaseResp"
+
+    ListResp:
+      allOf:
+        - $ref: "#/components/schemas/BaseResp"
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                type: object
+
+    ErrorResp:
+      allOf:
+        - $ref: "#/components/schemas/BaseResp"
+        - type: object
+          properties:
+            status:
+              type: string
+              default: error
+            message:
+              type: string
+              default: error
+
+    GroupDetailResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/GroupDetail'
+
+    GroupUserResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/GroupUser'
+    
+    GroupUserListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/GroupUser'
+
+    GroupResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Group'
+
+    GroupListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Group'
+    
+    IdentityResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Identity'
+    
+    IdentityListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Identity'
+
+    ArchiveResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Archive'
+
+    ArchiveListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Archive'
+
+    PipelineResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Pipeline'
+          
+    PipelineListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Pipeline'
+    
+    TaskResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Task'
+
+    TaskListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp' 
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Task'
+
+    EventResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Event'
+
+    EventListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp' 
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Event'
+
+    # -------------------------------------------------------------------------
+    # --- Enums ---------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    ArchiveTypeEnum:
+      type: string
+      enum:
+        - system
+        - s3
+    
+    PipelineTypeEnum:
+      type: string
+      enum:
+        - workflow
+        - ci
+
+    InvocationModeEnum:
+      type: string
+      enum:
+        - async
+        - sync
+
+    RetryPolicyEnum:
+      type: string
+      enum:
+        - exponention_backoff
+
+    TaskTypeEnum:
+      type: string
+      enum:
+        - image_build
+        - container_run
+        - request
+        - tapis_job
+        - tapis_actor
+        - function
+
+    BuilderEnum:
+      type: string
+      enum:
+        - kaniko
+        - singularity
+
+    ContextVisibilityEnum:
+      type: string
+      enum:
+        - private
+        - public
+
+    ContextTypeEnum:
+      type: string
+      enum:
+        - github
+        - dockerhub
+        - local
+
+    DestinationTypeEnum:
+      type: string
+      enum:
+        - dockerhub
+        - local
+    
+    HTTPMethodEnum:
+      type: string
+      enum:
+        - get
+        - post
+        - put
+        - patch
+        - delete
+
+    IdentityTypeEnum:
+      type: string
+      enum:
+        - github
+        - gitlab
+
+    RuntimeEnvironmentEnum:
+      type: string
+      enum:
+        - python3.9
+        - python2.7
+        - node20
+        - java17

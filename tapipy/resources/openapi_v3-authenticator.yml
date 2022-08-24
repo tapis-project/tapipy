@@ -274,6 +274,29 @@ paths:
                   result:
                     $ref: '#/components/schemas/TokenResponse'
 
+  /v3/oauth2/v2/token:
+    post:
+      tags:
+        - Tokens
+      operationId: create_v2_token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/V2Token'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+                properties:
+                  result:
+                    $ref: '#/components/schemas/V2TokenResponse'
+
   /v3/oauth2/userinfo:
     get:
       tags:
@@ -443,6 +466,21 @@ components:
         custom_idp_configuration:
           type: object
           description: JSON-serializable object which includes various configuration details for tenants using an IdP that is not LDAP/AD.
+        token_url:
+          type: string
+          description: Token URL endpoint for generating v2 token
+        impers_oauth_client_id:
+          type: string
+          description: Client ID for impersonation
+        impers_oauth_client_secret:
+          type: string
+          description: Client secret for impersonation
+        impersadmin_username:
+          type: string
+          description: Impersonation username for impersonation
+        impersadmin_password:
+          type: string
+          description: Impersonation password for impersonation
 
     NewTenantConfig:
       type: object
@@ -470,9 +508,27 @@ components:
         max_refresh_token_ttl:
           type: integer
           description: The maxiumum refresh token TTL, in seconds, for grant types that allow the caller to specify the TTL.
+        mfa_config:
+          type: object
+          description: JSON-serializable object which includes various details such as which MFA system to use (e.g., TACC MFA or another MFA) and configurations for it.
         custom_idp_configuration:
           type: object
           description: Configuration for customizing the IdP integration, including custom ldap search filters and alternative IdPs like github OAuth of Custos; must be a JSON-serializable object.
+        token_url:
+          type: string
+          description: Token URL endpoint for generating v2 token
+        impers_oauth_client_id:
+          type: string
+          description: Client ID for impersonation
+        impers_oauth_client_secret:
+          type: string
+          description: Client secret for impersonation
+        impersadmin_username:
+          type: string
+          description: Impersonation username for impersonation
+        impersadmin_password:
+          type: string
+          description: Impersonation password for impersonation
 
     NewClient:
       type: object
@@ -517,6 +573,14 @@ components:
         refresh_token:
           type: string
           description: The refresh token associated with the request (for refresh_token grant).
+
+    V2Token:
+      type: object
+      required: [access_token]
+      properties:
+        access_token:
+          type: string
+          description: The access token representing the user.
 
     NewDeviceCode:
       type: object
@@ -597,6 +661,20 @@ components:
             jti:
               type: string
               description: Unique identifier for the token
+    
+    V2TokenResponse:
+      type: object
+      description: A v2 token response object.
+      properties:
+        expires_in:
+          type: integer
+          description: The amount of time, in seconds, when the token will expire.
+        refresh_token:
+          type: string
+          description: The refresh token associated with the v2 token
+        access_token:
+          type: string
+          description: Unique identifier for the token
 
     DeviceCodeResposne:
       type: object

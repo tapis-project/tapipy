@@ -54,7 +54,8 @@ RESOURCES = {
         'pgrest': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pgrest.yml",
         'pods': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pods.yml",
         'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-jobs.yml",
-        'apps': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-apps.yml"
+        'apps': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-apps.yml",
+        'workflows': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-workflows.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -69,7 +70,8 @@ RESOURCES = {
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml',
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-jobs.yml',
-        'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml'
+        'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml',
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-workflows.yml'
     },
     'prod': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/prod-v3/docs/specs/openapi_v3.yml',               
@@ -84,7 +86,9 @@ RESOURCES = {
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/prod/pgrest/resources/openapi_v3.yml',
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml',
-        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/prod/AppsAPI.yaml'
+        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/prod/AppsAPI.yaml',
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/prod/src/api/specs/WorkflowsAPI.yaml'
+
     },
     'staging': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
@@ -99,7 +103,8 @@ RESOURCES = {
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/staging/pgrest/resources/openapi_v3.yml',
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/jobs-client/src/main/resources/JobsAPI.yaml',
-        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/staging/AppsAPI.yaml'
+        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/staging/AppsAPI.yaml',
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/stage/src/api/specs/WorkflowsAPI.yaml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
@@ -114,7 +119,9 @@ RESOURCES = {
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/paas/dev/pgrest/resources/openapi_v3.yml',
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml',
-        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/dev/AppsAPI.yaml'
+        'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/dev/AppsAPI.yaml',
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/dev/src/api/specs/WorkflowsAPI.yaml'
+
     }
 }
 
