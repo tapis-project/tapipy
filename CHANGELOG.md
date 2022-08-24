@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.8 - 2022-08-24
+### Added
+- Added new specs for authenticator, workflows, and one other one.
+- Added workflows to code.
+
+### Changed
+- Fixed spec creation script.
+
+### Removed
+- No change.
+
+
 ## 1.2.7 - 2022-07-25
 ### Added
 - No change.
