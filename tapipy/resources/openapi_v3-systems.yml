@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.1.3'
+  version: '1.2.4'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -32,6 +32,8 @@ tags:
     description: Manage Tapis system user access credentials.
   - name: Permissions
     description: Manage Tapis permissions for system resources. Grant, revoke and retrieve.
+  - name: Sharing
+    description: Manage Tapis sharing for system resources. Share, unshare, make public.
   - name: Scheduler Profiles
     description: Manage Tapis scheduler profile resources. Create, retrieve and delete.
 
@@ -113,7 +115,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of each result item. For example select=id,owner,host
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,owner,host
           schema:
             type: string
             default: 'summaryAttributes'
@@ -271,7 +273,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of each result item. For example select=id,owner,host
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,owner,host
           schema:
             type: string
             default: 'summaryAttributes'
@@ -336,7 +338,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of each result item. For example select=id,owner,host
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,owner,host
           schema:
             type: string
             default: 'summaryAttributes'
@@ -417,7 +419,15 @@ paths:
       tags:
         - Systems
       description: |
-        Retrieve information for a system given the system name.
+        Retrieve information for a system given the system Id.
+
+        Use query parameter authnMethod=<method> to override the default authentication method.
+
+        Certain services may use the query parameter *impersonationId* to be used in place of the requesting
+        Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*.
+
+        Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
+        application context. Tapis authorization will be bypassed.
       operationId: getSystem
       parameters:
         - name: systemId
@@ -439,19 +449,19 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of the result item. For example select=id,owner,host
+          description: List of attributes to be included as part of the result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,owner,host
           schema:
             type: string
             default: 'allAttributes'
         - name: returnCredentials
           in: query
-          description: Highly restricted. Only certain Tapis services are authorized to get credentials.
+          description: Restricted. Only certain Tapis services are authorized to get credentials.
           schema:
             type: boolean
             default: false
         - name: impersonationId
           in: query
-          description: Highly restricted. Only certain services may impersonate a Tapis user.
+          description: Restricted. Only certain services may impersonate a Tapis user.
           schema:
             type: string
         - name: resolveEffectiveUser
@@ -460,6 +470,12 @@ paths:
           schema:
             type: boolean
             default: true
+        - name: sharedAppCtx
+          in: query
+          description: Restricted. Only certain services may indicate that the request is in a shared context.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: System found.
@@ -920,7 +936,7 @@ paths:
       tags:
         - Credentials
       description: |
-        Highly restricted. Only certain Tapis services authorized.
+        Restricted. Only certain Tapis services authorized.
 
         Retrieve credentials for given system, target *userName* and authentication method.
 
@@ -1088,7 +1104,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '400':
-          description: Input error. Invalid JSON.
+          description: Input error.
           content:
             application/json:
               schema:
@@ -1161,7 +1177,7 @@ paths:
         - Permissions
       description: |
         Create permissions in the Security Kernel for a user. Requester must be owner of the system.
-        Permissions are READ, MODIFY, EXECUTE.
+        Permissions are READ, MODIFY, EXECUTE. MODIFY implies READ.
       operationId: grantUserPerms
       parameters:
         - name: systemId
@@ -1285,6 +1301,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for /share and /unshare -------------------------------------------------------
+  '/v3/systems/share/{systemId}':
+    get:
+      tags:
+        - Sharing
+      summary: Retrieve all sharing information for a system
+      description: |
+        Retrieve all sharing information for a system. This includes all users with whom the system
+        has been shared and whether or not the system has been made publicly available.
+      operationId: getShareInfo
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespShareInfo'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Sharing
+      summary: Share a system with one or more users.
+      description: |
+        Create or update sharing information for a system. The system will be shared with the list of users
+        provided in the request body. Requester must be owner of the system.
+      operationId: shareSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      requestBody:
+        required: true
+        description: A JSON object specifying updated sharing information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqShareUpdate'
+      responses:
+        '200':
+          description: Sharing information updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
           description: Input error. Invalid JSON.
           content:
             application/json:
@@ -1303,7 +1413,122 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
 
-  # --- Paths for /schedulerProfile ------------------------------------------------
+  '/v3/systems/share_public/{systemId}':
+    post:
+      tags:
+        - Sharing
+      summary: Share a system publicly with all users in the tenant.
+      description: |
+        Share a system with all users in the tenant. Requester must be owner of the system.
+      operationId: shareSystemPublic
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: System shared publicly.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/unshare/{systemId}':
+    post:
+      tags:
+        - Sharing
+      summary: Unshare a system with one or more users.
+      description: |
+        Create or update sharing information for a system. The system will be unshared with the list of users
+        provided in the request body. Requester must be owner of the system.
+      operationId: unShareSystem
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      requestBody:
+        required: true
+        description: A JSON object specifying updated sharing information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqShareUpdate'
+      responses:
+        '200':
+          description: Sharing information updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/systems/unshare_public/{systemId}':
+    post:
+      tags:
+        - Sharing
+      summary: Remove public access for a system.
+      description: |
+        Remove public sharing for a system. Requester must be owner of the system.
+      operationId: unShareSystemPublic
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: System public access removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    
+    # --- Paths for /schedulerProfile ------------------------------------------------
   '/v3/systems/schedulerProfile':
     get:
       tags:
@@ -1475,6 +1700,7 @@ paths:
 
 # ------------------------------------------------------------------------------
 # --- Components ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
 components:
   securitySchemes:
     TapisJWT:
@@ -1718,6 +1944,19 @@ components:
           type: string
         certificate:
           type: string
+    # --- ShareInfo ------------------------------------------------------------------
+    ShareInfo:
+      type: object
+      required:
+        - public
+        - userList
+      properties:
+        public:
+          type: boolean
+        userList:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserNameString'
     # --- KeyValuePair -------------------------------------------------------
     KeyValuePair:
       type: object
@@ -2079,7 +2318,16 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SchedulerHiddenOptionEnum'
-
+    ReqShareUpdate:
+      type: object
+      required:
+        - users
+      properties:
+        users:
+          type: array
+          minItems: 1
+          items:
+            type: string
     # -------------------------------------------------------------------------
     # --- Response objects ----------------------------------------------------
     # -------------------------------------------------------------------------
@@ -2267,6 +2515,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/SchedulerProfile'
+        metadata:
+          type: object
+    RespShareInfo:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ShareInfo'
         metadata:
           type: object
     # -------------------------------------------------------------------------

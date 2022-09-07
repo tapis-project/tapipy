@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.1.0'
+  version: '1.2.1'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -30,6 +30,8 @@ tags:
     description: Manage Tapis application resources. Create, retrieve, update, etc.
   - name: Permissions
     description: Manage Tapis permissions for application resources. Grant, revoke and retrieve.
+  - name: Sharing
+    description: Manage Tapis sharing for application resources. Share, unshare, make public.
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------
@@ -41,7 +43,7 @@ paths:
     get:
       tags:
         - General
-      description: Health check.
+      description: Health check. Lightweight non-authenticated check that service is alive.
       operationId: healthCheck
       responses:
         '200':
@@ -56,7 +58,7 @@ paths:
     get:
       tags:
         - General
-      description: Ready check.
+      description: Ready check. Non-authenticated check that service is ready to do work.
       operationId: readyCheck
       responses:
         '200':
@@ -66,13 +68,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '503':
-          description: Service unavailable.
+          description: Service not ready.
 
   '/v3/apps':
     get:
       tags:
         - Applications
-      summary: Retrieve applications
       description: Retrieve list of applications. Use search and select query parameters to limit results.
       operationId: getApps
       parameters:
@@ -110,7 +111,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of each result item. For example select=id,version,owner
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,version,owner
           schema:
             type: string
             default: 'summaryAttributes'
@@ -148,7 +149,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Create a new version of an application
       description: |
         Create an application using a request body. App id+version must be unique within tenant and can be composed of
         alphanumeric characters and the following special characters [-._~]. Id must begin with an alphabetic character
@@ -206,7 +206,6 @@ paths:
     get:
       tags:
         - Applications
-      summary: Retrieve list of applications matching search conditions specified as query parameters
       description: Retrieve details for applications. Use query parameters to specify search conditions. For example ?owner.eq=jdoe&enabled.eq=false
       operationId: searchAppsQueryParameters
       parameters:
@@ -239,7 +238,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of each result item. For example select=id,version,owner
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,version,owner
           schema:
             type: string
             default: 'summaryAttributes'
@@ -271,7 +270,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Retrieve applications matching search conditions
       description: Retrieve details for applications. Use request body to specify SQL-like search conditions.
       operationId: searchAppsRequestBody
       parameters:
@@ -304,7 +302,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of each result item. For example select=id,version,owner
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,version,owner
           schema:
             type: string
             default: 'summaryAttributes'
@@ -344,8 +342,9 @@ paths:
     get:
       tags:
         - Applications
-      summary: Retrieve latest version of an application
-      description: Retrieve latest version of an application.
+      description: |
+        Retrieve latest version of an application. In the result the attribute *sharedAppCtx* indicates if the
+        application is available to the user because it has been shared with the user by the application owner.
       operationId: getAppLatestVersion
       parameters:
         - name: appId
@@ -361,7 +360,7 @@ paths:
             default: false
         - name: select
           in: query
-          description: List of attributes to be included as part of the result item. For example select=id,version,owner
+          description: List of attributes to be included as part of the result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,version,owner
           schema:
             type: string
             default: 'allAttributes'
@@ -400,8 +399,10 @@ paths:
     get:
       tags:
         - Applications
-      summary: Retrieve details for specific version of an application
-      description: Retrieve information for an application given the application Id and version.
+      description: |
+        Retrieve information for an application given the application Id and version.
+        In the result the attribute *sharedAppCtx* indicates if the application is available to the user because it
+        has been shared with the user by the application owner.
       operationId: getApp
       parameters:
         - name: appId
@@ -420,9 +421,14 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: impersonationId
+          in: query
+          description: Highly restricted. Only certain services may impersonate a Tapis user.
+          schema:
+            type: string
         - name: select
           in: query
-          description: List of attributes to be included as part of the result item. For example select=id,version,owner
+          description: List of attributes to be included as part of the result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,version,owner
           schema:
             type: string
             default: 'allAttributes'
@@ -460,7 +466,6 @@ paths:
     patch:
       tags:
         - Applications
-      summary: Update selected attributes of an existing version of an application
       description: |
         Update selected attributes of an existing version of an application.
         Request body may only contain updatable attributes. Application must exist.
@@ -525,7 +530,6 @@ paths:
     put:
       tags:
         - Applications
-      summary: Update all updatable attributes of an application
       description: |
         Update all updatable attributes of an application using a request body identical to POST. Application must exist.
 
@@ -602,7 +606,6 @@ paths:
     get:
       tags:
         - Applications
-      summary: Check if application is currently enabled
       description: Check if an application is currently enabled, i.e. available for use.
       operationId: isEnabled
       parameters:
@@ -640,7 +643,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application availabe for use
       description: Mark an application available for use. Applies to all versions.
       operationId: enableApp
       parameters:
@@ -678,7 +680,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application unavailabe for use
       description: Mark an application unavailable for use. Applies to all versions.
       operationId: disableApp
       parameters:
@@ -716,7 +717,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application as deleted
       description: Mark an application as deleted. Application will not appear in queries unless explicitly requested.
       operationId: deleteApp
       parameters:
@@ -754,7 +754,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Mark an application as not deleted
       description: Mark an application as not deleted. Application will appear in queries.
       operationId: undeleteApp
       parameters:
@@ -792,7 +791,6 @@ paths:
     post:
       tags:
         - Applications
-      summary: Change application owner
       description: Change owner of an application. Applies to all versions.
       operationId: changeAppOwner
       parameters:
@@ -831,13 +829,50 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/history':
+    get:
+      tags:
+        - Applications
+      description: |
+        Retrieve history of changes for a given appId.
+      operationId: getHistory
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: History successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespAppHistory'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: App not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
 
   # --- Paths for /perms -------------------------------------------------------
   '/v3/apps/perms/{appId}/user/{userName}':
     get:
       tags:
         - Permissions
-      summary: Retrieve application user permissions
       description: Retrieve all application related permissions for a given application and user.
       operationId: getUserPerms
       parameters:
@@ -885,7 +920,6 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Grant application user permissions
       description: Create permissions in the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
       operationId: grantUserPerms
       parameters:
@@ -936,7 +970,6 @@ paths:
     post:
       tags:
         - Permissions
-      summary: Revoke application user permissions
       description: Remove permissions from the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerms
       parameters:
@@ -981,7 +1014,6 @@ paths:
     delete:
       tags:
         - Permissions
-      summary: Revoke application user permission
       description: Remove user permission from the Security Kernel. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerm
       parameters:
@@ -1008,6 +1040,100 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for /share and /unshare -------------------------------------------------------
+  '/v3/apps/share/{appId}':
+    get:
+      tags:
+        - Sharing
+      summary: Retrieve all sharing information for an app
+      description: |
+        Retrieve all sharing information for an app. This includes all users with whom the app
+        has been shared and whether or not the app has been made publicly available.
+      operationId: getShareInfo
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespShareInfo'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: App not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Sharing
+      summary: Share an app with one or more users.
+      description: |
+        Create or update sharing information for an app. The app will be shared with the list of users
+        provided in the request body. Requester must be owner of the app.
+      operationId: shareApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      requestBody:
+        required: true
+        description: A JSON object specifying updated sharing information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqShareUpdate'
+      responses:
+        '200':
+          description: Sharing information updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
           description: Input error. Invalid JSON.
           content:
             application/json:
@@ -1019,6 +1145,122 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/apps/share_public/{appId}':
+    post:
+      tags:
+        - Sharing
+      summary: Share an app publicly with all users in the tenant.
+      description: |
+        Share an app with all users in the tenant. Requester must be owner of the app.
+      operationId: shareAppPublic
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: App shared publicly.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/apps/unshare/{appId}':
+    post:
+      tags:
+        - Sharing
+      summary: Unshare an app with one or more users.
+      description: |
+        Create or update sharing information for an app. The app will be unshared with the list of users
+        provided in the request body. Requester must be owner of the app.
+      operationId: unShareApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      requestBody:
+        required: true
+        description: A JSON object specifying updated sharing information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqShareUpdate'
+      responses:
+        '200':
+          description: Sharing information updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/apps/unshare_public/{appId}':
+    post:
+      tags:
+        - Sharing
+      summary: Remove public access for an app.
+      description: |
+        Remove public sharing for an app. Requester must be owner of the app.
+      operationId: unShareAppPublic
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+      responses:
+        '200':
+          description: App public access removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+           description: Not authorized.
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -1040,7 +1282,7 @@ components:
     # ------------------------------------------------------------------------------
     # --- Model objects ------------------------------------------------------------
     # ------------------------------------------------------------------------------
-    # --- TapisApp ------------------------------------------------------------------
+    # --- TapisApp -----------------------------------------------------------------
     TapisApp:
       type: object
       properties:
@@ -1084,6 +1326,9 @@ components:
             type: string
         notes:
           type: object
+        sharedAppCtx:
+          type: boolean
+          default: false
         uuid:
           type: string
           format: uuid
@@ -1162,7 +1407,7 @@ components:
         subscriptions:
           type: array
           items:
-            $ref: '#/components/schemas/NotificationSubscription'
+            $ref: '#/components/schemas/ReqSubscribe'
         tags:
           type: array
           items:
@@ -1273,31 +1518,37 @@ components:
         value:
           type: string
           default: ""
-    # --- NotificationSubscription -------------------------------------------
-    NotificationSubscription:
+    # --- ReqSubscribe -------------------------------------------
+    ReqSubscribe:
       type: object
       required:
-        - notificationMechanisms
+        - jobEventCategoryFilter
+        - deliveryTargets
       properties:
-        filter:
-          type: string
-          minLength: 1
-        notificationMechanisms:
+        description:
+          $ref: '#/components/schemas/AppJobDescriptionString'
+        enabled:
+          type: boolean
+          default: true
+        jobEventCategoryFilter:
+          $ref: '#/components/schemas/JobEventCategoryFilter'
+        ttlMinutes:
+          type: integer
+        deliveryTargets:
           type: array
           minItems: 1
           items:
-            $ref: '#/components/schemas/NotificationMechanism'
-    # --- NotificationMechanism -------------------------------------------
-    NotificationMechanism:
+            $ref: '#/components/schemas/NotifDeliveryTarget'
+    # --- NotifDeliveryTarget ------------------------------------------------------------
+    NotifDeliveryTarget:
       type: object
       required:
-        - mechanism
+        - deliveryMethod
+        - deliveryAddress
       properties:
-        mechanism:
-          $ref: '#/components/schemas/NotificationMechanismEnum'
-        webhookURL:
-          type: string
-        emailAddress:
+        deliveryMethod:
+          $ref: '#/components/schemas/NotifDeliveryMethod'
+        deliveryAddress:
           type: string
     # --- String types with constraints ------------------------------------
     IdString:
@@ -1339,6 +1590,39 @@ components:
       type: string
       minLength: 1
       maxLength: 128
+    # --- AppHistory ------------------------------------------------------------------
+    AppHistory:
+      type: object
+      properties:
+        appVersion:
+          type: string
+        jwtTenant:
+          type: string
+        jwtUser:
+          $ref: '#/components/schemas/UserNameString'
+        oboTenant:
+          type: string
+        oboUser:
+          $ref: '#/components/schemas/UserNameString'
+        operation:
+          $ref: '#/components/schemas/OperationTypeEnum'
+        description:
+          type: string
+        created:
+          type: string
+    # --- ShareInfo ------------------------------------------------------------------
+    ShareInfo:
+      type: object
+      required:
+        - public
+        - userList
+      properties:
+        public:
+          type: boolean
+        userList:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserNameString'
     # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1467,6 +1751,16 @@ components:
         - search
       properties:
         search:
+          type: array
+          minItems: 1
+          items:
+            type: string
+    ReqShareUpdate:
+      type: object
+      required:
+        - users
+      properties:
+        users:
           type: array
           minItems: 1
           items:
@@ -1603,6 +1897,35 @@ components:
               type: string
             totalCount:
               type: integer
+    RespAppHistory:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/AppHistory'
+        metadata:
+          type: object
+    RespShareInfo:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ShareInfo'
+        metadata:
+          type: object
     # -------------------------------------------------------------------------
     # --- Enums ---------------------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1624,13 +1947,20 @@ components:
         - NONE
         - SINGULARITY_START
         - SINGULARITY_RUN
-    NotificationMechanismEnum:
+    NotifDeliveryMethod:
       type: string
       enum:
         - WEBHOOK
         - EMAIL
-        - QUEUE
-        - ACTOR
+    JobEventCategoryFilter:
+      type: string
+      enum:
+        - ALL
+        - JOB_NEW_STATUS
+        - JOB_INPUT_TRANSACTION_ID
+        - JOB_ARCHIVE_TRANSACTION_ID
+        - JOB_ERROR_MESSAGE
+        - JOB_SUBSCRIPTION
     FileInputModeEnum:
       type: string
       enum:
@@ -1646,3 +1976,19 @@ components:
         - INCLUDE_ON_DEMAND
         - INCLUDE_BY_DEFAULT
       default: INCLUDE_ON_DEMAND
+    OperationTypeEnum:
+      type: string
+      enum:
+        - CREATE
+        - READ
+        - MODIFY
+        - EXECUTE
+        - DELETE
+        - UNDELETE
+        - HARD_DELETE
+        - CHANGE_OWNER
+        - ENABLE
+        - DISABLE
+        - GET_PERMS
+        - GRANT_PERMS
+        - REVOKE_PERMS

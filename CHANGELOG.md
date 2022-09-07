@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.9 - 2022-09-07
+### Added
+- Added new specs for systems and apps.
+
+### Changed
+- Fixed lacking requirement in test docker-compose.
+
+### Removed
+- No change.
+
+
 ## 1.2.8 - 2022-08-24
 ### Added
 - Added new specs for authenticator, workflows, and one other one.
