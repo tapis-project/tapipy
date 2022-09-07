@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 
 
+
+## 1.2.10 - 2022-09-07
+### Added
+- No change.
+
+### Changed
+- Requirement for openapi-spec-validator added to toml.
+
+### Removed
+- No change.
+
+
 ## 1.2.9 - 2022-09-07
 ### Added
 - Added new specs for systems and apps.
