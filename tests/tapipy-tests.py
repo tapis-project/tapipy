@@ -1,6 +1,6 @@
 # A suite of integrations tests for the Tapis Python SDK.
 # Build the test docker image: docker build -t tapis/pysdk-tests -f Dockerfile-tests .
-# Run these tests using the built docker image: docker run -it --rm  tapis/pysdk-tests
+# Run these tests using the built docker image: docker run -it -e username=<dev_user> -e password=<dev_password> --rm  tapis/pysdk-tests
 import os
 import time
 import subprocess
@@ -8,7 +8,7 @@ import pytest
 from tapipy.tapis import Tapis, TapisResult
 
 
-BASE_URL = os.getenv("base_url", "https://tacc.develop.tapis.io")
+BASE_URL = os.getenv("base_url", "https://dev.develop.tapis.io")
 USERNAME = os.environ["username"]
 PASSWORD = os.environ["password"]
 

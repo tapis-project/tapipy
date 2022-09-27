@@ -1065,7 +1065,7 @@ class Operation(object):
         # allow arbitrary headers to be passed in via the special "headers" kwarg -
         if '_tapis_headers' in kwargs:
             try:
-                params.update(kwargs.pop('_tapis_headers'))
+                headers.update(kwargs.pop('_tapis_headers'))
             except ValueError:
                 raise errors.InvalidInputError(
                     msg="The _tapis_headers argument, if passed, must be a dictionary-like object.")

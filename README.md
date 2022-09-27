@@ -68,12 +68,12 @@ t.jobs.getJobSearchList(limit=5, orderBy='lastUpdated(desc),name(asc)', _tapis_q
 
 Tests resources are contained within the `test` directory. `Dockerfile-tests` is at root.
 1. Build the test docker image: `docker build -t tapis/tapipy-tests -f Dockerfile-tests .`
-2. Run these tests using the built docker image: `docker run -it --rm  tapis/tapipy-tests`
+2. Run these tests using the built docker image: `docker run -it --rm -e username=<dev_user> -e password=<dev_pass> tapis/tapipy-tests`
 
 
 ## Important Parameters to Know
 
-The Tapipy package allows for spec file customization in Tapis object initialization:
+The `tapipy` package allows for spec file customization in Tapis object initialization:
 * resource_set: str 
 	* Determines which set of resource to use, master or dev, defaults to master.
 	* Important to note that if a custom_spec_dictionary is used, it is appended to this resource_set.

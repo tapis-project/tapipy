@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.11 - 2022-09-27
+### Added
+- Add support for specifying arbitrary query parameters via the `_tapis_query_parameters` argument and headers
+  va the `_tapis_headers` argument (see issue #30).
+
+### Changed
+- The use of the `headers` argument for passing arbitrary headers has been deprecated in favor of `_tapis_headers`.
+
+### Removed
+- No change.
+
 
 ## 1.2.10 - 2022-09-07
 ### Added
