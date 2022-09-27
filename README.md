@@ -42,6 +42,27 @@ With the site I can see that I need to use my Tapis object, initialized as `t`, 
 t.sk.hasRole(tenant='dev', user='_testuser', roleName='Do you have this role?')
 ```
 
+### Special Query Parameters and Headers
+For the most part, arguments that can or should be passed to a Tapis endpoint are described in the OpenAPI 
+definition files and recognized automatically by `tapipy`. However, due to limitations in what can be expressed
+in OpenAPI, there are some paramaters that are not defined in the definition files; for example, the search
+parameters for various endpoints.
+
+To accommodate these cases, `tapipy` recognizes two special keyword arguments to all of its methods that
+correspond to Tapis API calls (i.e., all of its "operations"). They are:
+
+  * `_tapis_headers` -- dictionary-like object of header names (keys) and vales.
+  * `_tapis_query_parameters` -- dictionary-like object of query parameter names (keys) and values.
+
+Use the above two special arguments for passing headers (respectively, query parameters) that are not specified
+in the OpenAPI definition of an endpoint.
+
+For example, I can issue a search using the following syntax:
+
+```
+t.jobs.getJobSearchList(limit=5, orderBy='lastUpdated(desc),name(asc)', _tapis_query_parameters={'key': 'value'})
+```
+
 # Development Docs
 ## Running the tests
 
