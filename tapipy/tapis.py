@@ -1,3 +1,4 @@
+from asyncio.log import logger
 from base64 import b64encode
 from collections.abc import Sequence
 import datetime
@@ -566,12 +567,15 @@ class Tapis(object):
             auth_header = {'Authorization': get_basic_auth_header(client_id, client_key)}
         else:
             auth_header = {}
+        if '_tapis_headers' in kwargs:
+            auth_header.update(kwargs['_tapis_headers'])
+        # todo -- remove in a future release
         if 'headers' in kwargs:
             auth_header.update(kwargs['headers'])
         tokens = self.authenticator.create_token(username=username,
                                                  password=password,
                                                  grant_type='password',
-                                                 headers=auth_header)
+                                                 _tapis_headers=auth_header)
         self.set_access_token(tokens.access_token)
         self.refresh_token = None
         #
@@ -685,7 +689,7 @@ class Tapis(object):
 
         tokens = self.authenticator.create_token(grant_type='refresh_token',
                                                  refresh_token=refresh_token,
-                                                 headers=auth_header)
+                                                 _tapis_headers=auth_header)
         self.set_access_token(tokens.access_token)
         self.set_refresh_token(tokens.refresh_token)
 
@@ -762,7 +766,11 @@ class Tapis(object):
         r = requests.Request('POST',
                              url,
                              files={"file": open(source_file_path, 'rb')},
-                             headers=headers).prepare()
+                             _tapis_headers=headers).prepare()
+        # call the plugins' pre-request callables:
+        for f in self.tapis_client.plugin_on_call_pre_request_callables:
+            f(self, r, **kwargs)
+
         # make the request and return the response object -
         try:
             resp = self.requests_session.send(r, verify=self.verify)
@@ -973,6 +981,14 @@ class Operation(object):
             if param.name in kwargs:
                 p_val = kwargs.pop(param.name, None)
                 params[param.name] = p_val
+        
+        # allow arbitrary query parameters to b passed in via the special "_tapis_query_parameters" kwarg --
+        if '_tapis_query_parameters' in kwargs:
+            try:
+                params.update(kwargs.pop('_tapis_query_parameters'))
+            except ValueError:
+                raise errors.InvalidInputError(
+                    msg="The _tapis_query_parameters argument, if passed, must be a dictionary-like object.")
 
         # construct the http headers -
         headers = {}
@@ -1013,11 +1029,20 @@ class Operation(object):
             headers = {'X-Tapis-Token':  jwt}
 
         # allow arbitrary headers to be passed in via the special "headers" kwarg -
-        try:
-            headers.update(kwargs.pop('headers', {}))
-        except ValueError:
-            raise errors.InvalidInputError(
-                msg="The headers argument, if passed, must be a dictionary-like object.")
+        if '_tapis_headers' in kwargs:
+            try:
+                params.update(kwargs.pop('_tapis_headers'))
+            except ValueError:
+                raise errors.InvalidInputError(
+                    msg="The _tapis_headers argument, if passed, must be a dictionary-like object.")
+        # TODO -- remove this in a future release
+        if 'headers' in kwargs:
+            logger.warning("the `headers` argument is deprecated and will be removed in a future version; use _tapis_headers instead.")
+            try:
+                headers.update(kwargs.pop('headers', {}))
+            except ValueError:
+                raise errors.InvalidInputError(
+                    msg="The headers argument, if passed, must be a dictionary-like object.")
 
         # construct the data -
         data = None
