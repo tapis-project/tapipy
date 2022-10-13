@@ -29,9 +29,23 @@ tags:
   - name: Applications
     description: Manage Tapis application resources. Create, retrieve, update, etc.
   - name: Permissions
-    description: Manage Tapis permissions for application resources. Grant, revoke and retrieve.
+    description: |
+      The permissions model allows for fine grained access control of resources. The application owner
+      may grant READ and MODIFY permission to specific users. MODIFY implies READ.
+  
+      Please note that Tapis also supports a higher level approach to granting access known as *Sharing* that also includes
+      certain implicit access to resources during the execution of a Tapis job.
   - name: Sharing
-    description: Manage Tapis sharing for application resources. Share, unshare, make public.
+    description: |
+      In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
+      This approach is known simply as *sharing*. The sharing API allows you to share an application with a set of users
+      as well as share publicly with all users in a tenant. Sharing grants users READ access to the application and more
+      importantly allows others to run a job using the application.
+
+      Please note that sharing an application gives a user certain implicit access to resources in the context of running
+      a job. For example, if the application has defined a specific execution system id then while the job is running the
+      user who has been granted access to the application via sharing will also have implicit access to the system and
+      through the Files service certain paths on the system.
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------

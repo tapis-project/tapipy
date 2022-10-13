@@ -1465,6 +1465,245 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TaskResp'
+  
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs':
+    get:
+      tags:
+        - PipelineRuns
+      summary: Pipeline Runs
+      description: |
+        List runs for a pipeline
+      operationId: listPipelineRuns
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Pipeline Run updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineRunListResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs/{pipeline_run_uuid}':
+    get:
+      tags:
+        - PipelineRuns
+      summary: Pipeline Runs
+      description: |
+        Get a pipeline run
+      operationId: getPipelineRun
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pipeline Run updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PipelineRunResp'
+  
+  '/v3/workflows/executor/runs/{pipeline_run_uuid}/{status}':
+    patch:
+      tags:
+        - PipelineRuns
+      summary: Pipeline Runs
+      description: |
+        Endpoints that update pipeline runs are only accessible to the Workflow Executor
+      operationId: updatePipelineRunStatus
+      parameters:
+        - name: X-WORKFLOW-EXECUTOR-TOKEN
+          in: header
+          description: | 
+            an authorization header that contains the token that authroizes the workflow executor to update the pipeline run status
+          required: true
+          schema:
+            type: string
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/RunStatusEnum"
+      responses:
+        '200':
+          description: Pipeline Run updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringResp'
+
+  '/v3/workflows/executor/executions/{task_execution_uuid}/{status}':
+    patch:
+      tags:
+        - TaskExecutions
+      summary: Task Executions
+      description: |
+        update a task execution status
+      operationId: updateTaskExecutionStatus
+      parameters:
+        - name: X-WORKFLOW-EXECUTOR-TOKEN
+          in: header
+          description: | 
+            an authorization header that contains the token that authroizes the workflow executor to update the pipeline run status
+          required: true
+          schema:
+            type: string
+        - name: task_execution_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/RunStatusEnum"
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringResp'
+
+  '/v3/workflows/executor/runs/{pipeline_run_uuid}/executions':
+    post:
+      tags:
+        - TaskExecutions
+      summary: Task Executions
+      description: |
+        Create a task execution
+      operationId: createTaskExecution
+      parameters:
+        - name: X-WORKFLOW-EXECUTOR-TOKEN
+          in: header
+          description: | 
+            an authorization header that contains the token that authroizes the workflow executor to create a task execution
+          required: true
+          schema:
+            type: string
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: A JSON object for the createTaskExecution operation.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskExecutionPostReq'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceURLResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs/{pipeline_run_uuid}/executions/{task_execution_uuid}':
+    get:
+      tags:
+        - TaskExecutions
+      summary: Task Executions
+      description: |
+        Get a Task Execution
+      operationId: getTaskExecution
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: task_execution_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskExecutionResp'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs/{pipeline_run_uuid}/executions':
+    get:
+      tags:
+        - TaskExecutions
+      summary: Task Executions
+      description: |
+        List Task Executions for a pipeline run
+      operationId: listTaskExecutions
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskExecutionListResp'
 
   '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/events':
     get:
@@ -1570,6 +1809,8 @@ components:
           $ref: '#/components/schemas/InvocationModeEnum'
         retry_policy:
           $ref: '#/components/schemas/RetryPolicyEnum'
+        duplicate_submission_policy:
+          $ref: '#/components/schemas/DuplicateSubmissionPolicyEnum'
 
     BaseArchive:
       type: object
@@ -1646,6 +1887,41 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Task'
+
+    PipelineRun:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        pipeline:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/RunStatusEnum"
+        started_at:
+          type: string
+        ended_at:
+          type: string
+    
+    TaskExecution:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        pipeline_run:
+          type: string
+          format: uuid
+        task:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/RunStatusEnum"
+        started_at:
+          type: string
+        ended_at:
+          type: string
 
     # --- Task ---
     Task:
@@ -2403,6 +2679,23 @@ components:
           items:
             type: string
 
+    CreateTaskExecutionPostReq:
+      type: object
+      required:
+        - task_id
+        - uuid
+      properties:
+        task_id:
+          $ref: "#/components/schemas/ID"
+        started_at:
+          type: string
+        last_modified:
+          type: string
+        uuid:
+          type: string
+          format: uuid
+        
+
     # -------------------------------------------------------------------------
     # --- Response objects ----------------------------------------------------
     # -------------------------------------------------------------------------
@@ -2438,9 +2731,9 @@ components:
               type: string
               default: 'created'
             result:
-              $ref: '#/components/schemas/ResourceUrlResult'
+              $ref: '#/components/schemas/ResourceURLResult'
 
-    ResourceUrlResult:
+    ResourceURLResult:
       type: object
       properties:
         url:
@@ -2576,6 +2869,42 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Pipeline'
+
+    PipelineRunResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/PipelineRun'
+          
+    PipelineRunListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/PipelineRun'
+
+    TaskExecutionResp:
+      allOf:
+        - $ref: '#/components/schemas/ObjectResp'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/TaskExecution'
+          
+    TaskExecutionListResp:
+      allOf:
+        - $ref: '#/components/schemas/ListResp'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaskExecution'
     
     TaskResp:
       allOf:
@@ -2628,6 +2957,18 @@ components:
         - workflow
         - ci
 
+    RunStatusEnum:
+      type: string
+      enum:
+        - active
+        - pending
+        - backoff
+        - completed
+        - failed
+        - suspended
+        - archiving
+        - terminated
+
     InvocationModeEnum:
       type: string
       enum:
@@ -2638,6 +2979,13 @@ components:
       type: string
       enum:
         - exponention_backoff
+
+    DuplicateSubmissionPolicyEnum:
+      type: string
+      enum:
+        - allow
+        - deny
+        - terminate
 
     TaskTypeEnum:
       type: string

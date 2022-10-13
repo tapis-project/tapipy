@@ -31,11 +31,16 @@ tags:
   - name: Credentials
     description: Manage Tapis system user access credentials.
   - name: Permissions
-    description: Manage Tapis permissions for system resources. Grant, revoke and retrieve.
+    description: |
+      The permissions model allows for fine grained access control of resources. The system owner
+      may grant READ and MODIFY permission to specific users. MODIFY implies READ.
+  
+      Please note that Tapis also supports a higher level approach to granting access known as *Sharing*.
   - name: Sharing
-    description: Manage Tapis sharing for system resources. Share, unshare, make public.
-  - name: Scheduler Profiles
-    description: Manage Tapis scheduler profile resources. Create, retrieve and delete.
+    description: |
+      In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
+      This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
+      as well as share publicly with all users in a tenant. Sharing grants users READ and EXECUTE access to the system.
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------
@@ -1372,7 +1377,7 @@ paths:
       summary: Share a system with one or more users.
       description: |
         Create or update sharing information for a system. The system will be shared with the list of users
-        provided in the request body. Requester must be owner of the system.
+        provided in the request body. Sharing allows READ and EXECUTE access. Requester must be owner of the system.
       operationId: shareSystem
       parameters:
         - name: systemId
@@ -1419,7 +1424,7 @@ paths:
         - Sharing
       summary: Share a system publicly with all users in the tenant.
       description: |
-        Share a system with all users in the tenant. Requester must be owner of the system.
+        Share a system with all users in the tenant. Sharing allows READ and EXECUTE access. Requester must be owner of the system.
       operationId: shareSystemPublic
       parameters:
         - name: systemId

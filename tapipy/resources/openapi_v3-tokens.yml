@@ -80,8 +80,6 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/NewTokenResponse'
-
-
     put:
       tags:
       - Tokens
@@ -105,6 +103,28 @@ paths:
                 properties:
                   result:
                     $ref: '#/components/schemas/NewTokenResponse'
+
+  /v3/tokens/revoke:
+    post:
+      tags:
+      - Tokens
+      summary: Revoke a token.
+      description: Revoke a Tapis JWT. Pass the token to revoke in the body of the request. Once revoked, a token cannot be unrevoked. 
+      operationId: revoke_token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokeTokenRequest'
+      responses:
+        '200':
+          description: Token Revoked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
 
   /v3/tokens/keys:
     put:
@@ -234,6 +254,13 @@ components:
         expires_in:
           type: integer
           description: The time, in seconds, when the generated refresh token expires.
+
+    RevokeTokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          description: The Tapis JWT to revoke.
 
     NewSigningKeysRequest:
       type: object

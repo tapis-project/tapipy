@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.12 - 2022-10-13
+### Added
+- Nathan - Added new error message response code/statuses to Tapipy __call__ and upload.
+
+### Changed
+- Updated the specs for authenticator, workflows, systems, tokens, app.
+
+### Removed
+- No change.
+
+
 ## 1.2.11 - 2022-09-27
 ### Added
 - Add support for specifying arbitrary query parameters via the `_tapis_query_parameters` argument and headers
