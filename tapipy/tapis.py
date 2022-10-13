@@ -822,12 +822,18 @@ class Tapis(object):
         except:
             version = None
         # for any kind of non-20x response, we need to raise an error.
-        if resp.status_code in (400, 404):
-            raise errors.InvalidInputError(msg=error_msg, version=version, request=r, response=resp)
-        if resp.status_code in (401, 403):
-            raise errors.NotAuthorizedError(msg=error_msg, version=version, request=r, response=resp)
-        if resp.status_code in (500,):
-            raise errors.ServerDownError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 400:
+            raise errors.BadRequestError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 401:
+            raise errors.UnauthorizedError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 403:
+            raise errors.ForbiddenError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 404:
+            raise errors.NotFoundError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 503:
+            raise errors.ServiceUnavailableError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code in range(500, 600):
+            raise errors.InternalServerError(msg=error_msg, version=version, request=r, response=resp)
         # catch-all for any other non-20x response:
         if resp.status_code >= 300:
             raise errors.BaseTapyException(msg=error_msg, version=version, request=r, response=resp)
@@ -1172,12 +1178,18 @@ class Operation(object):
             f(self, resp, **kwargs)
 
         # for any kind of non-20x response, we need to raise an error.
-        if resp.status_code in (400, 404):
-            raise errors.InvalidInputError(msg=error_msg, version=version, request=r, response=resp)
-        if resp.status_code in (401, 403):
-            raise errors.NotAuthorizedError(msg=error_msg, version=version, request=r, response=resp)
-        if resp.status_code in (500,):
-            raise errors.ServerDownError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 400:
+            raise errors.BadRequestError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 401:
+            raise errors.UnauthorizedError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 403:
+            raise errors.ForbiddenError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 404:
+            raise errors.NotFoundError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code == 503:
+            raise errors.ServiceUnavailableError(msg=error_msg, version=version, request=r, response=resp)
+        if resp.status_code in range(500, 600):
+            raise errors.InternalServerError(msg=error_msg, version=version, request=r, response=resp)
         # catch-all for any other non-20x response:
         if resp.status_code >= 300:
             raise errors.BaseTapyException(msg=error_msg, version=version, request=r, response=resp)

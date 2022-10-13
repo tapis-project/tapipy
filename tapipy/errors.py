@@ -36,22 +36,42 @@ class TokenInvalidError(BaseTapyException):
     pass
 
 
-class NotAuthorizedError(BaseTapyException):
-    """Error indicating the user is not authorized for the request."""
-    pass
-
-
-class InvalidInputError(BaseTapyException):
-    """The input provided to the function was not valid."""
-    pass
-
-
 class InvalidServerResponseError(BaseTapyException):
     """Tapy got a response from the Tapis service that it didn't understand."""
     pass
 
+class InvalidInputError(BaseTapyException):
+    """Input used in request is invalid"""
+    pass
 
-class ServerDownError(BaseTapyException):
+# HTTP Response Errors
+
+class UnauthorizedError(BaseTapyException):
+    """Error indicating the user is not authorized for the request."""
+    pass
+
+
+class ForbiddenError(BaseTapyException):
+    """Access to this resource is not allowed"""
+    pass
+
+
+class NotFoundError(BaseTapyException):
+    """The resource specified by the inputs did not exist."""
+    pass
+
+
+class BadRequestError(BaseTapyException):
+    """The input provided to the function was not valid."""
+    pass
+
+
+class InternalServerError(BaseTapyException):
     """Tapy got an error trying to communication with the Tapis server."""
+    pass
+
+
+class ServiceUnavailableError(BaseTapyException):
+    """Service is not ready to handle the request"""
     pass
 
