@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.13 - 2022-10-18
+### Added
+- No change.
+
+### Changed
+- Updating specs for pods, workflows.
+
+### Removed
+- No change.
+
 
 ## 1.2.12 - 2022-10-13
 ### Added

@@ -974,6 +974,12 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Username'
+      requestBody:
+        required: false
+        description: Empty JSON object.
+        content:
+          application/json:
+            schema: {}
       responses:
         '200':
           description: successful
@@ -1051,6 +1057,12 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/ID'
+      requestBody:
+        required: false
+        description: Empty JSON object.
+        content:
+          application/json:
+            schema: {}
       responses:
         '200':
           description: Archive added
@@ -1553,6 +1565,12 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/RunStatusEnum"
+      requestBody:
+        required: false
+        description: Empty JSON object.
+        content:
+          application/json:
+            schema: {}
       responses:
         '200':
           description: Pipeline Run updated.
@@ -1588,6 +1606,12 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/RunStatusEnum"
+      requestBody:
+        required: false
+        description: Empty JSON object.
+        content:
+          application/json:
+            schema: {}
       responses:
         '200':
           description: Success
