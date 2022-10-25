@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.2.4'
+  version: '1.2.6'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -83,12 +83,13 @@ paths:
     get:
       tags:
         - Systems
-      description: Retrieve list of systems. Use search and select query parameters to limit results.
+      description: |
+        Retrieve list of systems. Use search and select query parameters to limit results.
       operationId: getSystems
       parameters:
         - name: search
           in: query
-          description: Search conditions as a single query paramter. For example search=(id.like.MySys*)~(enabled.eq.true)
+          description: Search conditions as a single query parameter. For example search=(id.like.MySys*)~(enabled.eq.true)
           schema:
             type: string
         - name: limit
@@ -236,7 +237,8 @@ paths:
     get:
       tags:
         - Systems
-      description: Retrieve details for systems. Use query parameters to specify search conditions. For example owner.eq=jdoe&port.gt=1024
+      description: |
+        Retrieve details for systems. Use query parameters to specify search conditions. For example owner.eq=jdoe&port.gt=1024
       operationId: searchSystemsQueryParameters
       parameters:
         - name: freeFormParameterName
@@ -1974,6 +1976,8 @@ components:
         value:
           type: string
           default: ""
+        description:
+          $ref: '#/components/schemas/DescriptionString'
 
     # --- String types with constraints ------------------------------------
     HostString:
@@ -1996,6 +2000,9 @@ components:
     DescriptionString:
       type: string
       maxLength: 2048
+    ArgDescriptionString:
+      type: string
+      maxLength: 8096
     DirString:
       type: string
       minLength: 1

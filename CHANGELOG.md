@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.2.14 - 2022-10-25
+### Added
+- No change.
+
+### Changed
+- Updating specs for sk, systems, jobs, apps, workflows.
+
+### Removed
+- No change.
+
+
 ## 1.2.13 - 2022-10-18
 ### Added
 - No change.

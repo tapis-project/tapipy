@@ -1074,7 +1074,7 @@ paths:
       tags:
         - share
       description: |-
-        Get a filtered list of shared resources. Query parameters are used to restrict the returned shares. The *grantor*, *grantee*, *resourceType*, *resourceId1*, *resourceId2*, *privilege*, *createdBy* and *createdByTenant* parameters are used to match values in shared resource objects. Other query parameters are used to control how matching is performed.
+        Get a filtered list of shared resources. Query parameters are used to restrict the returned shares. The *grantor*, *grantee*, *tenant*, *resourceType*, *resourceId1*, *resourceId2*, *privilege*, *createdBy* and *createdByTenant* parameters are used to match values in shared resource objects. Other query parameters are used to control how matching is performed.  The *tenant* parameter is required.
 
         If resourceId1 or resourceId2 end with a percent sign (%) wildcard then the search results will include all shares with IDs that begin with the same prefix string.  Percent signs embedded elsewhere in the string are *not* recognized as wildcards.
 
@@ -1093,6 +1093,11 @@ paths:
             type: string
             default: ''
         - name: grantee
+          in: query
+          schema:
+            type: string
+            default: ''
+        - name: tenant
           in: query
           schema:
             type: string
@@ -1183,16 +1188,15 @@ paths:
 
         Grantees can be given shared access to a resource on an individual basis or by using the public granting mechanism. Grants to the distinguished **~public** and **~public_no_authn** pseudo-grantees allow access to a resource to authenticated users or to any user, respectively.
 
-        The payload for this request includes these values, with all except resourceId2 required:
+        The payload for this request includes these values, with all except *resourceId2* required:
 
            - grantor
            - grantee
+           - tenant
            - resourceType
            - resourceId1
            - resourceId2
            - privilege
-
-        The grantor and grantee are always in the OBO tenant.
 
         If the share already exists, then this call has no effect. For the request to be authorized, the requestor must be a Tapis service.
       operationId: shareResource
@@ -1245,16 +1249,26 @@ paths:
       tags:
         - share
       description: |-
-        Delete a single shared resource by unique attribute selection. The *grantee*, *resourceType*, *resourceId1* and *privilege* parameters are mandatory; *resourceId2* is optional and assumed to be NULL if not provided.
+        Delete a single shared resource by unique attribute selection. The *grantor*, *grantee*, *tenant*, *resourceType*, *resourceId1* and *privilege* parameters are mandatory; *resourceId2* is optional and assumed to be NULL if not provided.
 
-        The shared resource is deleted only if it's in the tenant on whose behalf the service is making the call. The calling service must also be the same as the orginal service that granted the share.
+        The shared resource is deleted only if it's in the tenant specified in the required *tenant* query parameter. The calling service must also be the same as the orginal service that granted the share.
 
         This call is idempotent.  If no share satisfies the above constraints, a success response code is returned and the indicated number of changes is set to zero.  When a share is deleted, the indicated number of changes is one.
 
         For the request to be authorized, the requestor must be the Tapis service that originally granted the share.
       operationId: deleteShare
       parameters:
+        - name: grantor
+          in: query
+          schema:
+            type: string
+            default: ''
         - name: grantee
+          in: query
+          schema:
+            type: string
+            default: ''
+        - name: tenant
           in: query
           schema:
             type: string
@@ -1316,7 +1330,7 @@ paths:
       tags:
         - share
       description: |-
-        Get a shared resource by ID. The shared resource is returned only if it's in the tenant on whose behalf the service is making the call.
+        Get a shared resource by ID. The shared resource is deleted only if it's in the tenant specified in the required *tenant* query parameter.
 
         For the request to be authorized, the requestor must be a Tapis service.
       operationId: getShare
@@ -1327,6 +1341,11 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: tenant
+          in: query
+          schema:
+            type: string
+            default: ''
         - name: pretty
           in: query
           schema:
@@ -1369,7 +1388,7 @@ paths:
       tags:
         - share
       description: |-
-        Delete a shared resource by ID. The shared resource is deleted only if it's in the tenant on whose behalf the service is making the call. The calling service must also be the same as the orginal service that created the share.
+        Delete a shared resource by ID. The shared resource is deleted only if it's in the tenant specified in the required *tenant* query parameter. The calling service must also be the same as the orginal service that created the share.
 
         This call is idempotent.  If no share satisfies the above constraints, a success response code is returned and the indicated number of changes is set to zero.  When a share is deleted, the indicated number of changes is one.
 
@@ -1382,6 +1401,11 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: tenant
+          in: query
+          schema:
+            type: string
+            default: ''
         - name: pretty
           in: query
           schema:
@@ -1419,7 +1443,7 @@ paths:
       tags:
         - share
       description: |-
-        Determine if a user has been granted a specific privilege on a specific resource. The *grantee*, *resourceType*, *resourceId1* and *privilege* parameters are mandatory; *resourceId2* is optional and assumed to be NULL if not provided. Privilege matching is performed for the user and tenant on behalf of whom the call is being made.
+        Determine if a user has been granted a specific privilege on a specific resource. The *grantee*, *tenant*, *resourceType*, *resourceId1* and *privilege* parameters are mandatory; *resourceId2* is optional and assumed to be NULL if not provided. Privilege matching is performed for the grantee and tenant specified in the query parameters.
 
         True is returned if the user has been granted the privilege, false otherwise.
 
@@ -1431,6 +1455,11 @@ paths:
       operationId: hasPrivilege
       parameters:
         - name: grantee
+          in: query
+          schema:
+            type: string
+            default: ''
+        - name: tenant
           in: query
           schema:
             type: string
@@ -4057,6 +4086,8 @@ components:
         grantor:
           type: string
         grantee:
+          type: string
+        tenant:
           type: string
         resourceType:
           type: string

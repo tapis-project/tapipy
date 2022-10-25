@@ -1989,9 +1989,6 @@ components:
         - $ref: '#/components/schemas/BaseTask'
         - type: object
           properties:
-            auto_build:
-              type: object
-              default: false
             builder:
               allOf:
                 - $ref: '#/components/schemas/BuilderEnum'
@@ -2398,9 +2395,6 @@ components:
         - $ref: '#/components/schemas/BaseTaskReq'
         - type: object
           properties:
-            auto_build:
-              type: object
-              default: false
             builder:
               allOf:
                 - $ref: '#/components/schemas/BuilderEnum'
