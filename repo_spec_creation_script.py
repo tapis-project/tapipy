@@ -124,7 +124,8 @@ RESOURCES = {
         'pods': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-pods.yml",
         'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-jobs.yml",
         'apps': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-apps.yml",
-        'workflows': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-workflows.yml"
+        'workflows': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-workflows.yml",
+        'notifications': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-notifications.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -140,13 +141,14 @@ RESOURCES = {
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-jobs.yml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml',
-        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-workflows.yml'
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-workflows.yml',
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-notifications.yml'
     },
     'prod': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/prod-v3/docs/specs/openapi_v3.yml',               
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/prod/service/resources/openapi_v3.yml',
         'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/prod/api/src/main/resources/openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/openapi-files/prod/FilesAPI.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/prod/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/prod/SystemsAPI.yaml',
@@ -156,14 +158,14 @@ RESOURCES = {
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/prod/AppsAPI.yaml',
-        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/prod/src/api/specs/WorkflowsAPI.yaml'
-
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/prod/src/api/specs/WorkflowsAPI.yaml',
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/prod/NotificationsAPI.yaml'
     },
     'staging': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/staging/service/resources/openapi_v3.yml',
         'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/staging/api/src/main/resources/openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/openapi-files/staging/FilesAPI.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/staging/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/staging/SystemsAPI.yaml',
@@ -173,13 +175,14 @@ RESOURCES = {
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/staging/AppsAPI.yaml',
-        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/stage/src/api/specs/WorkflowsAPI.yaml'
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/stage/src/api/specs/WorkflowsAPI.yaml',
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/staging/NotificationsAPI.yaml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
         'authenticator': 'https://raw.githubusercontent.com/tapis-project/authenticator/dev/service/resources/openapi_v3.yml',
         'meta': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/meta-client/src/main/resources/metav3-openapi.yaml',
-        'files': 'https://raw.githubusercontent.com/tapis-project/tapis-files/dev/api/src/main/resources/openapi.yaml',
+        'files': 'https://raw.githubusercontent.com/tapis-project/openapi-files/dev/FilesAPI.yaml',
         'sk': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/security-client/src/main/resources/SKAuthorizationAPI.yaml',
         'streams': 'https://raw.githubusercontent.com/tapis-project/streams-api/dev/service/resources/openapi_v3.yml',
         'systems': 'https://raw.githubusercontent.com/tapis-project/openapi-systems/dev/SystemsAPI.yaml',
@@ -189,7 +192,8 @@ RESOURCES = {
         'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/dev/AppsAPI.yaml',
-        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/dev/src/api/specs/WorkflowsAPI.yaml'
+        'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/dev/src/api/specs/WorkflowsAPI.yaml',
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/dev/NotificationsAPI.yaml'
     }
 }
 
@@ -213,6 +217,7 @@ if __name__ == "__main__":
                             RESOURCES['local']['pods']: RESOURCES['tapipy']['pods'],
                             RESOURCES['local']['jobs']: RESOURCES['tapipy']['jobs'],
                             RESOURCES['local']['apps']: RESOURCES['tapipy']['apps'],
+                            RESOURCES['local']['notifications']: RESOURCES['tapipy']['notifications'],
                             RESOURCES['local']['workflows']: RESOURCES['tapipy']['workflows']}
 
     # Set 2 updates all tapipy pickle files with the specs contained

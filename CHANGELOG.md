@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.2.15 - 2022-10-26
+### Added
+- Adding notifications spec.
+
+### Changed
+- Changing files url. Updating workflows and files spec.
+
+### Removed
+- No change.
+
+
 ## 1.2.14 - 2022-10-25
 ### Added
 - No change.

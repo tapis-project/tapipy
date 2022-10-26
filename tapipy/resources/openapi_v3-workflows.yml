@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Workflows API
   description: Create and manage pipelines
-  version: '0.1'
+  version: '1.2.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Workflows API - CICSupport"

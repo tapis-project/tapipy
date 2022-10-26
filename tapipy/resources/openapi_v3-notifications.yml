@@ -1,0 +1,1487 @@
+openapi: 3.0.3
+info:
+  title: Tapis Notifications API
+  description: The Tapis Notifications API provides for management of subscriptions and event publication
+  version: '0.0.1'
+  termsOfService: "https://tapis-project.org"
+  contact:
+    name: "Notifications API - CICSupport"
+    url: "https://tapis-project.org"
+    email: "cicsupport@tacc.utexas.edu"
+  license:
+    name: 3-Clause BSD License
+    url: 'https://opensource.org/licenses/BSD-3-Clause'
+externalDocs:
+  description: Tapis Project
+  url: 'https://tapis-project.org'
+servers:
+  - url: 'http://localhost:8080/'
+    description: Local test environment
+    variables: {}
+  - url: 'https://dev.develop.tapis.io/'
+    description: Development environment
+    variables: {}
+security:
+  - TapisJWT: []
+tags:
+  - name: General
+    description: General service health and readiness
+  - name: Subscriptions
+    description: Manage notification subscriptions. Create, retrieve, update, etc.
+  - name: Events
+    description: Event publication
+  - name: Test
+    description: Support for managing a sequence of test notifications.
+
+# ------------------------------------------------------------------------------
+# --- Paths -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+paths:
+
+  # --- Paths for /notifications -----------------------------------------------------
+  '/v3/notifications/healthcheck':
+    get:
+      tags:
+        - General
+      description: Health check. Lightweight non-authenticated check that service is alive.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+  '/v3/notifications/readycheck':
+    get:
+      tags:
+        - General
+      description: Ready check. Non-authenticated check that service is ready to do work.
+      operationId: readyCheck
+      responses:
+        '200':
+          description: Service ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '503':
+          description: Service not ready.
+
+  # --- Paths for /notifications/subscriptions ------------------------------------------------
+  '/v3/notifications/subscriptions':
+    get:
+      tags:
+        - Subscriptions
+      description: | 
+        Retrieve list of subscriptions owned by the requesting user. Use search and select query parameters to limit results.
+        
+        Query parameter *ownedBy* may be used to retrieve subscriptions owned by a user other than the requesting user.
+        Ignored if *anyOwner* is set to true.
+        
+        Query parameter *anyOwner* may be used to retrieve all subscriptions owned by any user.
+        Query parameter *anyOwner* takes precedence over parameter *ownedBy*
+      operationId: getSubscriptions
+      parameters:
+        - name: search
+          in: query
+          description: Search conditions as a single query parameter. For example search=(name.like.MySubscr*)~(enabled.eq.false)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
+          schema:
+            type: integer
+            default: 100
+        - name: orderBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example orderBy=name(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=name(asc)&startAfter=my.sub1
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=owner,name,typeFilter.
+          schema:
+            type: string
+            default: 'summaryAttributes'
+        - name: ownedBy
+          in: query
+          description: Retrieve subscriptions owned by a user other than the requesting user. Ignored if *anyOwner* is true.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+        - name: anyOwner
+          in: query
+          description: Include subscriptions owned by any user. If set to true then *ownedBy* is ignored. Default is false.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubscriptions'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Subscriptions
+      description: |
+        Create a subscription using a request body. Only services may create subscriptions.
+
+        For each owner the *name* must be unique and can be composed of alphanumeric characters and the following
+        special characters [-._~]. If attribute *name* is not provided then the service will generate one.
+        The attributes *typeFilter*, *subjectFilter* and *deliveryTargets* are required.
+        
+        Subscription attributes:
+          - name: Optional short descriptive name. *owner+name* must be unique. If one is not provided the service will create one.
+          - description: Optional more verbose description. Maximum length of 2048 characters.
+          - owner: A specific user set at create time. Default is *${apiUserId}*.
+          - enabled: Indicates if subscription is active. By default enabled is true. 
+          - typeFilter: Filter to use when matching events. Filter for event type. Has three dot separated parts: *service*, *category* and *detail*. Each field may be a specific type or the wildcard character. Examples are *jobs.job.complete*, *jobs.new_status.**.
+          - subjectFilter: Filter to use when matching events. Filter for subject. This may be a specific subject such as a job Id or the wildcard character *.
+          - deliveryTargets: List of delivery targets to be used when delivering a matching event. Each target includes delivery method (EMAIL or WEBHOOK) and delivery address.
+          - ttlMinutes: Time to live in minutes specified when subscription is created or TTL is updated. Service will compute expiry based on TTL. Default is one week from creation. Value of 0 indicates no expiration.
+      operationId: postSubscription
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the subscription to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPostSubscription'
+      responses:
+        '201':
+          description: Subscription created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '409':
+          description: Subscription already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/search':
+    get:
+      tags:
+        - Subscriptions
+      description: |
+        Retrieve details for subscriptions owned by the requesting user.
+        Use query parameters to specify search conditions. For example name.eq=MySubscription.
+        Query parameter *ownedBy* may be used to retrieve subscriptions owned by another user.
+      operationId: searchSubscriptionsQueryParameters
+      parameters:
+        - name: freeFormParameterName
+          in: query
+          description: Free form query parameters.
+          explode: true
+          allowEmptyValue: true
+          schema:
+            type: object
+            additionalProperties:
+              type: string
+          style: form
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
+          schema:
+            type: integer
+            default: 100
+        - name: orderBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example orderBy=name(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=name(asc)&startAfter=my.sub2
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=owner,name,typeFilter
+          schema:
+            type: string
+            default: 'summaryAttributes'
+        - name: ownedBy
+          in: query
+          description: Retrieve subscriptions owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubscriptions'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - Subscriptions
+      description: |
+        Retrieve details for subscriptions owned by the requesting user.
+        Use request body to specify SQL-like search conditions.
+        Query parameter *ownedBy* may be used to retrieve subscriptions owned by another user.
+      operationId: searchSubscriptionsRequestBody
+      parameters:
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
+          schema:
+            type: integer
+            default: 100
+        - name: orderBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example orderBy=name(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=name(asc)&startAfter=my.sub1
+          schema:
+            type: string
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=owner,name,typeFilter
+          schema:
+            type: string
+            default: 'summaryAttributes'
+        - name: ownedBy
+          in: query
+          description: Retrieve subscriptions owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      requestBody:
+        required: true
+        description: A JSON object specifying SQL-like search conditions as an array of strings. Strings are concatenated to form full search query.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqSearchSubscriptions'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubscriptions'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/byName/{name}':
+    get:
+      tags:
+        - Subscriptions
+      description: |
+        Retrieve a subscription owned by the requesting user and whose name matches the provided value.
+        Query parameter *ownedBy* may be used to retrieve a subscription owned by another user.
+
+        Summary of subscription attributes. For details please see *postSubscription*:
+          - owner: Tapis user who owns the subscription.
+          - name: Short descriptive name.
+          - description: Optional more verbose description.
+          - enabled: Indicates if subscription is currently active. 
+          - typeFilter: Filter to use when matching events. Format is *<service>.<category>.<detail>*. Each field may be a specific type or the wildcard character *.
+          - subjectFilter: Filter to use when matching events. Filter for subject. May be wildcard character *.
+          - deliveryTargets: List of delivery targets to be used when delivering a matching event.
+          - ttlMinutes: Time to live in minutes. 0 indicates no expiration.
+          - uuid: A UUID generated by the service.
+          - expiry: Time at which the subscription expires and will be deleted. Maintained by the service.
+          - created: When created. Maintained by the service.
+          - updated: When last updated. Maintained by the service.
+      operationId: getSubscriptionByName
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: select
+          in: query
+          description: List of attributes to be included as part of the result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=owner,name,typeFilter
+          schema:
+            type: string
+            default: 'allAttributes'
+        - name: ownedBy
+          in: query
+          description: Retrieve subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Subscription found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubscription'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    patch:
+      tags:
+        - Subscriptions
+      description: |
+        Update selected attributes of a subscription owned by the requesting user and whose name matches the provided value.
+        Request body may only contain updatable attributes. Subscription must exist.
+        Query parameter *ownedBy* may be used to patch a subscription owned by another user.
+
+        Attributes that may not be updated via PATCH are
+
+          - name
+          - owner
+          - enabled
+          - ttlMinutes
+
+        Note that the attributes *enabled* and *ttlMinutes* may be modified using other endpoints.
+      operationId: patchSubscriptionByName
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: ownedBy
+          in: query
+          description: Patch a subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      requestBody:
+        required: true
+        description: A JSON object specifying changes to be applied.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqPatchSubscription'
+      responses:
+        '200':
+          description: Subscription updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceUrl'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - Subscriptions
+      description: |
+        Delete a subscription owned by the requesting user and whose name matches the provided value.
+        Events will stop being delivered. Subscription must be re-created to resume event delivery.
+        Query parameter *ownedBy* may be used to delete a subscription owned by another user.
+      operationId: deleteSubscriptionByName
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: ownedBy
+          in: query
+          description: Delete a subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Subscription deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/byUuid/{uuid}':
+    get:
+      tags:
+        - Subscriptions
+      description: |
+        Retrieve a subscription whose UUID matches the provided value.
+
+        Summary of subscription attributes. For details please see *postSubscription*:
+          - owner: Tapis user who owns the subscription.
+          - name: Short descriptive name.
+          - description: Optional more verbose description.
+          - enabled: Indicates if subscription is currently active. 
+          - typeFilter: Filter to use when matching events. Format is *<service>.<category>.<detail>*. Each field may be a specific type or the wildcard character *.
+          - subjectFilter: Filter to use when matching events. Filter for subject. May be wildcard character *.
+          - deliveryTargets: List of delivery targets to be used when delivering a matching event.
+          - ttlMinutes: Time to live in minutes. 0 indicates no expiration.
+          - uuid: A UUID generated by the service.
+          - expiry: Time at which the subscription expires and will be deleted. Maintained by the service.
+          - created: When created. Maintained by the service.
+          - updated: When last updated. Maintained by the service.
+      operationId: getSubscriptionByUuid
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: select
+          in: query
+          description: List of attributes to be included as part of the result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=owner,name,typeFilter
+          schema:
+            type: string
+            default: 'allAttributes'
+      responses:
+        '200':
+          description: Subscription found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubscription'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - Subscriptions
+      description: |
+        Delete a subscription whose UUID matches the provided value.
+      operationId: deleteSubscriptionByUuid
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Subscription deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/bySubject/{subject}':
+    delete:
+      tags:
+        - Subscriptions
+      description: |
+        Delete all subscriptions whose *subjectFilter* matches the specific *subject* provided.
+
+        Query parameter *ownedBy* may be used to delete subscriptions owned by a user other than the requesting user.
+        Ignored if *anyOwner* is set to true.
+        
+        Query parameter *anyOwner* may be used to delete subscriptions owned by any user.
+        Query parameter *anyOwner* takes precedence over parameter *ownedBy*
+      operationId: deleteSubscriptionsBySubject
+      parameters:
+        - name: subject
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: ownedBy
+          in: query
+          description: Delete subscriptions owned by a user other than the requesting user. Ignored if *anyOwner* is true.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+        - name: anyOwner
+          in: query
+          description: Delete subscriptions owned by any user. If set to true then *ownedBy* is ignored. Default is false.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Subscriptions deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/{name}/isEnabled':
+    get:
+      tags:
+        - Subscriptions
+      description: |
+        Check if a subscription owned by the requesting user is currently active.
+        Query parameter *ownedBy* may be used to check a subscription owned by another user.
+      operationId: isEnabled
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: ownedBy
+          in: query
+          description: Check a subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Check successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBoolean'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/{name}/enable':
+    post:
+      tags:
+        - Subscriptions
+      description: |
+        Update a subscription owned by the requesting user to be active. Matching events will start being delivered.
+        Query parameter *ownedBy* may be used to enable a subscription owned by another user.
+      operationId: enableSubscription
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: ownedBy
+          in: query
+          description: Update a subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Subscription enabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/{name}/disable':
+    post:
+      tags:
+        - Subscriptions
+      description: |
+        Update a subscription owned by the requesting user to be inactive. Matching events will stop being delivered.
+        Query parameter *ownedBy* may be used to disable a subscription owned by another user.
+      operationId: disableSubscription
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: ownedBy
+          in: query
+          description: Update a subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Subscription disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/subscriptions/{name}/updateTTL/{ttlMinutes}':
+    post:
+      tags:
+        - Subscriptions
+      description: |
+        Update Time-To-Live (TTL) for a subscription owned by the requesting user.
+        TTL provided as number of minutes. Use 0 to indicate subscription should never expire.
+        Query parameter *ownedBy* may be used to update a subscription owned by another user.
+      operationId: updateTTL
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+        - name: ttlMinutes
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: ownedBy
+          in: query
+          description: Update a subscription owned by a user other than the requesting user.
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+      responses:
+        '200':
+          description: Subscription TTL updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for notifications/events ------------------------------------------------
+  '/v3/notifications/events':
+    post:
+      tags:
+        - Events
+      description: |
+        Publish an event to be distributed to all subscribers. Only services may publish events.
+        
+        The attributes *source*, *type* and *timestamp* are required.
+        Event attributes:
+          - source: Context in which event happened: Examples: *Jobs*, *Systems*.
+          - type: Type of event. Used for routing notifications. A series of 3 fields separated by the dot character. Pattern is *<service>.<category>.<detail>*. Examples: *jobs.new_status.complete*, *systems.system.create*, *files.object.delete*
+          - subject: Subject of event in the context of the service. Examples: job Id, system Id, file path, role name, etc.
+          - seriesId: Optional Id that may be used to group events from the same source in a series, thereby preserving event order during notification delivery.
+          - timestamp: When the event happened.
+          - data: Optional additional information associated with the event. Data specific to the service associated with the event.
+        
+        Note that events are not persisted by the front end api service. When received they are simply sent to a
+        message broker. The back end dispatch service will persist events temporarily in order to support recovery.
+      operationId: postEvent
+      parameters:
+        - name: tenant
+          in: query
+          description: Highly restricted. Tenant associated with the event. Only services may set the tenant. By default, oboTenant from the JWT is used.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        description: A JSON object specifying the event details.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '200':
+          description: Event published.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  # --- Paths for notifications/test ------------------------------------------------
+  '/v3/notifications/test/begin':
+    post:
+      tags:
+        - Test
+      description: |
+        Start a test sequence by creating a subscription and publishing an initial event matching the subscription.
+        The subscription will have the following properties:
+          - owner: <api_user>
+          - name: <subscription_uuid>
+          - typeFilter: notifications.test.*
+          - subjectFilter: <subscription_uuid>
+          - deliveryTarget:
+            - deliveryMethod: WEBHOOK
+            - deliveryAddress: <tenant_base_url>/v3/notifications/test/callback/<subscription_uuid>
+          - ttlMinutes: 60
+
+        The default TTL of 1 hour may be overridden using the query parameter *subscriptionTTL*.
+
+        The initial event will have the following properties:
+          - source: <tenant_base_url>/v3/notifications/test
+          - type: notifications.test.begin
+          - subject: <subscription_uuid>
+
+        The initial event will be published to the main queue and the subscription will be returned to the caller.
+        The sequence of test events may be continued by publishing events that match the test subscription. 
+        Results will be recorded when notifications associated with the test are received via the callback.
+        The first notification should be recorded shortly after the initial event is published.
+      operationId: beginTestSequence
+      parameters:
+        - name: subscriptionTTL
+          in: query
+          description: Subscription TTL in minutes. Default is 60 minutes. A TTL of 0 or less indicates no expiration.
+          schema:
+            type: integer
+            default: 60
+      requestBody:
+        required: false
+        description: A json request body. Not used but required to correctly generate the client.
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Test subscription created and test event published.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSubscription'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/test/{name}':
+    get:
+      tags:
+        - Test
+      description: |
+        Retrieve status and result history for a test sequence created using the endpoint *test/begin*.
+      operationId: getTestSequence
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+      responses:
+        '200':
+          description: Results found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespTestSequence'
+        '400':
+          description: Subscription is not associated with a test sequence.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Subscription not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - Test
+      description: |
+        Delete all test sequence artifacts including the subscription and results.
+      operationId: deleteTestSequence
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+      responses:
+        '200':
+          description: Test sequence deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '400':
+          description: Subscription is not associated with a test sequence.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Test sequence not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/notifications/test/callback/{name}':
+    post:
+      tags:
+        - Test
+      description: |
+        Callback endpoint for receiving a notification associated with a test sequence.
+        Results will be recorded when notifications associated with the test are received via the callback.
+      operationId: recordTestNotification
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/NameString'
+      requestBody:
+        required: true
+        description: A JSON object with event details.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Notification'
+      responses:
+        '200':
+          description: Test event received and recorded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Subscription is not associated with a test sequence.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Test sequence not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+# ------------------------------------------------------------------------------
+# --- Components ---------------------------------------------------------------
+# ------------------------------------------------------------------------------
+components:
+  securitySchemes:
+    TapisJWT:
+      type: apiKey
+      description: Tapis signed JWT token authentication
+      name: X-Tapis-Token
+      in: header
+  schemas:
+    # ------------------------------------------------------------------------------
+    # --- Model objects ------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+
+    # --- TapisSubscription --------------------------------------------------------
+    TapisSubscription:
+      type: object
+      properties:
+        tenant:
+          type: string
+        name:
+          $ref: '#/components/schemas/NameString'
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        owner:
+          $ref: '#/components/schemas/UserNameApiDefaultString'
+        enabled:
+          type: boolean
+          default: true
+        typeFilter:
+          $ref: '#/components/schemas/TypeFilterString'
+        subjectFilter:
+          $ref: '#/components/schemas/SubjectFilterString'
+        deliveryTargets:
+          $ref: '#/components/schemas/DeliveryTargets'
+        ttlMinutes:
+          type: integer
+        uuid:
+          type: string
+        expiry:
+          type: string
+        created:
+          type: string
+        updated:
+          type: string
+   # --- DeliveryTargets --------------------------------------------------------
+    DeliveryTargets:
+      type: array
+      items:
+        $ref: '#/components/schemas/DeliveryTarget'
+    # --- DeliveryTarget ------------------------------------------------------------
+    DeliveryTarget:
+      type: object
+      required:
+        - deliveryMethod
+        - deliveryAddress
+      properties:
+        deliveryMethod:
+          $ref: '#/components/schemas/DeliveryMethod'
+        deliveryAddress:
+          type: string
+    # --- Event ------------------------------------------------------------
+    Event:
+      type: object
+      required:
+        - source
+        - type
+        - timestamp
+      properties:
+        source:
+          type: string
+        type:
+          type: string
+        subject:
+          type: string
+        data:
+          type: string
+        seriesId:
+          type: string
+        timestamp:
+          type: string
+        deleteSubscriptionsMatchingSubject:
+          type: boolean
+    # --- Notification ------------------------------------------------------------
+    Notification:
+      type: object
+      required:
+        - uuid
+        - tenant
+        - name
+        - deliveryTarget
+        - event
+        - created
+      properties:
+        uuid:
+          type: string
+        tenant:
+          type: string
+        name:
+          type: string
+        deliveryTarget:
+          $ref: '#/components/schemas/DeliveryTarget'
+        event:
+          $ref: '#/components/schemas/Event'
+        created:
+          type: string
+    # --- String types with constraints ------------------------------------
+    NameString:
+      type: string
+      minLength: 1
+      maxLength: 188
+    DescriptionString:
+      type: string
+      maxLength: 2048
+    UserNameString:
+      type: string
+      minLength: 1
+      maxLength: 60
+    UserNameApiDefaultString:
+      type: string
+      minLength: 1
+      maxLength: 60
+      default: "${apiUserId}"
+    TypeFilterString:
+      type: string
+      minLength: 5
+      maxLength: 128
+    SubjectFilterString:
+      type: string
+      minLength: 1
+      maxLength: 150
+    # --- TestSequence --------------------------------------------------------
+    TestSequence:
+      type: object
+      properties:
+        tenant:
+          type: string
+        subscription:
+          $ref: '#/components/schemas/TapisSubscription'
+        receivedEvents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+    # -------------------------------------------------------------------------
+    # --- Request objects -----------------------------------------------------
+    # -------------------------------------------------------------------------
+    ReqPostSubscription:
+      type: object
+      required:
+        - typeFilter
+        - subjectFilter
+        - deliveryTargets
+      properties:
+        name:
+          $ref: '#/components/schemas/NameString'
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        owner:
+          $ref: '#/components/schemas/UserNameApiDefaultString'
+        enabled:
+          type: boolean
+          default: true
+        typeFilter:
+          $ref: '#/components/schemas/TypeFilterString'
+        subjectFilter:
+          $ref: '#/components/schemas/SubjectFilterString'
+        deliveryTargets:
+          $ref: '#/components/schemas/DeliveryTargets'
+        ttlMinutes:
+          type: integer
+    ReqPatchSubscription:
+      type: object
+      properties:
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        typeFilter:
+          $ref: '#/components/schemas/TypeFilterString'
+        subjectFilter:
+          $ref: '#/components/schemas/SubjectFilterString'
+        deliveryTargets:
+          $ref: '#/components/schemas/DeliveryTargets'
+    ReqSearchSubscriptions:
+      type: object
+      required:
+        - search
+      properties:
+        search:
+          type: array
+          minItems: 1
+          items:
+            type: string
+    # -------------------------------------------------------------------------
+    # --- Response objects ----------------------------------------------------
+    # -------------------------------------------------------------------------
+    RespBasic:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: object
+        metadata:
+          type: object
+    RespBoolean:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultBoolean'
+        metadata:
+          type: object
+    ResultBoolean:
+      type: object
+      properties:
+        aBool:
+          type: boolean
+    RespNameArray:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultNameArray'
+        metadata:
+          type: object
+    ResultNameArray:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+    RespChangeCount:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultChangeCount'
+        metadata:
+          type: object
+    ResultChangeCount:
+      type: object
+      properties:
+        changes:
+          type: integer
+          format: int32
+    RespResourceUrl:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultResourceUrl'
+        metadata:
+          type: object
+    ResultResourceUrl:
+      type: object
+      properties:
+        url:
+          type: string
+    RespSubscription:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/TapisSubscription'
+        metadata:
+          type: object
+    RespSubscriptions:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/TapisSubscription'
+        metadata:
+          type: object
+          properties:
+            recordCount:
+              type: integer
+            recordLimit:
+              type: integer
+            recordsSkipped:
+              type: integer
+            orderBy:
+              type: string
+            startAfter:
+              type: string
+            totalCount:
+              type: integer
+    RespTestSequence:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/TestSequence'
+        metadata:
+          type: object
+    # -------------------------------------------------------------------------
+    # --- Enums ---------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    DeliveryMethod:
+      type: string
+      enum:
+        - WEBHOOK
+        - EMAIL
