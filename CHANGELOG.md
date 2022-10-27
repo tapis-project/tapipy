@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.16 - 2022-10-27
+### Added
+- No change.
+
+### Changed
+- Updating spec for jobs.
+
+### Removed
+- No change.
+
+
 ## 1.2.15 - 2022-10-26
 ### Added
 - Adding notifications spec.
