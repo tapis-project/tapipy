@@ -331,3 +331,11 @@ def test_download_service_dev_specs():
               resource_set="dev")
     t.get_tokens()
     return t
+
+def test_download_service_local_specs():
+    t = Tapis(base_url=BASE_URL,
+              username=USERNAME,
+              password=PASSWORD,
+              resource_set="local")
+    t.get_tokens()
+    return t

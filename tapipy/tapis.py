@@ -43,21 +43,21 @@ def _seq_but_not_str(obj: object) -> bool:
 # currently the files spec is missing operationId's for some of its operations.
 RESOURCES = {
     'local':{
-        'actors': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-actors.yml",
-        'authenticator': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-authenticator.yml",
-        'meta': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-meta.yml",
-        'files': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-files.yml",
-        'sk': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-sk.yml",
-        'streams': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-streams.yml",
-        'systems': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-systems.yml",
-        'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-tenants.yml",
-        'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-tokens.yml",
-        'pgrest': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-pgrest.yml",
-        'pods': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-pods.yml",
-        'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-jobs.yml",
-        'apps': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-apps.yml",
-        'workflows': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-workflows.yml",
-        'notifications': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-notifications.yml"
+        'actors': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-actors.yml",
+        'authenticator': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-authenticator.yml",
+        'meta': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-meta.yml",
+        'files': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-files.yml",
+        'sk': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-sk.yml",
+        'streams': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-streams.yml",
+        'systems': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-systems.yml",
+        'tenants': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tenants.yml",
+        'tokens': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-tokens.yml",
+        'pgrest': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pgrest.yml",
+        'pods': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-pods.yml",
+        'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-jobs.yml",
+        'apps': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-apps.yml",
+        'workflows': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-workflows.yml",
+        'notifications': f"local: {os.path.join(os.path.dirname(__file__), 'resources')}/openapi_v3-notifications.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',

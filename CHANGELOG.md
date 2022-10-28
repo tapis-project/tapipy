@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.17 - 2022-10-28
+### Added
+- Added test to test running resource_set='local'.
+
+### Changed
+- Fixed bug when running resource_set='local'.
+
+### Removed
+- No change.
+
+
 ## 1.2.16 - 2022-10-27
 ### Added
 - No change.
