@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.2.3'
+  version: '1.2.4'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -88,14 +88,25 @@ paths:
     get:
       tags:
         - Applications
-      description: Retrieve list of applications. Use search and select query parameters to limit results.
+      description: |
+        Retrieve list of applications. Use *listType*, *search* and *select* query parameters to limit results. Query
+        parameter *listType* allows for filtering results based on authorization. Options for *listType* are
+
+          - *OWNED* Include only items owned by requester (Default)
+          - *SHARED_PUBLIC* Include only items shared publicly
+          - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: getApps
       parameters:
         - name: search
           in: query
-          description: Search conditions as a single query paramter. For example search=(id.like.MyApp*)~(enabled.eq.true)
+          description: Search conditions as a single query parameter. For example search=(id.like.MyApp*)~(enabled.eq.true)
           schema:
             type: string
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -221,9 +232,22 @@ paths:
     get:
       tags:
         - Applications
-      description: Retrieve details for applications. Use query parameters to specify search conditions. For example ?owner.eq=jdoe&enabled.eq=false
+      description: |
+        Retrieve details for applications. Use query parameters to specify search conditions.
+        For example ?owner.eq=jdoe&enabled.eq=false
+        Use *listType* and *select* query parameters to limit results. Query parameter *listType* allows
+        for filtering results based on authorization. Options for *listType* are
+
+          - *OWNED* Include only items owned by requester (Default)
+          - *SHARED_PUBLIC* Include only items shared publicly
+          - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: searchAppsQueryParameters
       parameters:
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -285,9 +309,21 @@ paths:
     post:
       tags:
         - Applications
-      description: Retrieve details for applications. Use request body to specify SQL-like search conditions.
+      description: |
+        Retrieve details for applications. Use request body to specify SQL-like search conditions.
+        Use *listType* and *select* query parameters to limit results. Query parameter *listType* allows
+        for filtering results based on authorization. Options for *listType* are
+
+          - *OWNED* Include only items owned by requester (Default)
+          - *SHARED_PUBLIC* Include only items shared publicly
+          - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: searchAppsRequestBody
       parameters:
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -621,7 +657,8 @@ paths:
     get:
       tags:
         - Applications
-      description: Check if an application is currently enabled, i.e. available for use.
+      description: |
+        Check if an application is currently enabled, i.e. available for use.
       operationId: isEnabled
       parameters:
         - name: appId
@@ -658,7 +695,8 @@ paths:
     post:
       tags:
         - Applications
-      description: Mark an application available for use. Applies to all versions.
+      description: |
+        Mark an application available for use. Applies to all versions.
       operationId: enableApp
       parameters:
         - name: appId
@@ -695,7 +733,8 @@ paths:
     post:
       tags:
         - Applications
-      description: Mark an application unavailable for use. Applies to all versions.
+      description: |
+        Mark an application unavailable for use. Applies to all versions.
       operationId: disableApp
       parameters:
         - name: appId
@@ -732,7 +771,8 @@ paths:
     post:
       tags:
         - Applications
-      description: Mark an application as deleted. Application will not appear in queries unless explicitly requested.
+      description: |
+        Mark an application as deleted. Application will not appear in queries unless explicitly requested.
       operationId: deleteApp
       parameters:
         - name: appId
@@ -769,7 +809,8 @@ paths:
     post:
       tags:
         - Applications
-      description: Mark an application as not deleted. Application will appear in queries.
+      description:  |
+        Mark an application as not deleted. Application will appear in queries.
       operationId: undeleteApp
       parameters:
         - name: appId
@@ -806,7 +847,8 @@ paths:
     post:
       tags:
         - Applications
-      description: Change owner of an application. Applies to all versions.
+      description:  |
+        Change owner of an application. Applies to all versions.
       operationId: changeAppOwner
       parameters:
         - name: appId
@@ -888,7 +930,8 @@ paths:
     get:
       tags:
         - Permissions
-      description: Retrieve all application related permissions for a given application and user.
+      description:  |
+        Retrieve all application related permissions for a given application and user.
       operationId: getUserPerms
       parameters:
         - name: appId
@@ -935,7 +978,8 @@ paths:
     post:
       tags:
         - Permissions
-      description: Create permissions in the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
+      description:  |
+        Create permissions in the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
       operationId: grantUserPerms
       parameters:
         - name: appId
@@ -985,7 +1029,8 @@ paths:
     post:
       tags:
         - Permissions
-      description: Remove permissions from the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
+      description:  |
+        Remove permissions from the Security Kernel for a user. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerms
       parameters:
         - name: appId
@@ -1029,7 +1074,8 @@ paths:
     delete:
       tags:
         - Permissions
-      description: Remove user permission from the Security Kernel. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
+      description:  |
+        Remove user permission from the Security Kernel. Requester must be owner. Permissions are READ, MODIFY, EXECUTE.
       operationId: revokeUserPerm
       parameters:
         - name: appId
@@ -1948,6 +1994,13 @@ components:
     # -------------------------------------------------------------------------
     # --- Enums ---------------------------------------------------------------
     # -------------------------------------------------------------------------
+    ListTypeEnum:
+      type: string
+      default: OWNED
+      enum:
+        - OWNED
+        - SHARED_PUBLIC
+        - ALL
     JobTypeEnum:
       type: string
       enum:

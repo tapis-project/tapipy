@@ -1,1360 +1,1092 @@
-{
-  "openapi":"3.0.2",
-  "info":{
-    "title":"Tapis Pods Service",
-    "description":"\nThe Pods Service is a web service and distributed computing platform providing pods-as-a-service (PaaS). The service \nimplements a message broker and processor model that requests pods, alongside a health module to poll for pod\ndata, including logs, status, and health. The primary use of this service is to have quick to deploy long-lived\nservices based on Docker images that are exposed via HTTP or TCP endpoints listed by the API.\n\n**The Pods service provides functionality for two types of pod solutions:**\n * **Templated Pods** for run-as-is popular images. Neo4J is one example, the template manages TCP ports, user creation, and permissions.\n * **Custom Pods** for arbitrary docker images with less functionality. In this case we will expose port 5000 and do nothing else.\n",
-    "contact":{
-      "name":"CIC Support",
-      "email":"cicsupport@tacc.utexas.edu"
-    },
-    "license":{
-      "name":"BSD 3.0",
-      "url":"https://github.com/tapis-project/pods_service"
-    },
-    "version":"0.30"
-  },
-  "paths":{
-    "/pods":{
-      "get":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"get_pods",
-        "description":"Get all pods in your respective tenant and site that you have READ or higher access to.\n\nReturns a list of pods.",
-        "operationId":"get_pods",
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodsResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"create_pod",
-        "description":"Create a pod with inputted information.\n\nNotes:\n- Author will be given ADMIN level permissions to the pod.\n- status_requested defaults to \"ON\". So pod will immediately begin creation.\n\nReturns new pod object.",
-        "operationId":"create_pod",
-        "requestBody":{
-          "content":{
-            "application/json":{
-              "schema":{
-                "$ref":"#/components/schemas/NewPod"
-              }
-            }
-          },
-          "required":true
-        },
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}":{
-      "get":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"get_pod",
-        "description":"Get a pod.\n\nReturns retrieved pod object.",
-        "operationId":"get_pod",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "put":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"update_pod",
-        "description":"Update a pod. CURRENTLY WORK IN PROGRESS. BROKEN.\n\nNote:\n- Pod will not be restarted, you must restart the pod for any pod-related changes to proliferate.\n\nReturns updated pod object.",
-        "operationId":"update_pod",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "requestBody":{
-          "content":{
-            "application/json":{
-              "schema":{
-                "$ref":"#/components/schemas/UpdatePod"
-              }
-            }
-          },
-          "required":true
-        },
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"delete_pod",
-        "description":"Delete a pod.\n\nReturns \"\".",
-        "operationId":"delete_pod",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/DeletePodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/credentials":{
-      "get":{
-        "tags":[
-          "Credentials"
-        ],
-        "summary":"get_pod_credentials",
-        "description":"Get the credentials created for a pod.\n\nNote:\n- These credentials are used in the case of templated pods, but for custom pods they're not.\n\nReturns user accessible credentials.",
-        "operationId":"get_pod_credentials",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodCredentialsResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/logs":{
-      "get":{
-        "tags":[
-          "Logs"
-        ],
-        "summary":"get_pod_logs",
-        "description":"Get a pods logs.\n\nNote:\n- These are only retrieved while pod is running.\n- If a pod is restarted or turned off and then on, the logs will be reset.\n\nReturns pod logs.",
-        "operationId":"get_pod_logs",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodLogsResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/permissions":{
-      "get":{
-        "tags":[
-          "Permissions"
-        ],
-        "summary":"get_pod_permissions",
-        "description":"Get a pods permissions.\n\nNote:\n- There are 3 levels of permissions, READ, USER, and ADMIN.\n- Permissions are granted/revoked to individual TACC usernames.\n\nReturns all pod permissions.",
-        "operationId":"get_pod_permissions",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodPermissionsResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post":{
-        "tags":[
-          "Permissions"
-        ],
-        "summary":"set_pod_permission",
-        "description":"Set a permission for a pod.\n\nReturns updated pod permissions.",
-        "operationId":"set_pod_permission",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "requestBody":{
-          "content":{
-            "application/json":{
-              "schema":{
-                "$ref":"#/components/schemas/SetPermission"
-              }
-            }
-          },
-          "required":true
-        },
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodPermissionsResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/permissions/{user}":{
-      "delete":{
-        "tags":[
-          "Permissions"
-        ],
-        "summary":"delete_pod_permission",
-        "description":"Delete a permission from a pod.\n\nReturns updated pod permissions.",
-        "operationId":"delete_pod_permission",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          },
-          {
-            "required":true,
-            "schema":{
-              "title":"User"
-            },
-            "name":"user",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodPermissionsResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/stop":{
-      "get":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"stop_pod",
-        "description":"Stop a pod.\n\nNote:\n- Sets status_requested to OFF. Pod will attempt to get to STOPPED status unless start_pod is ran.\n\nReturns updated pod object.",
-        "operationId":"stop_pod",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/start":{
-      "get":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"start_pod",
-        "description":"Start a pod.\n\nNote:\n- Sets status_requested to ON. Pod will attempt to deploy.\n\nReturns updated pod object.",
-        "operationId":"start_pod",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/pods/{pod_id}/restart":{
-      "get":{
-        "tags":[
-          "Pods"
-        ],
-        "summary":"restart_pod",
-        "description":"Restart a pod. CURRENTLY WORK IN PROGRESS. BROKEN.\n\nNote:\n- Sets status_requested to OFF. If pod status gets to STOPPED, status_requested will be flipped to ON.\n\nReturns updated pod object.",
-        "operationId":"restart_pod",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Pod Id"
-            },
-            "name":"pod_id",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/PodResponse"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/traefik-config":{
-      "get":{
-        "summary":"Api Traefik Config",
-        "description":"Supplies traefik-config to service. Returns json traefik-config object for\ntraefik to use with the http provider. Dynamic configs don't work well in \nKubernetes.",
-        "operationId":"api_traefik_config_traefik_config_get",
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/healthcheck":{
-      "get":{
-        "summary":"Api Healthcheck",
-        "description":"Health check for service. Returns healthy when api is running.\nShould add database health check, should add kubernetes health check",
-        "operationId":"api_healthcheck_healthcheck_get",
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/error-handler/{status}":{
-      "get":{
-        "summary":"Error Codes",
-        "description":"Handles all error codes from Traefik.",
-        "operationId":"error_codes_error_handler__status__get",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Status"
-            },
-            "name":"status",
-            "in":"path"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/TapisApiModel"
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/error-handler":{
-      "get":{
-        "summary":"Error Codes",
-        "description":"Handles all error codes from Traefik.",
-        "operationId":"error_codes_error_handler_get",
-        "parameters":[
-          {
-            "required":true,
-            "schema":{
-              "title":"Status"
-            },
-            "name":"status",
-            "in":"query"
-          }
-        ],
-        "responses":{
-          "200":{
-            "description":"Successful Response",
-            "content":{
-              "application/json":{
-                "schema":{
-                  
-                }
-              }
-            }
-          },
-          "422":{
-            "description":"Validation Error",
-            "content":{
-              "application/json":{
-                "schema":{
-                  "$ref":"#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components":{
-    "schemas":{
-      "CredentialsModel":{
-        "title":"CredentialsModel",
-        "required":[
-          "user_username",
-          "user_password"
-        ],
-        "type":"object",
-        "properties":{
-          "user_username":{
-            "title":"User Username",
-            "type":"string"
-          },
-          "user_password":{
-            "title":"User Password",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "DeletePodResponse":{
-        "title":"DeletePodResponse",
-        "required":[
-          "message",
-          "metadata",
-          "result",
-          "status",
-          "version"
-        ],
-        "type":"object",
-        "properties":{
-          "message":{
-            "title":"Message",
-            "type":"string"
-          },
-          "metadata":{
-            "title":"Metadata",
-            "type":"object"
-          },
-          "result":{
-            "title":"Result",
-            "type":"string"
-          },
-          "status":{
-            "title":"Status",
-            "type":"string"
-          },
-          "version":{
-            "title":"Version",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "HTTPValidationError":{
-        "title":"HTTPValidationError",
-        "type":"object",
-        "properties":{
-          "detail":{
-            "title":"Detail",
-            "type":"array",
-            "items":{
-              "$ref":"#/components/schemas/ValidationError"
-            }
-          }
-        }
-      },
-      "LogsModel":{
-        "title":"LogsModel",
-        "type":"object",
-        "properties":{
-          "logs":{
-            "title":"Logs",
-            "type":"string",
-            "description":"Logs from kubernetes pods, useful for debugging and reading results.",
-            "default":""
-          }
-        },
-        "additionalProperties":false
-      },
-      "NewPod":{
-        "title":"NewPod",
-        "required":[
-          "pod_id",
-          "pod_template"
-        ],
-        "type":"object",
-        "properties":{
-          "pod_id":{
-            "title":"Pod Id",
-            "type":"string",
-            "description":"Name of this pod."
-          },
-          "pod_template":{
-            "title":"Pod Template",
-            "type":"string",
-            "description":"Which pod template to use, or which custom image to run, must be on allowlist."
-          },
-          "description":{
-            "title":"Description",
-            "type":"string",
-            "description":"Description of this pod.",
-            "default":""
-          },
-          "command":{
-            "title":"Command",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Command to run in pod."
-          },
-          "environment_variables":{
-            "title":"Environment Variables",
-            "type":"object",
-            "description":"Environment variables to inject into k8 pod; Only for custom pods.",
-            "default":{
-              
-            }
-          },
-          "data_requests":{
-            "title":"Data Requests",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Requested pod names.",
-            "default":[
-              
-            ]
-          },
-          "roles_required":{
-            "title":"Roles Required",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Roles required to view this pod",
-            "default":[
-              
-            ]
-          },
-          "persistent_volume":{
-            "title":"Persistent Volume",
-            "type":"object",
-            "description":"Key: Volume name. Value: List of strs specifying volume folders/files to mount in pod",
-            "default":{
-              
-            }
-          },
-          "time_to_stop_default":{
-            "title":"Time To Stop Default",
-            "type":"integer",
-            "description":"Default time (sec) for pod to run from instance start. -1 for unlimited. 12 hour default.",
-            "default":43200
-          },
-          "time_to_stop_instance":{
-            "title":"Time To Stop Instance",
-            "type":"integer",
-            "description":"Time (sec) for pod to run from instance start. Reset each time instance is started. -1 for unlimited. 12 hour default."
-          },
-          "routing_port":{
-            "title":"Routing Port",
-            "type":"integer",
-            "description":"Port proxy points to in Pod.",
-            "default":5000
-          }
-        },
-        "additionalProperties":false,
-        "description":"Object with fields that users are allowed to specify for the Pod class."
-      },
-      "PermissionsModel":{
-        "title":"PermissionsModel",
-        "type":"object",
-        "properties":{
-          "permissions":{
-            "title":"Permissions",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Pod permissions for each user.",
-            "default":[
-              
-            ]
-          }
-        },
-        "additionalProperties":false
-      },
-      "PodCredentialsResponse":{
-        "title":"PodCredentialsResponse",
-        "required":[
-          "message",
-          "metadata",
-          "result",
-          "status",
-          "version"
-        ],
-        "type":"object",
-        "properties":{
-          "message":{
-            "title":"Message",
-            "type":"string"
-          },
-          "metadata":{
-            "title":"Metadata",
-            "type":"object"
-          },
-          "result":{
-            "$ref":"#/components/schemas/CredentialsModel"
-          },
-          "status":{
-            "title":"Status",
-            "type":"string"
-          },
-          "version":{
-            "title":"Version",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "PodLogsResponse":{
-        "title":"PodLogsResponse",
-        "required":[
-          "message",
-          "metadata",
-          "result",
-          "status",
-          "version"
-        ],
-        "type":"object",
-        "properties":{
-          "message":{
-            "title":"Message",
-            "type":"string"
-          },
-          "metadata":{
-            "title":"Metadata",
-            "type":"object"
-          },
-          "result":{
-            "$ref":"#/components/schemas/LogsModel"
-          },
-          "status":{
-            "title":"Status",
-            "type":"string"
-          },
-          "version":{
-            "title":"Version",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "PodPermissionsResponse":{
-        "title":"PodPermissionsResponse",
-        "required":[
-          "message",
-          "metadata",
-          "result",
-          "status",
-          "version"
-        ],
-        "type":"object",
-        "properties":{
-          "message":{
-            "title":"Message",
-            "type":"string"
-          },
-          "metadata":{
-            "title":"Metadata",
-            "type":"object"
-          },
-          "result":{
-            "$ref":"#/components/schemas/PermissionsModel"
-          },
-          "status":{
-            "title":"Status",
-            "type":"string"
-          },
-          "version":{
-            "title":"Version",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "PodResponse":{
-        "title":"PodResponse",
-        "required":[
-          "message",
-          "metadata",
-          "result",
-          "status",
-          "version"
-        ],
-        "type":"object",
-        "properties":{
-          "message":{
-            "title":"Message",
-            "type":"string"
-          },
-          "metadata":{
-            "title":"Metadata",
-            "type":"object"
-          },
-          "result":{
-            "$ref":"#/components/schemas/PodResponseModel"
-          },
-          "status":{
-            "title":"Status",
-            "type":"string"
-          },
-          "version":{
-            "title":"Version",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "PodResponseModel":{
-        "title":"PodResponseModel",
-        "required":[
-          "pod_id",
-          "pod_template"
-        ],
-        "type":"object",
-        "properties":{
-          "pod_id":{
-            "title":"Pod Id",
-            "type":"string",
-            "description":"Name of this pod."
-          },
-          "pod_template":{
-            "title":"Pod Template",
-            "type":"string",
-            "description":"Which pod template to use, or which custom image to run, must be on allowlist."
-          },
-          "description":{
-            "title":"Description",
-            "type":"string",
-            "description":"Description of this pod.",
-            "default":""
-          },
-          "command":{
-            "title":"Command",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Command to run in pod."
-          },
-          "environment_variables":{
-            "title":"Environment Variables",
-            "type":"object",
-            "description":"Environment variables to inject into k8 pod; Only for custom pods.",
-            "default":{
-              
-            }
-          },
-          "data_requests":{
-            "title":"Data Requests",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Requested pod names.",
-            "default":[
-              
-            ]
-          },
-          "roles_required":{
-            "title":"Roles Required",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Roles required to view this pod.",
-            "default":[
-              
-            ]
-          },
-          "status_requested":{
-            "title":"Status Requested",
-            "type":"string",
-            "description":"Status requested by user, ON or OFF.",
-            "default":"ON"
-          },
-          "url":{
-            "title":"Url",
-            "type":"string",
-            "description":"Url used to access this database if it is running."
-          },
-          "status":{
-            "title":"Status",
-            "type":"string",
-            "description":"Current status of pod.",
-            "default":"STOPPED"
-          },
-          "status_container":{
-            "title":"Status Container",
-            "type":"object",
-            "description":"Status of container if exists. Gives phase.",
-            "default":{
-              
-            }
-          },
-          "data_attached":{
-            "title":"Data Attached",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Data attached.",
-            "default":[
-              
-            ]
-          },
-          "roles_inherited":{
-            "title":"Roles Inherited",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Inherited roles required to view this pod",
-            "default":[
-              
-            ]
-          },
-          "creation_ts":{
-            "title":"Creation Ts",
-            "type":"string",
-            "description":"Time (UTC) that this node was created.",
-            "format":"date-time"
-          },
-          "update_ts":{
-            "title":"Update Ts",
-            "type":"string",
-            "description":"Time (UTC) that this node was updated.",
-            "format":"date-time"
-          },
-          "start_instance_ts":{
-            "title":"Start Instance Ts",
-            "type":"string",
-            "description":"Time (UTC) that this pod instance was started.",
-            "format":"date-time"
-          },
-          "persistent_volume":{
-            "title":"Persistent Volume",
-            "type":"object",
-            "description":"Key: Volume name. Value: List of strs specifying volume folders/files to mount in pod",
-            "default":{
-              
-            }
-          },
-          "time_to_stop_default":{
-            "title":"Time To Stop Default",
-            "type":"integer",
-            "description":"Default time (sec) for pod to run from instance start. -1 for unlimited. 12 hour default.",
-            "default":43200
-          },
-          "time_to_stop_instance":{
-            "title":"Time To Stop Instance",
-            "type":"integer",
-            "description":"Time (sec) for pod to run from instance start. Reset each time instance is started. -1 for unlimited. 12 hour default."
-          },
-          "time_to_stop_ts":{
-            "title":"Time To Stop Ts",
-            "type":"string",
-            "description":"Time (UTC) that this pod is scheduled to be stopped. Change with time_to_stop_instance.",
-            "format":"date-time"
-          },
-          "routing_port":{
-            "title":"Routing Port",
-            "type":"integer",
-            "description":"Port proxy points to in Pod.",
-            "default":5000
-          }
-        },
-        "additionalProperties":false
-      },
-      "PodsResponse":{
-        "title":"PodsResponse",
-        "required":[
-          "message",
-          "metadata",
-          "result",
-          "status",
-          "version"
-        ],
-        "type":"object",
-        "properties":{
-          "message":{
-            "title":"Message",
-            "type":"string"
-          },
-          "metadata":{
-            "title":"Metadata",
-            "type":"object"
-          },
-          "result":{
-            "title":"Result",
-            "type":"array",
-            "items":{
-              "$ref":"#/components/schemas/PodResponseModel"
-            }
-          },
-          "status":{
-            "title":"Status",
-            "type":"string"
-          },
-          "version":{
-            "title":"Version",
-            "type":"string"
-          }
-        },
-        "additionalProperties":false
-      },
-      "SetPermission":{
-        "title":"SetPermission",
-        "required":[
-          "user",
-          "level"
-        ],
-        "type":"object",
-        "properties":{
-          "user":{
-            "title":"User",
-            "type":"string",
-            "description":"User to modify permissions for."
-          },
-          "level":{
-            "title":"Level",
-            "type":"string",
-            "description":"Permission level to give the user."
-          }
-        },
-        "additionalProperties":false,
-        "description":"Object with fields that users are allowed to specify for the Pod class."
-      },
-      "TapisApiModel":{
-        "title":"TapisApiModel",
-        "type":"object",
-        "properties":{
-          
-        },
-        "additionalProperties":false
-      },
-      "UpdatePod":{
-        "title":"UpdatePod",
-        "required":[
-          "pod_id",
-          "pod_template"
-        ],
-        "type":"object",
-        "properties":{
-          "pod_id":{
-            "title":"Pod Id",
-            "type":"string",
-            "description":"Name of this pod."
-          },
-          "pod_template":{
-            "title":"Pod Template",
-            "type":"string",
-            "description":"Which pod template to use, or which custom image to run, must be on allowlist."
-          },
-          "description":{
-            "title":"Description",
-            "type":"string",
-            "description":"Description of this pod.",
-            "default":""
-          },
-          "command":{
-            "title":"Command",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Command to run in pod."
-          },
-          "data_requests":{
-            "title":"Data Requests",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Requested pod names.",
-            "default":[
-              
-            ]
-          },
-          "roles_required":{
-            "title":"Roles Required",
-            "type":"array",
-            "items":{
-              "type":"string"
-            },
-            "description":"Roles required to view this pod",
-            "default":[
-              
-            ]
-          },
-          "persistent_volume":{
-            "title":"Persistent Volume",
-            "type":"object",
-            "description":"Key: Volume name. Value: List of strs specifying volume folders/files to mount in pod",
-            "default":{
-              
-            }
-          },
-          "time_to_stop_instance":{
-            "title":"Time To Stop Instance",
-            "type":"integer",
-            "description":"Time (sec) for pod to run from instance start. Reset each time instance is started. -1 for unlimited. 12 hour default."
-          },
-          "routing_port":{
-            "title":"Routing Port",
-            "type":"integer",
-            "description":"Port proxy points to in Pod.",
-            "default":5000
-          }
-        },
-        "additionalProperties":false,
-        "description":"Object with fields that users are allowed to specify for the Pod class."
-      },
-      "ValidationError":{
-        "title":"ValidationError",
-        "required":[
-          "loc",
-          "msg",
-          "type"
-        ],
-        "type":"object",
-        "properties":{
-          "loc":{
-            "title":"Location",
-            "type":"array",
-            "items":{
-              "anyOf":[
-                {
-                  "type":"string"
-                },
-                {
-                  "type":"integer"
-                }
-              ]
-            }
-          },
-          "msg":{
-            "title":"Message",
-            "type":"string"
-          },
-          "type":{
-            "title":"Error Type",
-            "type":"string"
-          }
-        }
-      }
-    }
-  },
-  "tags":[
-    {
-      "name":"Pods",
-      "description":"Create and command pods."
-    },
-    {
-      "name":"Credentials",
-      "description":"Manage pod's credentials used."
-    },
-    {
-      "name":"Logs",
-      "description":"Manage pod logs."
-    },
-    {
-      "name":"Permissions",
-      "description":"Manage pod permissions. Grant specific TACC users **READ**, **USER**, and **ADMIN** level permissions."
-    }
-  ]
-}
+---
+openapi: 3.0.2
+info:
+  title: Tapis Pods Service
+  description: "\nThe Pods Service is a web service and distributed computing platform
+    providing pods-as-a-service (PaaS). The service \nimplements a message broker
+    and processor model that requests pods, alongside a health module to poll for
+    pod\ndata, including logs, status, and health. The primary use of this service
+    is to have quick to deploy long-lived\nservices based on Docker images that are
+    exposed via HTTP or TCP endpoints listed by the API.\n\n**The Pods service provides
+    functionality for two types of pod solutions:**\n * **Templated Pods** for run-as-is
+    popular images. Neo4J is one example, the template manages TCP ports, user creation,
+    and permissions.\n * **Custom Pods** for arbitrary docker images with less functionality.
+    In this case we will expose port 5000 and do nothing else.\n"
+  contact:
+    name: CIC Support
+    email: cicsupport@tacc.utexas.edu
+  license:
+    name: BSD 3.0
+    url: https://github.com/tapis-project/pods_service
+  version: '0.30'
+paths:
+  "/pods":
+    get:
+      tags:
+      - Pods
+      summary: get_pods
+      description: |-
+        Get all pods in your respective tenant and site that you have READ or higher access to.
+
+        Returns a list of pods.
+      operationId: get_pods
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodsResponse"
+    post:
+      tags:
+      - Pods
+      summary: create_pod
+      description: |-
+        Create a pod with inputted information.
+
+        Notes:
+        - Author will be given ADMIN level permissions to the pod.
+        - status_requested defaults to "ON". So pod will immediately begin creation.
+
+        Returns new pod object.
+      operationId: create_pod
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/NewPod"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}":
+    get:
+      tags:
+      - Pods
+      summary: get_pod
+      description: |-
+        Get a pod.
+
+        Returns retrieved pod object.
+      operationId: get_pod
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+    put:
+      tags:
+      - Pods
+      summary: update_pod
+      description: |-
+        Update a pod. CURRENTLY WORK IN PROGRESS. BROKEN.
+
+        Note:
+        - Pod will not be restarted, you must restart the pod for any pod-related changes to proliferate.
+
+        Returns updated pod object.
+      operationId: update_pod
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/UpdatePod"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+    delete:
+      tags:
+      - Pods
+      summary: delete_pod
+      description: |-
+        Delete a pod.
+
+        Returns "".
+      operationId: delete_pod
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/DeletePodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/credentials":
+    get:
+      tags:
+      - Credentials
+      summary: get_pod_credentials
+      description: |-
+        Get the credentials created for a pod.
+
+        Note:
+        - These credentials are used in the case of templated pods, but for custom pods they're not.
+
+        Returns user accessible credentials.
+      operationId: get_pod_credentials
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodCredentialsResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/logs":
+    get:
+      tags:
+      - Logs
+      summary: get_pod_logs
+      description: |-
+        Get a pods logs.
+
+        Note:
+        - These are only retrieved while pod is running.
+        - If a pod is restarted or turned off and then on, the logs will be reset.
+
+        Returns pod logs.
+      operationId: get_pod_logs
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodLogsResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/permissions":
+    get:
+      tags:
+      - Permissions
+      summary: get_pod_permissions
+      description: |-
+        Get a pods permissions.
+
+        Note:
+        - There are 3 levels of permissions, READ, USER, and ADMIN.
+        - Permissions are granted/revoked to individual TACC usernames.
+
+        Returns all pod permissions.
+      operationId: get_pod_permissions
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodPermissionsResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+    post:
+      tags:
+      - Permissions
+      summary: set_pod_permission
+      description: |-
+        Set a permission for a pod.
+
+        Returns updated pod permissions.
+      operationId: set_pod_permission
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/SetPermission"
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodPermissionsResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/permissions/{user}":
+    delete:
+      tags:
+      - Permissions
+      summary: delete_pod_permission
+      description: |-
+        Delete a permission from a pod.
+
+        Returns updated pod permissions.
+      operationId: delete_pod_permission
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      - required: true
+        schema:
+          title: User
+        name: user
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodPermissionsResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/stop":
+    get:
+      tags:
+      - Pods
+      summary: stop_pod
+      description: |-
+        Stop a pod.
+
+        Note:
+        - Sets status_requested to OFF. Pod will attempt to get to STOPPED status unless start_pod is ran.
+
+        Returns updated pod object.
+      operationId: stop_pod
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/start":
+    get:
+      tags:
+      - Pods
+      summary: start_pod
+      description: |-
+        Start a pod.
+
+        Note:
+        - Sets status_requested to ON. Pod will attempt to deploy.
+
+        Returns updated pod object.
+      operationId: start_pod
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/pods/{pod_id}/restart":
+    get:
+      tags:
+      - Pods
+      summary: restart_pod
+      description: |-
+        Restart a pod.
+
+        Note:
+        - Sets status_requested to RESTART. If pod status gets to STOPPED, status_requested will be flipped to ON. Health should then create new pod.
+
+        Returns updated pod object.
+      operationId: restart_pod
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/PodResponse"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/traefik-config":
+    get:
+      summary: Api Traefik Config
+      description: "Supplies traefik-config to service. Returns json traefik-config
+        object for\ntraefik to use with the http provider. Dynamic configs don't work
+        well in \nKubernetes."
+      operationId: api_traefik_config_traefik_config_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  "/healthcheck":
+    get:
+      summary: Api Healthcheck
+      description: |-
+        Health check for service. Returns healthy when api is running.
+        Should add database health check, should add kubernetes health check
+      operationId: api_healthcheck_healthcheck_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  "/error-handler/{status}":
+    get:
+      summary: Error Codes
+      description: Handles all error codes from Traefik.
+      operationId: error_codes_error_handler__status__get
+      parameters:
+      - required: true
+        schema:
+          title: Status
+        name: status
+        in: path
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/TapisApiModel"
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+  "/error-handler":
+    get:
+      summary: Error Codes
+      description: Handles all error codes from Traefik.
+      operationId: error_codes_error_handler_get
+      parameters:
+      - required: true
+        schema:
+          title: Status
+        name: status
+        in: query
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPValidationError"
+components:
+  schemas:
+    CredentialsModel:
+      title: CredentialsModel
+      required:
+      - user_username
+      - user_password
+      type: object
+      properties:
+        user_username:
+          title: User Username
+          type: string
+        user_password:
+          title: User Password
+          type: string
+      additionalProperties: false
+    DeletePodResponse:
+      title: DeletePodResponse
+      required:
+      - message
+      - metadata
+      - result
+      - status
+      - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          title: Result
+          type: string
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    HTTPValidationError:
+      title: HTTPValidationError
+      type: object
+      properties:
+        detail:
+          title: Detail
+          type: array
+          items:
+            "$ref": "#/components/schemas/ValidationError"
+    LogsModel:
+      title: LogsModel
+      type: object
+      properties:
+        logs:
+          title: Logs
+          type: string
+          description: Logs from kubernetes pods, useful for debugging and reading
+            results.
+          default: ''
+      additionalProperties: false
+    Networking:
+      title: Networking
+      type: object
+      properties:
+        protocol:
+          title: Protocol
+          type: string
+          description: Whether to use http or tcp routing for requests to this pod.
+          default: http
+        port:
+          title: Port
+          type: integer
+          description: Pod port to expose via networking.url in this networking object.
+          default: 5000
+        url:
+          title: Url
+          type: string
+          description: URL used to access the port of the pod defined in this networking
+            object.
+          default: ''
+      additionalProperties: false
+    NewPod:
+      title: NewPod
+      required:
+      - pod_id
+      - pod_template
+      type: object
+      properties:
+        pod_id:
+          title: Pod Id
+          type: string
+          description: Name of this pod.
+        pod_template:
+          title: Pod Template
+          type: string
+          description: Which pod template to use, or which custom image to run, must
+            be on allowlist.
+        description:
+          title: Description
+          type: string
+          description: Description of this pod.
+          default: ''
+        command:
+          title: Command
+          type: array
+          items:
+            type: string
+          description: Command to run in pod.
+        networking:
+          title: Networking
+          type: object
+          additionalProperties:
+            "$ref": "#/components/schemas/Networking"
+          description: 'Networking information. {''url_suffix'': {''protocol'': ''http''  ''tcp'',
+            ''port'': int}/}'
+          default:
+            default:
+              protocol: http
+              port: 5000
+        environment_variables:
+          title: Environment Variables
+          type: object
+          description: Environment variables to inject into k8 pod; Only for custom
+            pods.
+          default: {}
+        data_requests:
+          title: Data Requests
+          type: array
+          items:
+            type: string
+          description: Requested pod names.
+          default: []
+        roles_required:
+          title: Roles Required
+          type: array
+          items:
+            type: string
+          description: Roles required to view this pod
+          default: []
+        persistent_volume:
+          title: Persistent Volume
+          type: object
+          description: 'Key: Volume name. Value: List of strs specifying volume folders/files
+            to mount in pod'
+          default: {}
+        time_to_stop_default:
+          title: Time To Stop Default
+          type: integer
+          description: Default time (sec) for pod to run from instance start. -1 for
+            unlimited. 12 hour default.
+          default: 43200
+        time_to_stop_instance:
+          title: Time To Stop Instance
+          type: integer
+          description: Time (sec) for pod to run from instance start. Reset each time
+            instance is started. -1 for unlimited. 12 hour default.
+        resources:
+          title: Resources
+          allOf:
+          - "$ref": "#/components/schemas/Resources"
+          description: Pod reesource management
+          default: {}
+      additionalProperties: false
+      description: Object with fields that users are allowed to specify for the Pod
+        class.
+    PermissionsModel:
+      title: PermissionsModel
+      type: object
+      properties:
+        permissions:
+          title: Permissions
+          type: array
+          items:
+            type: string
+          description: Pod permissions for each user.
+          default: []
+      additionalProperties: false
+    PodCredentialsResponse:
+      title: PodCredentialsResponse
+      required:
+      - message
+      - metadata
+      - result
+      - status
+      - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          "$ref": "#/components/schemas/CredentialsModel"
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodLogsResponse:
+      title: PodLogsResponse
+      required:
+      - message
+      - metadata
+      - result
+      - status
+      - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          "$ref": "#/components/schemas/LogsModel"
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodPermissionsResponse:
+      title: PodPermissionsResponse
+      required:
+      - message
+      - metadata
+      - result
+      - status
+      - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          "$ref": "#/components/schemas/PermissionsModel"
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodResponse:
+      title: PodResponse
+      required:
+      - message
+      - metadata
+      - result
+      - status
+      - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          "$ref": "#/components/schemas/PodResponseModel"
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    PodResponseModel:
+      title: PodResponseModel
+      required:
+      - pod_id
+      - pod_template
+      type: object
+      properties:
+        pod_id:
+          title: Pod Id
+          type: string
+          description: Name of this pod.
+        pod_template:
+          title: Pod Template
+          type: string
+          description: Which pod template to use, or which custom image to run, must
+            be on allowlist.
+        description:
+          title: Description
+          type: string
+          description: Description of this pod.
+          default: ''
+        command:
+          title: Command
+          type: array
+          items:
+            type: string
+          description: Command to run in pod.
+        networking:
+          title: Networking
+          type: object
+          additionalProperties:
+            "$ref": "#/components/schemas/Networking"
+          description: 'Networking information. {''url_suffix'': {''protocol'': ''http''  ''tcp'',
+            ''port'': int}/}'
+          default:
+            default:
+              protocol: http
+              port: 5000
+        environment_variables:
+          title: Environment Variables
+          type: object
+          description: Environment variables to inject into k8 pod; Only for custom
+            pods.
+          default: {}
+        data_requests:
+          title: Data Requests
+          type: array
+          items:
+            type: string
+          description: Requested pod names.
+          default: []
+        roles_required:
+          title: Roles Required
+          type: array
+          items:
+            type: string
+          description: Roles required to view this pod.
+          default: []
+        status_requested:
+          title: Status Requested
+          type: string
+          description: Status requested by user, ON or OFF.
+          default: 'ON'
+        status:
+          title: Status
+          type: string
+          description: Current status of pod.
+          default: STOPPED
+        status_container:
+          title: Status Container
+          type: object
+          description: Status of container if exists. Gives phase.
+          default: {}
+        data_attached:
+          title: Data Attached
+          type: array
+          items:
+            type: string
+          description: Data attached.
+          default: []
+        roles_inherited:
+          title: Roles Inherited
+          type: array
+          items:
+            type: string
+          description: Inherited roles required to view this pod
+          default: []
+        creation_ts:
+          title: Creation Ts
+          type: string
+          description: Time (UTC) that this node was created.
+          format: date-time
+        update_ts:
+          title: Update Ts
+          type: string
+          description: Time (UTC) that this node was updated.
+          format: date-time
+        start_instance_ts:
+          title: Start Instance Ts
+          type: string
+          description: Time (UTC) that this pod instance was started.
+          format: date-time
+        persistent_volume:
+          title: Persistent Volume
+          type: object
+          description: 'Key: Volume name. Value: List of strs specifying volume folders/files
+            to mount in pod'
+          default: {}
+        time_to_stop_default:
+          title: Time To Stop Default
+          type: integer
+          description: Default time (sec) for pod to run from instance start. -1 for
+            unlimited. 12 hour default.
+          default: 43200
+        time_to_stop_instance:
+          title: Time To Stop Instance
+          type: integer
+          description: Time (sec) for pod to run from instance start. Reset each time
+            instance is started. -1 for unlimited. 12 hour default.
+        time_to_stop_ts:
+          title: Time To Stop Ts
+          type: string
+          description: Time (UTC) that this pod is scheduled to be stopped. Change
+            with time_to_stop_instance.
+          format: date-time
+        resources:
+          title: Resources
+          allOf:
+          - "$ref": "#/components/schemas/Resources"
+          description: Pod reesource management
+          default: {}
+      additionalProperties: false
+    PodsResponse:
+      title: PodsResponse
+      required:
+      - message
+      - metadata
+      - result
+      - status
+      - version
+      type: object
+      properties:
+        message:
+          title: Message
+          type: string
+        metadata:
+          title: Metadata
+          type: object
+        result:
+          title: Result
+          type: array
+          items:
+            "$ref": "#/components/schemas/PodResponseModel"
+        status:
+          title: Status
+          type: string
+        version:
+          title: Version
+          type: string
+      additionalProperties: false
+    Resources:
+      title: Resources
+      type: object
+      properties:
+        cpu_request:
+          title: Cpu Request
+          type: integer
+          description: CPU allocation pod requests at startup. In millicpus (m). 1000
+            = 1 cpu.
+          default: 250
+        cpu_limit:
+          title: Cpu Limit
+          type: integer
+          description: CPU allocation pod is allowed to use. In millicpus (m). 1000
+            = 1 cpu.
+          default: 2000
+        mem_request:
+          title: Mem Request
+          type: integer
+          description: Memory allocation pod requests at startup. In megabytes (M)
+          default: 250
+        mem_limit:
+          title: Mem Limit
+          type: integer
+          description: Memory allocation pod is allowed to use. In megabytes (M)
+          default: 3000
+      additionalProperties: false
+    SetPermission:
+      title: SetPermission
+      required:
+      - user
+      - level
+      type: object
+      properties:
+        user:
+          title: User
+          type: string
+          description: User to modify permissions for.
+        level:
+          title: Level
+          type: string
+          description: Permission level to give the user.
+      additionalProperties: false
+      description: Object with fields that users are allowed to specify for the Pod
+        class.
+    TapisApiModel:
+      title: TapisApiModel
+      type: object
+      properties: {}
+      additionalProperties: false
+    UpdatePod:
+      title: UpdatePod
+      required:
+      - pod_id
+      - pod_template
+      type: object
+      properties:
+        pod_id:
+          title: Pod Id
+          type: string
+          description: Name of this pod.
+        pod_template:
+          title: Pod Template
+          type: string
+          description: Which pod template to use, or which custom image to run, must
+            be on allowlist.
+        description:
+          title: Description
+          type: string
+          description: Description of this pod.
+          default: ''
+        command:
+          title: Command
+          type: array
+          items:
+            type: string
+          description: Command to run in pod.
+        networking:
+          title: Networking
+          type: object
+          additionalProperties:
+            "$ref": "#/components/schemas/Networking"
+          description: 'Networking information. {''url_suffix'': {''protocol'': ''http''  ''tcp'',
+            ''port'': int}/}'
+          default:
+            default:
+              protocol: http
+              port: 5000
+        data_requests:
+          title: Data Requests
+          type: array
+          items:
+            type: string
+          description: Requested pod names.
+          default: []
+        roles_required:
+          title: Roles Required
+          type: array
+          items:
+            type: string
+          description: Roles required to view this pod
+          default: []
+        persistent_volume:
+          title: Persistent Volume
+          type: object
+          description: 'Key: Volume name. Value: List of strs specifying volume folders/files
+            to mount in pod'
+          default: {}
+        time_to_stop_instance:
+          title: Time To Stop Instance
+          type: integer
+          description: Time (sec) for pod to run from instance start. Reset each time
+            instance is started. -1 for unlimited. 12 hour default.
+        resources:
+          title: Resources
+          allOf:
+          - "$ref": "#/components/schemas/Resources"
+          description: Pod reesource management
+          default: {}
+      additionalProperties: false
+      description: Object with fields that users are allowed to specify for the Pod
+        class.
+    ValidationError:
+      title: ValidationError
+      required:
+      - loc
+      - msg
+      - type
+      type: object
+      properties:
+        loc:
+          title: Location
+          type: array
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+        msg:
+          title: Message
+          type: string
+        type:
+          title: Error Type
+          type: string
+tags:
+- name: Pods
+  description: Create and command pods.
+- name: Credentials
+  description: Manage pod's credentials used.
+- name: Logs
+  description: Manage pod logs.
+- name: Permissions
+  description: Manage pod permissions. Grant specific TACC users **READ**, **USER**,
+    and **ADMIN** level permissions.

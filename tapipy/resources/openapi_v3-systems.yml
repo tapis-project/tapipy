@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.2.6'
+  version: '1.2.7'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -84,7 +84,12 @@ paths:
       tags:
         - Systems
       description: |
-        Retrieve list of systems. Use search and select query parameters to limit results.
+        Retrieve list of systems. Use *listType*, *search* and *select* query parameters to limit results. Query
+        parameter *listType* allows for filtering results based on authorization. Options for *listType* are
+
+          - *OWNED* Include only items owned by requester (Default)
+          - *SHARED_PUBLIC* Include only items shared publicly
+          - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: getSystems
       parameters:
         - name: search
@@ -92,6 +97,11 @@ paths:
           description: Search conditions as a single query parameter. For example search=(id.like.MySys*)~(enabled.eq.true)
           schema:
             type: string
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -239,6 +249,12 @@ paths:
         - Systems
       description: |
         Retrieve details for systems. Use query parameters to specify search conditions. For example owner.eq=jdoe&port.gt=1024
+        Use *listType* and *select* query parameters to limit results. Query parameter *listType* allows
+        for filtering results based on authorization. Options for *listType* are
+
+          - *OWNED* Include only items owned by requester (Default)
+          - *SHARED_PUBLIC* Include only items shared publicly
+          - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: searchSystemsQueryParameters
       parameters:
         - name: freeFormParameterName
@@ -251,6 +267,11 @@ paths:
             additionalProperties:
               type: string
           style: form
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -314,8 +335,19 @@ paths:
         - Systems
       description: |
         Retrieve details for systems. Use request body to specify SQL-like search conditions.
+        Use *listType* and *select* query parameters to limit results. Query parameter *listType* allows
+        for filtering results based on authorization. Options for *listType* are
+
+          - *OWNED* Include only items owned by requester (Default)
+          - *SHARED_PUBLIC* Include only items shared publicly
+          - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: searchSystemsRequestBody
       parameters:
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
         - name: limit
           in: query
           description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
@@ -2552,6 +2584,13 @@ components:
         - S3
         - IRODS
         - GLOBUS
+    ListTypeEnum:
+      type: string
+      default: OWNED
+      enum:
+        - OWNED
+        - SHARED_PUBLIC
+        - ALL
     AuthnEnum:
       type: string
       enum:

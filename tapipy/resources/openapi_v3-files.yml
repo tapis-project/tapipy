@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Files API
   description: The Tapis Files API provides for management of file resources on Tapis systems
-  version: '1.2.6'
+  version: '1.2.7'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Files API - CICSupport"
@@ -589,6 +589,10 @@ paths:
         Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*
         for the system.
         
+        Use the query parameter *zip* to request a stream compressed using the ZIP file format. This is not allowed
+        if system *rootDir* plus *path* would result in all files on the host being included. Please download
+        individual directories, files or objects.
+        
         Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
         application context. Tapis authorization will be bypassed.
       operationId: getContents
@@ -616,7 +620,7 @@ paths:
           example: range=0,999
         - name: zip
           in: query
-          description: Zip the contents of file or directory?
+          description: Indicates a zip output stream should be provided.
           schema:
             type: boolean
           example: false
