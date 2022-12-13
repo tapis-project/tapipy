@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.18 - 2022-12-13
+### Added
+- No change.
+
+### Changed
+- Updating specs for files, systems, pods, jobs, apps, workflows.
+
+### Removed
+- No change.
+
+
 ## 1.2.17 - 2022-10-28
 ### Added
 - Added test to test running resource_set='local'.
