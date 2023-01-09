@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.19 - 2023-01-09
+### Added
+- No change.
+
+### Changed
+- Updating specs for workflows.
+
+### Removed
+- No change.
+
+
 ## 1.2.18 - 2022-12-13
 ### Added
 - No change.

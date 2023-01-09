@@ -1980,9 +1980,8 @@ components:
         - type: object
           properties:
             builder:
-              allOf:
-                - $ref: '#/components/schemas/EnumBuilder'
-                - default: "kaniko"
+              $ref: '#/components/schemas/EnumBuilder'
+              default: "kaniko"
             cache:
               type: boolean
               default: true
@@ -2391,9 +2390,8 @@ components:
             - builder
           properties:
             builder:
-              allOf:
-                - $ref: '#/components/schemas/EnumBuilder'
-                - default: "kaniko"
+              $ref: '#/components/schemas/EnumBuilder'
+              default: "kaniko"
             cache:
               type: boolean
               default: true
@@ -2588,6 +2586,13 @@ components:
       allOf:
         - $ref: "#/components/schemas/ReqBaseContext"
         - $ref: "#/components/schemas/ReqRepoContext"
+        - type: object
+          properties:
+            credentials:
+              $ref: '#/components/schemas/ReqGitlabCred'
+            identity_uuid:
+              type: string
+              format: uuid
 
     ReqDockerhubContext:
       allOf:
@@ -2625,6 +2630,14 @@ components:
           type: string
 
     ReqDockerhubCred:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+
+    ReqGitlabCred:
       type: object
       properties:
         token:
@@ -3021,7 +3034,7 @@ components:
     EnumRetryPolicy:
       type: string
       enum:
-        - exponention_backoff
+        - exponential_backoff
 
     EnumDuplicateSubmissionPolicy:
       type: string
