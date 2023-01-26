@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.2.20 - 2023-01-26
+### Added
+- Updated __version__ and will keep it up to date with true version.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
 ## 1.2.19 - 2023-01-09
 ### Added
 - No change.
