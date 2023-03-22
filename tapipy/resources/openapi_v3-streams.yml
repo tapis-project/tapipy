@@ -14,14 +14,13 @@ info:
     url: "https://github.com/tapis-project/streams-api"
 
 servers:
-- url: http://localhost:5000
-  description: Local Development
-- url: https://dev.develop.tapis.io
-  description: Develop Instance
+  - url: http://localhost:5000
+    description: Local Development
+  - url: https://dev.develop.tapis.io
+    description: Develop Instance
 
 paths:
-
-### Begin of Hello
+  ### Begin of Hello
   /v3/streams/hello:
     get:
       tags:
@@ -31,38 +30,38 @@ paths:
       operationId: hello
       x-swagger-router-controller: connexContr
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: string
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Hello
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Hello
 
-### Begin of Ready
+  ### Begin of Ready
   /v3/streams/ready:
     get:
       tags:
@@ -72,38 +71,38 @@ paths:
       operationId: ready
       x-swagger-router-controller: connexContr
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: string
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Ready
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Ready
 
-### Begin of Healthcheck
+  ### Begin of Healthcheck
   /v3/streams/healthcheck:
     get:
       tags:
@@ -120,97 +119,98 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: string
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Healthcheck
 
-### Begin of Projects
+  ### Begin of Projects
   /v3/streams/projects:
     get:
       tags:
-      - Projects
+        - Projects
       summary: List projects.
       description: List projects.
       operationId: list_projects
       x-swagger-router-controller: connexContr
       parameters:
-      - name: query
-        in: query
-        description: a formated query string for sites.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
+        - name: query
+          in: query
+          description: a formated query string for sites.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: skip
+          in: query
+          description: index (skip) to start list.
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                       $ref: '#/components/schemas/Project'
-        '400':
+                      $ref: "#/components/schemas/Project"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
-      - Projects
+        - Projects
       summary: Create a project.
       description: Create a project.
       operationId: create_project
@@ -220,43 +220,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewProject'
+              $ref: "#/components/schemas/NewProject"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Project'
+                    $ref: "#/components/schemas/Project"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/projects/{project_id}:
     get:
       tags:
-      - Projects
+        - Projects
       summary: Get project details.
       description: Get project details.
       operationId: get_project
@@ -269,46 +269,46 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Project'
-        '400':
+                    $ref: "#/components/schemas/Project"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Project not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
-      - Projects
+        - Projects
       summary: Update a project
       description: Update a project
       operationId: update_project
@@ -325,49 +325,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewProject'
+              $ref: "#/components/schemas/NewProject"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Project'
+                  result:
+                    $ref: "#/components/schemas/Project"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Project not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
-      - Projects
+        - Projects
       summary: Delete a project
       description: Delete a project
       operationId: delete_project
@@ -380,116 +380,114 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Project Deleted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Project'
+                  result:
+                    $ref: "#/components/schemas/Project"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Project not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Projects
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Projects
 
-
-### Begin of Sites
+  ### Begin of Sites
   /v3/streams/projects/{project_id}/sites:
     get:
       tags:
-      - Sites
+        - Sites
       summary: List sites.
       description: List sites.
       operationId: list_sites
       x-swagger-router-controller: connexContr
       parameters:
-      - name: project_id
-        in: path
-        description: Unique ID of project generated by Tapis
-        required: true
-        schema:
-          type: string
-      - name: query
-        in: query
-        description: a formated query string for sites.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
+        - name: project_id
+          in: path
+          description: Unique ID of project generated by Tapis
+          required: true
+          schema:
+            type: string
+        - name: query
+          in: query
+          description: a formated query string for sites.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: skip
+          in: query
+          description: index (skip) to start list.
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                       $ref: '#/components/schemas/Site'
-        '400':
+                      $ref: "#/components/schemas/Site"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
-      - Sites
-      summary: Create a site.
-      description: Create a site.
+        - Sites
+      summary: Create a site. (single or bulk)
+      description: Create a site. (single or bulk)
       operationId: create_site
       x-swagger-router-controller: connexContr
       requestBody:
@@ -497,52 +495,52 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewSiteRequest'
+              $ref: "#/components/schemas/NewSiteRequest"
       parameters:
-      - name: project_id
-        in: path
-        description: Unique ID of project generated by Tapis
-        required: true
-        schema:
-          type: string
+        - name: project_id
+          in: path
+          description: Unique ID of project generated by Tapis
+          required: true
+          schema:
+            type: string
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Site'
+                      $ref: "#/components/schemas/Site"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/projects/{project_id}/sites/{site_id}:
     get:
       tags:
-      - Sites
+        - Sites
       summary: Get site details.
       description: Get site details.
       operationId: get_site
@@ -553,55 +551,54 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Site'
-        '400':
+                    $ref: "#/components/schemas/Site"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Site not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
-      - Sites
+        - Sites
       summary: Update a site
       description: Update a site
       operationId: update_site
@@ -612,10 +609,10 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
             type: string
@@ -624,50 +621,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewSite'
+              $ref: "#/components/schemas/UpdateSite"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Site'
+                  result:
+                    $ref: "#/components/schemas/Site"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Site not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
-      - Sites
+        - Sites
       summary: Delete a site
       description: Delete a site
       operationId: delete_site
@@ -678,59 +674,58 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Site Deleted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Site'
+                  result:
+                    $ref: "#/components/schemas/Site"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Site not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Sites
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Sites
 
-
-### Begin of Instruments
+  ### Begin of Instruments
   /v3/streams/projects/{project_id}/sites/{site_id}/instruments:
     get:
       tags:
-      - Instruments
+        - Instruments
       summary: List instruments
       description: List instruments
       operationId: list_instruments
@@ -740,13 +735,13 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: query
           in: query
           description: a formated query string for instruments.
@@ -763,39 +758,38 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: A list of instruments
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Instrument'
+                      $ref: "#/components/schemas/Instrument"
 
-
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -808,52 +802,52 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewInstRequest'
+              $ref: "#/components/schemas/NewInstRequest"
       parameters:
         - name: project_id
           in: path
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Instrument'
-        '400':
+                      $ref: "#/components/schemas/Instrument"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/projects/{project_id}/sites/{site_id}/instruments/{inst_id}:
     get:
@@ -868,57 +862,57 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                     $ref: "#/components/schemas/Instrument"
+                    $ref: "#/components/schemas/Instrument"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Instrument not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
@@ -932,16 +926,16 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
@@ -950,51 +944,51 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewInstrument'
+              $ref: "#/components/schemas/UpdateInst"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
-           application/json:
+            application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
+                  result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Instrument'
+                      $ref: "#/components/schemas/Instrument"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Instrument not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
-      - Instruments
+        - Instruments
       summary: Delete an instrument
       description: Delete an instrument
       operationId: delete_instrument
@@ -1004,64 +998,63 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Instrument'
-        '400':
+                    $ref: "#/components/schemas/Instrument"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Instrument not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Instruments
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Instruments
 
-
-### Begin of Variables
+  ### Begin of Variables
   /v3/streams/projects/{project_id}/sites/{site_id}/instruments/{inst_id}/variables:
     get:
       tags:
-       - Variables
+        - Variables
       summary: List variables.
       description: List variables.
       operationId: list_variables
@@ -1071,16 +1064,16 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
@@ -1100,42 +1093,42 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
+                  result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Variable'
-        '400':
+                      $ref: "#/components/schemas/Variable"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
-      - Variables
+        - Variables
       summary: Create variable (single or bulk).
       description: Create variable (single or bulk).
       operationId: create_variable
@@ -1144,64 +1137,64 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewVarRequest'
+              $ref: "#/components/schemas/NewVarRequest"
       parameters:
         - name: project_id
           in: path
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
+                  result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Variable'
+                      $ref: "#/components/schemas/Variable"
 
-        '400':
-           description: Input error.
-           content:
+        "400":
+          description: Input error.
+          content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
-           description: Not authorized.
-           content:
-             application/json:
-               schema:
-                 $ref: '#/components/schemas/ErrorResponse'
-        '500':
+        "401":
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/projects/{project_id}/sites/{site_id}/instruments/{inst_id}/variables/{var_id}:
     get:
       tags:
-      - Variables
+        - Variables
       summary: Get variable details
       description: Get details of a specific variable by its id
       operationId: get_variable
@@ -1211,67 +1204,67 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
         - name: var_id
           in: path
-          description: Unique ID of variable generated by Tapis
+          description: User provided, unique identifier within in the Instrument name space. will be used as the chords shortname
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Variable'
+                    $ref: "#/components/schemas/Variable"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Variable not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
-      - Variables
+        - Variables
       summary: Update a variable
       description: Update a variable
       operationId: update_variable
@@ -1281,22 +1274,22 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
         - name: var_id
           in: path
-          description: Unique ID of variable generated by Tapis
+          description: User provided, unique identifier within in the Instrument name space. will be used as the chords shortname
           required: true
           schema:
             type: string
@@ -1305,51 +1298,51 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewVariable'
+              $ref: "#/components/schemas/UpdateVariable"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Variable'
+                  result:
+                    $ref: "#/components/schemas/Variable"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Variable not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
-      - Variables
-      summary: Delete a variable (single or bulk)
-      description: Delete a variable (single or bulk)
+        - Variables
+      summary: Delete a variable
+      description: Delete a variable
       operationId: delete_variable
       parameters:
         - name: project_id
@@ -1357,71 +1350,70 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
-          description: Site ID generated by CHORDS
+          description: User uniquely defined ID for site.
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
-          description: Instrument ID generated by CHORDS
+          description: User uniquely defined ID for instrument.
           required: true
           schema:
             type: string
         - name: var_id
           in: path
-          description: Unique ID of variable generated by Tapis
+          description: User provided, unique identifier within in the Instrument name space. will be used as the chords shortname
           required: true
           schema:
             type: string
       responses:
-        '201':
+        "201":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Variable'
+                  result:
+                    $ref: "#/components/schemas/Variable"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Variable not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Variables
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Variables
 
-
-### Begin of Measurements
+  ### Begin of Measurements
   /v3/streams/measurements:
     post:
       tags:
-      - Measurements
+        - Measurements
       summary: Create a measurement.
       description: Create a measurement.
       operationId: create_measurement
@@ -1430,44 +1422,44 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewMeasurement'
+              $ref: "#/components/schemas/NewMeasurement"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Measurements'
+                  result:
+                    $ref: "#/components/schemas/Measurements"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/measurements/{inst_id}:
     get:
       tags:
-      - Measurements
+        - Measurements
       summary: List measurements when only inst_id is provided
       description: Download measurements
       operationId: download_measurements
@@ -1514,37 +1506,37 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Measurements'
+                    $ref: "#/components/schemas/Measurements"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/projects/{project_id}/sites/{site_id}/instruments/{inst_id}/measurements:
     get:
@@ -1559,13 +1551,13 @@ paths:
           description: Unique ID of project generated by Tapis
           required: true
           schema:
-           type: string
+            type: string
         - name: site_id
           in: path
           description: Site ID generated by CHORDS
           required: true
           schema:
-           type: string
+            type: string
         - name: inst_id
           in: path
           description: Instrument ID generated by CHORDS
@@ -1613,101 +1605,99 @@ paths:
           schema:
             type: boolean
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
-                      $ref: '#/components/schemas/Measurements'
+                  result:
+                    $ref: "#/components/schemas/Measurements"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### End of Measurements
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Measurements
 
-
-### begin of Ontology
+  ### begin of Ontology
   /v3/streams/ontologies:
     get:
       tags:
-      - Ontologies
+        - Ontologies
       summary: List ontologies.
       description: List ontologies.
       operationId: list_ontologies
       parameters:
-      - name: query
-        in: query
-        description: a formated query string for ontology label.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
+        - name: query
+          in: query
+          description: a formated query string for ontology label.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: skip
+          in: query
+          description: index (skip) to start list.
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                       $ref: '#/components/schemas/Ontology'
-        '400':
+                      $ref: "#/components/schemas/Ontology"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
-      - Ontologies
+        - Ontologies
       summary: Add an ontology .
       description: Add an ontology .
       operationId: add_ontology
@@ -1716,45 +1706,45 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewOntology'
+              $ref: "#/components/schemas/NewOntology"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Ontology'
+                      $ref: "#/components/schemas/Ontology"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/ontologies/{onto_id}:
     get:
       tags:
-      - Ontologies
+        - Ontologies
       summary: Get ontology details.
       description: Get ontology details.
       operationId: get_ontology
@@ -1766,48 +1756,46 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Ontology'
-        '400':
+                    $ref: "#/components/schemas/Ontology"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Project not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
-      - Ontologies
+        - Ontologies
       summary: Update an ontology
       description: Update an ontology
       operationId: update_ontology
@@ -1823,50 +1811,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewOntology'
+              $ref: "#/components/schemas/NewOntology"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Ontology'
+                  result:
+                    $ref: "#/components/schemas/Ontology"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Project not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
-      - Ontologies
+        - Ontologies
       summary: Delete an ontology
       description: Delete an ontology
       operationId: delete_ontology
@@ -1878,109 +1865,108 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Ontology Deleted
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Ontology'
+                  result:
+                    $ref: "#/components/schemas/Ontology"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Project not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-#### End of Ontology
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Ontology
 
-
-### Begin of Channels
+  ### Begin of Channels
   /v3/streams/channels:
     get:
       tags:
-       - Channels
+        - Channels
       summary: List channels.
       description: List channels.
       operationId: list_channels
       x-swagger-router-controller: connexContr
       parameters:
-      - name: query
-        in: query
-        description: a formated query string for channel.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
+        - name: query
+          in: query
+          description: a formated query string for channel.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: skip
+          in: query
+          description: index (skip) to start list.
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
+                  result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Channel'
+                      $ref: "#/components/schemas/Channel"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
-      - Channels
+        - Channels
       summary: Create channels.
       description: Create channels.
       operationId: create_channels
@@ -1990,97 +1976,97 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewChannel'
+              $ref: "#/components/schemas/NewChannel"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Channel'
-        '400':
+                      $ref: "#/components/schemas/Channel"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/channels/{channel_id}:
     get:
       tags:
-      - Channels
+        - Channels
       summary: Get channels details
       description: Get details of a specific channel by its id
       operationId: get_channel
       parameters:
-      - name: channel_id
-        in: path
-        description: Unique channel id
-        required: true
-        schema:
-          type: string
+        - name: channel_id
+          in: path
+          description: Unique channel id
+          required: true
+          schema:
+            type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Channel'
+                    $ref: "#/components/schemas/Channel"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Channel not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
-      - Channels
+        - Channels
       summary: Update a channel
       description: Update a channel
       operationId: update_channel
@@ -2097,49 +2083,49 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewChannel'
+              $ref: "#/components/schemas/UpdateChannel"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Channel'
+                  result:
+                    $ref: "#/components/schemas/Channel"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Channel not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     delete:
       tags:
-      - Channels
+        - Channels
       summary: Delete a channel
       description: Delete a channel
       operationId: delete_channel
@@ -2152,43 +2138,43 @@ paths:
           schema:
             type: string
       responses:
-        '201':
+        "201":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                 result:
-                  $ref: '#/components/schemas/Channel'
+                  result:
+                    $ref: "#/components/schemas/Channel"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Channel not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -2209,49 +2195,48 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateChannelStatus'
+              $ref: "#/components/schemas/UpdateChannelStatus"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Channel'
+                    $ref: "#/components/schemas/Channel"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Channel not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-#### End of Channels
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Channels
 
-
-### Begin of alerts
+  ### Begin of Alerts
   /v3/streams/channels/{channel_id}/alerts:
     get:
       tags:
@@ -2267,48 +2252,47 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Alert'
-        '400':
+                      $ref: "#/components/schemas/Alert"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Alert not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-#### End of alerts
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Alerts
 
-
-### Begin of templates
+  ### Begin of Templates
   /v3/streams/templates:
     get:
       tags:
@@ -2334,40 +2318,39 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
+                      $ref: "#/components/schemas/Template"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -2381,40 +2364,40 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTemplate'
+              $ref: "#/components/schemas/NewTemplate"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
-        '400':
+                      $ref: "#/components/schemas/Template"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
   /v3/streams/templates/{template_id}:
     get:
@@ -2432,39 +2415,39 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Template'
+                      $ref: "#/components/schemas/Template"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
     put:
       tags:
@@ -2474,181 +2457,184 @@ paths:
       operationId: update_template
       x-swagger-router-controller: connexContr
       parameters:
-            - name: template_id
-              in: path
-              description: Unique template id
-              required: true
-              schema:
-                type: string
+        - name: template_id
+          in: path
+          description: Unique template id
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewTemplate'
+              $ref: "#/components/schemas/NewTemplate"
       responses:
-        '201':
+        "201":
           description: Updated
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
-                    $ref: '#/components/schemas/Template'
-        '400':
+                    $ref: "#/components/schemas/Template"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-#### End of templates
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Templates
 
+  ### Begin of Units
   /units:
     get:
       tags:
-       - Units
+        - Units
       summary: List units.
       description: List units.
       operationId: list_units
       x-swagger-router-controller: connexContr
       parameters:
-      - name: query
-        in: query
-        description: a formated query string for units.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
+        - name: query
+          in: query
+          description: a formated query string for units.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: skip
+          in: query
+          description: index (skip) to start list.
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
+                  result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Unit'
-        '400':
+                      $ref: "#/components/schemas/Unit"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Unit not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Units
 
+  ### Begin of Measured Properties
   /measured_properties:
     get:
       tags:
-       - Measured_Properties
+        - Measured_Properties
       summary: List measured_properties.
       description: List measured_properties.
       operationId: list_measured_properties
       x-swagger-router-controller: connexContr
       parameters:
-      - name: query
-        in: query
-        description: a formated query string for units.
-        schema:
-          type: string
-      - name: limit
-        in: query
-        description: limit the number of records returned.
-        schema:
-          type: integer
-      - name: skip
-        in: query
-        description: index (skip) to start list.
-        schema:
-          type: integer
+        - name: query
+          in: query
+          description: a formated query string for units.
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: limit the number of records returned.
+          schema:
+            type: integer
+        - name: skip
+          in: query
+          description: index (skip) to start list.
+          schema:
+            type: integer
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
-                   result:
+                  result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/MeasuredProperty'
-        '400':
+                      $ref: "#/components/schemas/MeasuredProperty"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: measured properties not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Measured Properties
 
-
-### Begin of Roles
+  ### Begin of Roles
   /v3/streams/roles:
     get:
       tags:
@@ -2677,45 +2663,44 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Roles'
-        '400':
+                      $ref: "#/components/schemas/Roles"
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '404':
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
           description: Alert not found.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '500':
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-    #### End of roles
+                $ref: "#/components/schemas/ErrorResponse"
 
     post:
       tags:
@@ -2729,42 +2714,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewRole'
+              $ref: "#/components/schemas/NewRole"
       responses:
-        '201':
+        "201":
           description: Created
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Roles'
+                      $ref: "#/components/schemas/Roles"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Roles
 
-### Begin of revoke Role
+  ### Begin of Revoke Role
   /v3/streams/roles/revokeRole:
     post:
       tags:
@@ -2778,41 +2764,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RevokeRole'
+              $ref: "#/components/schemas/RevokeRole"
       responses:
-        '201':
+        "201":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Roles'
+                      $ref: "#/components/schemas/Roles"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-### Begin of archive
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Revoke Role
+
+  ### Begin of Archives
   /v3/streams/projects/{project_id}/archives:
     post:
       tags:
@@ -2833,40 +2821,40 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/NewArchive'
+              $ref: "#/components/schemas/NewArchive"
       responses:
-        '201':
+        "201":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: object
                     items:
-                      $ref: '#/components/schemas/Archive'
+                      $ref: "#/components/schemas/Archive"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
     get:
       tags:
         - Archives
@@ -2881,40 +2869,41 @@ paths:
           schema:
             type: string
       responses:
-        '201':
+        "201":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Archives'
+                      $ref: "#/components/schemas/Archives"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+  ### End of Archives
 
-### Begin of transfers
+  ### Begin of Transfer
   /v3/streams/transfer:
     post:
       tags:
@@ -2928,40 +2917,43 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Transfer'
+              $ref: "#/components/schemas/Transfer"
       responses:
-        '201':
+        "201":
           description: OK
           content:
             application/json:
               schema:
                 allOf:
-                  - $ref: '#/components/schemas/BasicResponse'
+                  - $ref: "#/components/schemas/BasicResponse"
                 properties:
                   result:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Transfer'
+                      $ref: "#/components/schemas/Transfer"
 
-        '400':
+        "400":
           description: Input error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
 
-        '401':
+        "401":
           description: Not authorized.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '500':
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
           description: Server error.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: "#/components/schemas/ErrorResponse"
+### End of Transfer
+
+### Begin of Components
 components:
   schemas:
     BasicResponse:
@@ -3045,7 +3037,6 @@ components:
           type: string
           description: ISO8601 datetime string for object updated date
 
-
     NewProject:
       type: object
       properties:
@@ -3083,7 +3074,7 @@ components:
           description: Site name
         site_id:
           type: string
-          description: The site id generated by CHORDS
+          description: User uniquely defined ID for site.
         owner:
           type: string
           description: The owner for site
@@ -3109,7 +3100,7 @@ components:
     NewSiteRequest:
       type: array
       items:
-        $ref: '#/components/schemas/NewSite'
+        $ref: "#/components/schemas/NewSite"
 
     NewSite:
       type: object
@@ -3119,7 +3110,7 @@ components:
           description: Resource name.
         site_id:
           type: string
-          description: User defined Id for site.
+          description: User uniquely defined ID for site.
         description:
           type: string
         latitude:
@@ -3134,7 +3125,30 @@ components:
         metadata:
           type: object
           description: User defined metadata for the site
-      required: [site_name, site_id, latitude, longitude, elevation, description]
+      required:
+        [site_name, site_id, latitude, longitude, elevation, description]
+
+    UpdateSite:
+      type: object
+      properties:
+        site_name:
+          type: string
+          description: Resource name.
+        description:
+          type: string
+        latitude:
+          type: number
+          description: Latitude of site.
+        longitude:
+          type: number
+          description: Longitude of site.
+        elevation:
+          type: number
+          description: Elevation of site.
+        metadata:
+          type: object
+          description: User defined metadata for the site
+      required: [site_name, latitude, longitude, elevation, description]
 
     Instrument:
       type: object
@@ -3175,7 +3189,7 @@ components:
     NewInstRequest:
       type: array
       items:
-        $ref: '#/components/schemas/NewInstrument'
+        $ref: "#/components/schemas/NewInstrument"
 
     NewInstrument:
       type: object
@@ -3185,7 +3199,7 @@ components:
           description: Instrument name
         inst_id:
           type: string
-          description: User defined instrument id
+          description: User uniquely defined ID for instrument.
         inst_description:
           type: string
           description: Instrument description
@@ -3202,23 +3216,12 @@ components:
           description: User enetered metadata on instruments
       required: [inst_name, inst_id, inst_description]
 
-    UpdateInstRequest:
-      type: array
-      items:
-        $ref: '#/components/schemas/UpdateInst'
-
     UpdateInst:
       type: object
       properties:
-        inst_id:
-          type: string
-          description: Instrument ID generated by CHORDS
         inst_name:
           type: string
           description: Instrument name
-        site_id:
-          type: string
-          description: The CHORDS site id to which instrument attached to
         inst_description:
           type: string
           description: More information on instrument
@@ -3230,12 +3233,12 @@ components:
         metadata:
           type: object
           description: user metadata on instruments
-      required: [inst_id, site_id, inst_name]
+      required: [inst_name]
 
     NewVarRequest:
       type: array
       items:
-        $ref: '#/components/schemas/NewVariable'
+        $ref: "#/components/schemas/NewVariable"
 
     NewVariable:
       type: object
@@ -3259,6 +3262,26 @@ components:
           type: string
           description: User entered short name
       required: [var_id, var_name]
+
+    UpdateVariable:
+      type: object
+      properties:
+        var_name:
+          type: string
+          description: Variable name.
+        units:
+          type: string
+          description: Unit name
+        measured_property_id:
+          type: number
+          description: Id of the Property measured by the variable type
+        metadata:
+          type: object
+          description: User entered metadata for the variable
+        shortname:
+          type: string
+          description: User entered short name
+      required: [var_name]
 
     Variable:
       type: object
@@ -3306,25 +3329,25 @@ components:
         instrument:
           type: object
           description: The instrument metadata - if with_metadata is set to True.
-          $ref: '#/components/schemas/Instrument'
+          $ref: "#/components/schemas/Instrument"
         site:
           type: object
           description: The site metadata - if with_metadata is set to True.
-          $ref: '#/components/schemas/Site'
+          $ref: "#/components/schemas/Site"
         measurements_in_file:
           type: integer
           description: The count of measurements records.
       #unexpected typing behavior, still works (assigns to type any rather than generating DatetimeValues type)
       additionalProperties:
-        $ref: '#/components/schemas/DatetimeValues'
-      example: {"2021-05-15T15:23:00+05:00":7.2,"2021-05-15T25:23:00+05:00":7.3}
+        $ref: "#/components/schemas/DatetimeValues"
+      example:
+        { "2021-05-15T15:23:00+05:00": 7.2, "2021-05-15T25:23:00+05:00": 7.3 }
 
     DatetimeValues:
       type: object
       additionalProperties:
         type: number
       description: example "ph":{"2021-05-15T15:23:00+05:00":7.2,"2021-05-15T25:23:00+05:00":7.3}
-      
 
     NewMeasurement:
       type: object
@@ -3334,7 +3357,7 @@ components:
         vars:
           type: array
           items:
-            $ref: '#/components/schemas/MeasurementValues'
+            $ref: "#/components/schemas/MeasurementValues"
       required: [inst_id, vars]
 
     MeasurementValues:
@@ -3363,11 +3386,10 @@ components:
         additionalProperties:
           type: string
 
-
     NewOntologyRequest:
       type: array
       items:
-        $ref: '#/components/schemas/NewOntology'
+        $ref: "#/components/schemas/NewOntology"
 
     Ontology:
       type: object
@@ -3383,7 +3405,6 @@ components:
           description: URL for the Ontology
         additionalProperties:
           type: string
-
 
     Channel:
       type: object
@@ -3431,17 +3452,9 @@ components:
                     type: string
                     description: Abaco nonces
               condition:
-                type: object
-                properties:
-                  key:
-                    type: string
-                    description: variable id
-                  operator:
-                    type: string
-                    description: logical operator
-                  val:
-                    type: number
-                    description: Value of measurement
+                oneOf:
+                  - $ref: "#/components/schemas/Threshold"
+                  - $ref: "#/components/schemas/Deadman"
               inst_ids:
                 type: array
                 items:
@@ -3468,7 +3481,14 @@ components:
           description: User defined channel name.
         template_id:
           type: string
-          description: Template id.
+          description: Template id. (public templates include default_threshold or default_deadman)
+        type:
+          type: string
+          enum:
+            - threshold
+            - deadman
+          default: threshold
+          description: Type of Checks (threshold or deadman)
         triggers_with_actions:
           type: array
           items:
@@ -3479,14 +3499,9 @@ components:
                 items:
                   type: string
               condition:
-                type: object
-                properties:
-                  key:
-                    type: string
-                  operator:
-                    type: string
-                  val:
-                    type: number
+                oneOf:
+                  - $ref: "#/components/schemas/Threshold"
+                  - $ref: "#/components/schemas/Deadman"
               action:
                 type: object
                 properties:
@@ -3496,6 +3511,84 @@ components:
                     type: string
                   message:
                     type: string
+      required:
+        - channel_id
+        - channel_name
+        - template_id
+
+    UpdateChannel:
+      type: object
+      properties:
+        channel_name:
+          type: string
+          description: User defined channel name.
+        template_id:
+          type: string
+          description: Template id. (public templates include default_threshold or default_deadman)
+        type:
+          type: string
+          enum:
+            - threshold
+            - deadman
+          default: threshold
+          description: Type of Checks (threshold or deadman)
+        triggers_with_actions:
+          type: array
+          items:
+            type: object
+            properties:
+              inst_ids:
+                type: array
+                items:
+                  type: string
+              condition:
+                oneOf:
+                  - $ref: "#/components/schemas/Threshold"
+                  - $ref: "#/components/schemas/Deadman"
+              action:
+                type: object
+                properties:
+                  method:
+                    type: string
+                  actor_id:
+                    type: string
+                  message:
+                    type: string
+      required:
+        - channel_name
+
+    Threshold:
+      type: object
+      properties:
+        key:
+          type: string
+        operator:
+          type: string
+        val:
+          type: number
+      required: [key, operator, val]
+
+    Deadman:
+      type: object
+      properties:
+        key:
+          type: string
+        every:
+          type: string
+          example: "10m"
+        offset:
+          type: string
+          example: "15s"
+        report_zero:
+          type: boolean
+        time_since:
+          type: string
+          example: "15s"
+        stale_time:
+          type: string
+          example: "10m"
+      required: [key, time_since]
+    
     Unit:
       type: object
       properties:
@@ -3541,58 +3634,57 @@ components:
           type: string
           description: Name of the ontology this unit belongs too.
 
-
     Alert:
-     type: object
-     properties:
-       actor_id:
-         type: string
-         description: Abaco actor id
-       alert_id:
-         type: string
-         description: Alert id
-       channel_id:
-         type: string
-         description: Unique channel id
-       channel_name:
+      type: object
+      properties:
+        actor_id:
+          type: string
+          description: Abaco actor id
+        alert_id:
+          type: string
+          description: Alert id
+        channel_id:
+          type: string
+          description: Unique channel id
+        channel_name:
           type: string
           description: User defined channel name
-       created_at:
+        created_at:
           type: string
           description: Time of alert creation
-       execution_id:
+        execution_id:
           type: string
           description: Abaco execution id
-       message:
-         type: string
-         description: alert message
+        message:
+          type: string
+          description: alert message
 
     Template:
-     type: object
-     properties:
-       created_at:
-         type: string
-         description: Time for template creation
-       last_updated:
-         type: string
-         description: Time for template update
-       permissions:
-         type: object
-         properties:
-           users:
-             type: array
-             items:
-               type: string
-       script:
-         type: string
-       template_id:
-         type: string
-       type:
-         type: string
+      type: object
+      properties:
+        created_at:
+          type: string
+          description: Time for template creation
+        last_updated:
+          type: string
+          description: Time for template update
+        permissions:
+          type: object
+          properties:
+            users:
+              type: array
+              items:
+                type: string
+        script:
+          type: string
+        template_id:
+          type: string
+        type:
+          type: string
 
     NewTemplate:
-     type: object
-     properties:
+      type: object
+      properties:
         template_id:
           type: string
           description: User defined template id
@@ -3622,7 +3714,7 @@ components:
         resource_type:
           type: string
           description: Resource type should be either project or channel
-          enum: [project,channel, template]
+          enum: [project, channel, template]
         role_name:
           type: string
           description: role name
@@ -3640,7 +3732,7 @@ components:
         resource_type:
           type: string
           description: Resource type should be either project or channel
-          enum: [project,channel, template]
+          enum: [project, channel, template]
         role_name:
           type: string
           description: role name
@@ -3675,7 +3767,7 @@ components:
             data_format:
               type: string
               description: The data measurement format - csv or JSON is currently supported
-              enum: [csv,json]
+              enum: [csv, json]
             frequency:
               type: string
               description: How often should this archive occur - currently supports one-time_now
@@ -3693,7 +3785,7 @@ components:
     Archives:
       type: array
       items:
-        $ref: '#/components/schemas/Archive'
+        $ref: "#/components/schemas/Archive"
 
     Archive:
       type: object
@@ -3730,7 +3822,7 @@ components:
             data_format:
               type: string
               description: The data measurement format - csv or JSON is currently supported
-              enum: [csv,json]
+              enum: [csv, json]
             frequency:
               type: string
               description: How often should this archive occur - currently supports one-time_now
@@ -3781,4 +3873,5 @@ components:
           description: A ISO8601 formatted datetime string for the ending time for archival data
 
     Application:
-     type: object
+      type: object
+### End of Components

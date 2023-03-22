@@ -135,7 +135,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespName'
         '409':
-          description: Job is already in Terminal State (CANCELLED, FINISHED or FAILED). Job state conflicts with the cancel request. No action taken
+          description: >-
+            Job is already in Terminal State (CANCELLED, FINISHED or FAILED).
+            Job state conflicts with the cancel request. No action taken
           content:
             application/json:
               schema:
@@ -200,7 +202,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespName'
         '409':
-          description: Job is already in Terminal State (CANCELLED, FINISHED or FAILED). Job state conflicts with the cancel request. No action taken
+          description: >-
+            Job is already in Terminal State (CANCELLED, FINISHED or FAILED).
+            Job state conflicts with the cancel request. No action taken
           content:
             application/json:
               schema:
@@ -265,7 +269,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespName'
         '409':
-          description: Job is already in Terminal State (CANCELLED, FINISHED or FAILED). Job state conflicts with the cancel request. No action taken
+          description: >-
+            Job is already in Terminal State (CANCELLED, FINISHED or FAILED).
+            Job state conflicts with the cancel request. No action taken
           content:
             application/json:
               schema:
@@ -410,10 +416,13 @@ paths:
     get:
       tags:
         - jobs
-      description: |-
-        Retrieve list of jobs for which the user is the job owner, creator or a tenant administrator.
+      description: >-
+        Retrieve list of jobs for which the user is the job owner, creator or a
+        tenant administrator.
+
 
         Also list the jobs that are shared with the user. 
+
         listType allowed are: MY_JOBS, SHARED_JOBS, ALL_JOBS
       operationId: getJobList
       parameters:
@@ -493,10 +502,13 @@ paths:
     get:
       tags:
         - jobs
-      description: |-
-        Download job's output files for previously submitted job by its UUID. The job must be in a terminal state (FINISHED or FAILED or CANCELLED).  
+      description: >-
+        Download job's output files for previously submitted job by its UUID.
+        The job must be in a terminal state (FINISHED or FAILED or CANCELLED).  
+
 
         The caller must be the job owner, creator or a tenant administrator.
+
         The URL must ends with '/' even if there is no outputPath is specified. 
       operationId: getJobOutputDownload
       parameters:
@@ -570,10 +582,14 @@ paths:
     get:
       tags:
         - jobs
-      description: |-
-        Retrieve job's output files list for previously submitted job by its UUID. The job must be in a terminal state (FINISHED or FAILED or CANCELLED)  
+      description: >-
+        Retrieve job's output files list for previously submitted job by its
+        UUID. The job must be in a terminal state (FINISHED or FAILED or
+        CANCELLED)  
+
 
         The caller must be the job owner, creator or a tenant administrator.
+
         The URL must ends with '/' even if there is no outputPath is specified. 
       operationId: getJobOutputList
       parameters:
@@ -646,10 +662,13 @@ paths:
     get:
       tags:
         - jobs
-      description: |-
-        Retrieve list of jobs for the user based on search conditions in the query paramter on the dedicated search end-point.
+      description: >-
+        Retrieve list of jobs for the user based on search conditions in the
+        query paramter on the dedicated search end-point.
+
 
         The caller must be the job owner, creator or a tenant administrator. 
+
 
         List of Jobs shared with the user can also be searched
       operationId: getJobSearchList
@@ -733,8 +752,11 @@ paths:
     post:
       tags:
         - jobs
-      description: |-
-        Retrieve list of jobs for the user based on search conditions in the request body and pagination information from the query paramter on the dedicated search end-point.
+      description: >-
+        Retrieve list of jobs for the user based on search conditions in the
+        request body and pagination information from the query paramter on the
+        dedicated search end-point.
+
 
         The caller must be the job owner, creator or a tenant administrator.
       operationId: getJobSearchListByPostSqlStr
@@ -766,6 +788,11 @@ paths:
           in: query
           schema:
             type: string
+        - name: listType
+          in: query
+          schema:
+            type: string
+            default: MY_JOBS
         - name: pretty
           in: query
           schema:
@@ -819,8 +846,10 @@ paths:
     delete:
       tags:
         - share
-      description: |-
-        Delete all share information of a previously shared job for a specific user
+      description: >-
+        Delete all share information of a previously shared job for a specific
+        user
+
 
         The caller must be the job owner, creator or a tenant administrator.
       operationId: deleteJobShare
@@ -951,7 +980,9 @@ paths:
     post:
       tags:
         - share
-      description: Share a job with a user of the tenant. The caller must be the job owner, creator or a tenant administrator.
+      description: >-
+        Share a job with a user of the tenant. The caller must be the job owner,
+        creator or a tenant administrator.
       operationId: shareJob
       parameters:
         - name: jobUuid
@@ -1116,8 +1147,9 @@ paths:
     post:
       tags:
         - jobs
-      description: |-
-        Resubmit a job for execution using the job's original parameters.  The main phases of job execution are:
+      description: >-
+        Resubmit a job for execution using the job's original parameters.  The
+        main phases of job execution are:
 
           - validate input
           - check resource availability
@@ -1127,7 +1159,13 @@ paths:
           - monitor application
           - archive application output
 
-        When a job is submitted its request payload is captured and available for resubmission using this API. The resubmitted job is assigned a new UUID and does not reference or have any special access to the original job's information once the orginal job's request is copied. The resubmitted job's execution can differ from the original job's if the application, system or other aspects of the execution environment have changed.
+        When a job is submitted its request payload is captured and available
+        for resubmission using this API. The resubmitted job is assigned a new
+        UUID and does not reference or have any special access to the original
+        job's information once the orginal job's request is copied. The
+        resubmitted job's execution can differ from the original job's if the
+        application, system or other aspects of the execution environment have
+        changed.
       operationId: resubmitJob
       parameters:
         - name: jobUuid
@@ -1177,10 +1215,18 @@ paths:
     post:
       tags:
         - jobs
-      description: |-
-        Send a user event to an active job. The job must be in the same tenant as the caller, but no other authorization is needed. If the job has terminated the request will be rejected. The caller must specify a payload of non-empty string data in the *eventData* field. The *eventDetail* field can be set to further qualify the type of user event, which is useful when filtering events. If not provided the *eventDetail* defaults to "DEFAULT".
+      description: >-
+        Send a user event to an active job. The job must be in the same tenant
+        as the caller, but no other authorization is needed. If the job has
+        terminated the request will be rejected. The caller must specify a
+        payload of non-empty string data in the *eventData* field. The
+        *eventDetail* field can be set to further qualify the type of user
+        event, which is useful when filtering events. If not provided the
+        *eventDetail* defaults to "DEFAULT".
 
-        Subscribers that register interest in events of type JOB_USER_EVENT will receive a notification as a result of this call.
+
+        Subscribers that register interest in events of type JOB_USER_EVENT will
+        receive a notification as a result of this call.
       operationId: sendEvent
       parameters:
         - name: jobUuid
@@ -1236,7 +1282,7 @@ paths:
     post:
       tags:
         - jobs
-      description: |-
+      description: >-
         Submit a job for execution.  The main phases of job execution are:
 
           - validate input
@@ -1247,7 +1293,17 @@ paths:
           - monitor application
           - archive application output
 
-        At a minimum, the job name, application ID and application version must be specified in the request payload. The optional parameters available in a job request provide great flexibility but must be considered in the context of the application and system definitions. The actual values used during job execution are a combination of the values in this request and those specified in the job's application and system definitions. It's often desirable to keep the submission request simple by specifying common values in these other two definitions. See the [Job Submission Request](https://tapis.readthedocs.io/en/latest/technical/jobs.html#the-job-submission-request) documentation for details.
+        At a minimum, the job name, application ID and application version must
+        be specified in the request payload. The optional parameters available
+        in a job request provide great flexibility but must be considered in the
+        context of the application and system definitions. The actual values
+        used during job execution are a combination of the values in this
+        request and those specified in the job's application and system
+        definitions. It's often desirable to keep the submission request simple
+        by specifying common values in these other two definitions. See the [Job
+        Submission
+        Request](https://tapis.readthedocs.io/en/latest/technical/jobs.html#the-job-submission-request)
+        documentation for details.
       operationId: submitJob
       parameters:
         - name: pretty
@@ -1298,10 +1354,17 @@ paths:
     delete:
       tags:
         - subscriptions
-      description: |-
-        Depending on the UUID provide, this API either deletes a single subscription from a job or all subscriptions from a job. To delete single subscription, provide the UUID of that subscription as listed in the subscription retrieval result for the job.  To delete all a job's subscriptions, specify the job UUID.
+      description: >-
+        Depending on the UUID provide, this API either deletes a single
+        subscription from a job or all subscriptions from a job. To delete
+        single subscription, provide the UUID of that subscription as listed in
+        the subscription retrieval result for the job.  To delete all a job's
+        subscriptions, specify the job UUID.
 
-        Like all Job subscription APIs, modifications only affect running jobs and never change the saved job definition. As a consequence, job resubmissions are not affected by runtime subscription changes.
+
+        Like all Job subscription APIs, modifications only affect running jobs
+        and never change the saved job definition. As a consequence, job
+        resubmissions are not affected by runtime subscription changes.
       operationId: deleteSubscriptions
       parameters:
         - name: uuid
@@ -1351,7 +1414,11 @@ paths:
     get:
       tags:
         - subscriptions
-      description: Retrieve a job's subscriptions fom the Notifications service. After subscriptions expire or are deleted by user action they may no longer be listed in Notification service. To inspect the initial set of subscriptions assigned to a job, retrieve the job definition.
+      description: >-
+        Retrieve a job's subscriptions fom the Notifications service. After
+        subscriptions expire or are deleted by user action they may no longer be
+        listed in Notification service. To inspect the initial set of
+        subscriptions assigned to a job, retrieve the job definition.
       operationId: getSubscriptions
       parameters:
         - name: jobUuid
@@ -1412,20 +1479,35 @@ paths:
     post:
       tags:
         - subscriptions
-      description: |
-        Subcribe to a running job identified by it's UUID. The caller must be the job owner or a tenant administrator.
+      description: >
+        Subcribe to a running job identified by it's UUID. The caller must be
+        the job owner or a tenant administrator.
 
-        Like all Job subscription APIs, modifications only affect running jobs and never change the saved job definition. As a consequence, job resubmissions are not affected by runtime subscription changes.
+
+        Like all Job subscription APIs, modifications only affect running jobs
+        and never change the saved job definition. As a consequence, job
+        resubmissions are not affected by runtime subscription changes.
+
 
         The events to which one can subscribe are:
 
+
         - JOB_NEW_STATUS - the job has transitioned to a new status
-        - JOB_INPUT_TRANSACTION_ID - a request to stage job input files has been submitted
-        - JOB_ARCHIVE_TRANSACTION_ID - a request to archive job output files has been submitted
+
+        - JOB_INPUT_TRANSACTION_ID - a request to stage job input files has been
+        submitted
+
+        - JOB_ARCHIVE_TRANSACTION_ID - a request to archive job output files has
+        been submitted
+
         - JOB_SUBSCRIPTION - a change to the job's subscriptions has occurred
+
         - JOB_SHARE_EVENT - a job resource has been shared or unshared
+
         - JOB_ERROR_MESSAGE - the job experienced an error
+
         - JOB_USER_EVENT - user generated events
+
         - ALL - all job event categories
       operationId: subscribe
       parameters:

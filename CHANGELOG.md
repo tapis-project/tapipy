@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.3.0 - 2023-03-22
+### Added
+- No change.
+
+### Changed
+- Updating specs for streams, pgrest, jobs, apps, notifications.
+
+### Removed
+- No change.
+
 
 ## 1.2.20 - 2023-01-26
 ### Added

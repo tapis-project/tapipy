@@ -511,6 +511,30 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/BasicResponse'
 
+  /v3/pgrest/manage/views/{view_name}/refresh:
+    get:
+      tags:
+        - Manage Views
+      summary: refresh_materialized_view
+      description: Refresh materialized view (views created with the materialized_view_raw_sql attribute).
+      operationId: refresh_materialized_view
+      x-swagger-router-controller: connexContr
+      parameters:
+      - name: view_name
+        in: path
+        description: The id of the view.
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BasicResponse'
+
   /v3/pgrest/views/{view_name}:
     get:
       tags:
@@ -943,6 +967,10 @@ components:
         raw_sql:
           type: string
           description: Admin only. Full support of SQL when creating complex views.
+        materialized_view_raw_sql:
+          type: string
+          description: Admin only. Full support of SQL when creating complex materialized views.
+
       required: [view_name]
 
 

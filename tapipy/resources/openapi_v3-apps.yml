@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.2.4'
+  version: '1.2.5'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -38,9 +38,9 @@ tags:
   - name: Sharing
     description: |
       In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
-      This approach is known simply as *sharing*. The sharing API allows you to share an application with a set of users
-      as well as share publicly with all users in a tenant. Sharing grants users READ access to the application and more
-      importantly allows others to run a job using the application.
+      This approach is known simply as *sharing*. The sharing API allows an application owner to share an application
+      with a set of users as well as share publicly with all users in a tenant. Sharing grants users READ access to the
+      application and more importantly allows others to run a job using the application.
 
       Please note that sharing an application gives a user certain implicit access to resources in the context of running
       a job. For example, if the application has defined a specific execution system id then while the job is running the
@@ -94,6 +94,9 @@ paths:
 
           - *OWNED* Include only items owned by requester (Default)
           - *SHARED_PUBLIC* Include only items shared publicly
+          - *SHARED_DIRECT* Include only items shared directly with requester. Exclude publicly shared items.
+          - *READ_PERM* Include only items for which requester was granter READ or MODIFY permission.
+          - *MINE* Include items owned or shared directly with requester. Exclude publicly shared items.
           - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: getApps
       parameters:
@@ -159,12 +162,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -210,8 +207,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -240,6 +237,9 @@ paths:
 
           - *OWNED* Include only items owned by requester (Default)
           - *SHARED_PUBLIC* Include only items shared publicly
+          - *SHARED_DIRECT* Include only items shared directly with requester. Exclude publicly shared items.
+          - *READ_PERM* Include only items for which requester was granter READ or MODIFY permission.
+          - *MINE* Include items owned or shared directly with requester. Exclude publicly shared items.
           - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: searchAppsQueryParameters
       parameters:
@@ -294,12 +294,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -316,6 +310,9 @@ paths:
 
           - *OWNED* Include only items owned by requester (Default)
           - *SHARED_PUBLIC* Include only items shared publicly
+          - *SHARED_DIRECT* Include only items shared directly with requester. Exclude publicly shared items.
+          - *READ_PERM* Include only items for which requester was granter READ or MODIFY permission.
+          - *MINE* Include items owned or shared directly with requester. Exclude publicly shared items.
           - *ALL* Include all items requester is authorized to view. Includes check for READ or MODIFY permission.
       operationId: searchAppsRequestBody
       parameters:
@@ -377,12 +374,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -428,8 +419,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -454,6 +445,9 @@ paths:
         Retrieve information for an application given the application Id and version.
         In the result the attribute *sharedAppCtx* indicates if the application is available to the user because it
         has been shared with the user by the application owner.
+        
+        Certain services may use the query parameter *impersonationId* to be used in place of the requesting
+        Tapis user. Tapis will use this user Id when performing authorization.
       operationId: getApp
       parameters:
         - name: appId
@@ -474,7 +468,7 @@ paths:
             default: false
         - name: impersonationId
           in: query
-          description: Highly restricted. Only certain services may impersonate a Tapis user.
+          description: Restricted. Only certain services may impersonate a Tapis user.
           schema:
             type: string
         - name: select
@@ -496,8 +490,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -560,8 +554,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -635,8 +629,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -673,8 +667,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBoolean'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -711,8 +705,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -749,8 +743,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -787,8 +781,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -825,8 +819,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -868,8 +862,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -906,14 +900,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespAppHistory'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '404':
-          description: App not found.
+          description: Application not found.
           content:
             application/json:
               schema:
@@ -957,8 +951,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1012,8 +1006,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1057,8 +1051,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1106,8 +1100,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1148,14 +1142,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '404':
-          description: App not found.
+          description: Application not found.
           content:
             application/json:
               schema:
@@ -1200,8 +1194,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1234,8 +1228,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1282,8 +1276,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1316,8 +1310,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-           description: Not authorized.
+        '403':
+           description: Permission denied.
            content:
              application/json:
                schema:
@@ -1360,6 +1354,8 @@ components:
         enabled:
           type: boolean
           default: true
+        isPublic:
+          type: boolean
         runtime:
           $ref: '#/components/schemas/RuntimeEnum'
         runtimeVersion:
@@ -2000,6 +1996,9 @@ components:
       enum:
         - OWNED
         - SHARED_PUBLIC
+        - SHARED_DIRECT
+        - READ_PERM
+        - MINE
         - ALL
     JobTypeEnum:
       type: string
