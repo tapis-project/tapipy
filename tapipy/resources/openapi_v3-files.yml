@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Files API
   description: The Tapis Files API provides for management of file resources on Tapis systems
-  version: '1.2.7'
+  version: '1.3.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Files API - CICSupport"
@@ -85,7 +85,7 @@ paths:
         '503':
           description: Service unavailable.
 
-  # --- Paths for /files/ops -----------------------------------------------------
+  # --- Paths for /files/ops --------------------------------------- --------------
   /v3/files/ops/{systemId}/{path}:
     get:
       tags:
@@ -157,37 +157,37 @@ paths:
             type: boolean
             default: false
       responses:
-        "200":
+        '200':
           description: A list of files
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileListingResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "404":
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -219,37 +219,37 @@ paths:
             schema:
               $ref: '#/components/schemas/MoveCopyRequest'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "404":
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -260,7 +260,6 @@ paths:
         - File Operations
       description: |
         The file or object will be uploaded at the {path} independent of the original name.
-        Not supported for all system types.
       operationId: insert
       parameters:
         - name: systemId
@@ -287,31 +286,31 @@ paths:
                   type: string
                   format: binary
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -346,37 +345,37 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "404":
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -387,7 +386,8 @@ paths:
       tags:
         - File Operations
       description: |
-        Create a directory on the system at the given path. Not supported for all system types.
+        Create a directory on the system at the given path. Not supported for all system types. Currently supported
+        for LINUX and IRODS type systems.
         Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
         application context. Tapis authorization will be bypassed.
       operationId: mkdir
@@ -410,31 +410,31 @@ paths:
             schema:
               $ref: '#/components/schemas/MkdirRequest'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -472,37 +472,37 @@ paths:
             default: false
           example: true
       responses:
-        "200":
+        '200':
           description: Linux stat information for the file or directory.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStatInfoResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "404":
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -540,37 +540,162 @@ paths:
             schema:
               $ref: '#/components/schemas/NativeLinuxOpRequest'
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/NativeLinuxOpResultResponse'
-        "400":
+        '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "401":
+        '401':
           description: Not Authenticated
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "404":
+        '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/FileStringResponse'
-        "500":
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+
+  /v3/files/utils/linux/facl/{systemId}/{path}:
+    get:
+      tags:
+        - File Operations
+      description: |
+        Get file ACLs for files or directories.
+      operationId: getFacl
+      parameters:
+        - name: systemId
+          in: path
+          description: System ID
+          required: true
+          schema:
+            type: string
+          example: system123
+        - name: path
+          in: path
+          description: Path relative to the system *rootDir*
+          required: true
+          schema:
+            type: string
+          example: /directoryA/directoryB/
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NativeLinuxGetFaclResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+    post:
+      tags:
+        - File Operations
+      description: |
+        Set file ACLs for files or directories.
+
+        This can be used for a single file or directory, or can be recursive.  If recursion is
+        used, it can be made to follow symlinks, or not follow symlinks.
+
+        The operations support adding or removing Acl Entries as well as removing all acls or all
+        default acls
+      operationId: setFacl
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          description: System ID
+          schema:
+            type: string
+          example: system123
+        - name: path
+          in: path
+          description: Path relative to the system *rootDir*
+          required: true
+          schema:
+            type: string
+          example: /directoryA/directoryB/
+      requestBody:
+        required: true
+        description: A JSON object specifying updated sharing information.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NativeLinuxSetFaclRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NativeLinuxSetFaclResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
           description: Internal Error
           content:
             application/json:
@@ -583,7 +708,7 @@ paths:
       tags:
         - Content
       description: |
-        Get file or directory contents as a stream of data. Not supported for all system types.
+        Get file or directory contents as a stream of data.
 
         Certain services may use the query parameter *impersonationId* to be used in place of the requesting
         Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*
@@ -642,16 +767,16 @@ paths:
             type: boolean
             default: false
       responses:
-        "200":
+        '200':
           description: OK
-        "400":
+        '400':
           description: Bad Request
-        "401":
+        '401':
           description: Not Authenticated
-        "404":
+        '404':
           description: Not Found
-        "403":
-          description: Not Authorized
+        '403':
+          description: Permission Denied
 
   # --- Paths for /files/transfers -----------------------------------------------
   /v3/files/transfers:
@@ -679,7 +804,7 @@ paths:
             default: 0
           example: 1000
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -698,7 +823,7 @@ paths:
               $ref: '#/components/schemas/ReqTransfer'
         required: true
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -720,7 +845,7 @@ paths:
             type: string
           example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -741,7 +866,7 @@ paths:
             type: string
           example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -768,7 +893,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: OK
           content:
             application/json:
@@ -803,7 +928,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: FilePermission
           content:
             application/json:
@@ -835,7 +960,7 @@ paths:
               $ref: '#/components/schemas/CreatePermissionRequest'
         required: true
       responses:
-        "200":
+        '200':
           description: FilePermission
           content:
             application/json:
@@ -867,7 +992,7 @@ paths:
           schema:
             type: string
       responses:
-        "200":
+        '200':
           description: FilePermission
           content:
             application/json:
@@ -908,8 +1033,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
@@ -966,8 +1091,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
@@ -1005,8 +1130,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
@@ -1058,8 +1183,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
@@ -1097,8 +1222,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
@@ -1142,8 +1267,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission Denied
           content:
             application/json:
               schema:
@@ -1154,6 +1279,370 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for PostIts  -------------------------------------------------------
+  '/v3/files/postits/{systemId}/{path}':
+    post:
+      summary: Create a PostIt
+      tags: 
+        - PostIts
+      description: |
+        Create a PostIt.  The PostIt will grant access to a file url.
+        The newly created PostIt can be redeemed by anyone without 
+        further authorization.  This will nearly identical to calling
+        the files service getContents endpoint.
+      operationId: createPostIt
+      parameters:
+        - name: systemId
+          description: The name of the system to create the PostIt for.
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+        - name: path
+          in: path
+          required: true
+          description: Path relative to the system *rootDir*
+          example: /DirectoryA/DirectoryB/file.txt
+          schema: 
+            type: string
+      requestBody:
+        required: true
+        description: A JSON document describing the PostIt to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePostItRequest'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostItResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+  '/v3/files/postits':
+    get:
+      summary: List PostIts.
+      tags: 
+        - PostIts
+      description: |
+        Retrieve a list of all PostIts.  Use *listType* and *select* query 
+        parameters to limit results. Query parameter *listType* allows for filtering 
+        results based on authorization. Options for *listType* are
+          - *OWNED* Include only items owned by requester (Default)
+          - *ALL* Include all items requester is authorized to view. (Tenant admins can view all PostIts in their tenant).
+      operationId: listPostIts
+      parameters:
+        - name: listType
+          in: query 
+          schema: 
+            $ref: '#/components/schemas/ListTypeEnum'
+        - name: limit
+          in: query
+          description: Limit number of items returned. For example limit=10. Use -1 for unlimited. Default is 100.
+          schema:
+            type: integer
+            default: 100
+        - name: orderBy
+          in: query
+          description: Attribute for sorting. Direction may be included. For example orderBy=id(desc). Default direction is (asc).
+          schema:
+            type: string
+        - name: skip
+          in: query
+          description: Number of items to skip. Use one of skip or startAfter. For example skip=10. Default is 0.
+          schema:
+            type: integer
+        - name: startAfter
+          in: query
+          description: Where to start when sorting. Use one of skip or startAfter. Must also specify orderBy. For example, limit=10&orderBy=id(asc)&startAfter=&lt;postitid&gt;
+          schema:
+            type: string
+        - name: select
+          in: query
+          description: List of attributes to be included as part of each result item. Keywords *allAttributes* and *summaryAttributes* are supported. For example select=id,owner,path
+          schema:
+            type: string
+            default: 'summaryAttributes'
+
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostItListResponse'    
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+  '/v3/files/postits/{postitId}':
+    get:
+      summary: Get PostIt.
+      tags: 
+        - PostIts
+      description: Get a single PostIt.  This does not redeem the PostIt. 
+      operationId: getPostIt
+      parameters:
+        - name: postitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostItResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+    patch:
+      summary: Modify a PostIt
+      tags: 
+        - PostIts
+      description: |
+        Update selected fields of a PostIt. 
+      operationId: updatePostIt
+      parameters:
+        - name: postitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: A JSON document describing the PostIt to be updated.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePostItRequest'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostItResponse'          
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+    delete:
+      summary: Delete a PostIt
+      tags: 
+        - PostIts
+      description: Delete a PostIt. 
+      operationId: deletePostIt
+      parameters:
+        - name: postitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '401':
+          description: Not Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+  '/v3/files/postits/redeem/{postitId}':
+    get:
+      summary: Redeem PostIt.
+      tags: 
+        - PostIts
+      description: Redeem a PostIt.  This will return the file that is pointed to by the PostIt.  No authentication is required.
+        If the *zip* query param is provided it controls if the content is zipped or not.  If zip is not provided, it defaults
+        to false unless the path pointed to by the PostIt is a directory.  In the case of a directory, the default is zip=true.
+        Directories must by redeemed in zipped format, so either accept the default, or specify zip=true.
+      operationId: redeemPostIt
+      parameters:
+        - name: postitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: zip
+          in: query
+          description: Indicates a zip output stream should be provided.  If zip is not provided it defaults to false unless
+            the path is a directory.  In the case of a directory the content will be zipped.
+          schema:
+            type: boolean
+          example: false
+      responses:
+        '200':
+          description: Success.
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '403':
+          description: Permission Denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
+        '500':
+          description: Internal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStringResponse'
 
 # ------------------------------------------------------------------------------
 # --- Components ---------------------------------------------------------------
@@ -1226,6 +1715,18 @@ components:
           type: boolean
         link:
           type: boolean
+    # --- AclEntryInfo -----------------------------------------------------------------
+    AclEntryInfo:
+      type: object
+      properties:
+        defaultAcl:
+          type: boolean
+        type:
+          type: string
+        principal:
+          type: string
+        permissions:
+          type: string
     FileListingResponse:
       type: object
       properties:
@@ -1429,6 +1930,56 @@ components:
         endTime:
           type: string
           format: date-time
+    # --- PostIt -------------------------------------------------------------
+    PostIt:
+      type: object
+      properties:
+        postitId:
+          type: string
+          format: uuid
+          description: The unique ID of the PostIt.
+        systemId:
+          type: string
+          description: The ID of the system where the file pointed to by the PostIt resides.
+        owner:
+          type: string
+          description: The owner of the PostIt.
+        tenantId:
+          type: string
+          description: the tenant that tthe PostIt belongs to.
+        path:
+          type: string
+          description: Path relative to the system *rootDir*
+        allowedUses:
+          type: integer
+          format: int32
+          description: The number of times the PostIt may be redeemed.  This number minus *uses* is the number of uses remaining.
+        timesUsed:
+          type: integer
+          format: int32
+          description: The number of times the PostIt has already been retrieved.
+        jwtUser:
+          type: string
+          description: Authenticated user from the JWT (may be different than OBO user).
+        jwtTenantId:
+          type: string
+          description: Tenant of authenticated user from the JWT (may be different than OBO user's tenant).
+
+        redeemUrl:
+          type: string
+          description: The url to use to retrieve the file pointed to by the PostIt.
+        expiration:
+          type: string
+          format: date-time
+          description: The expiration date/time of the PostIt.
+        created:
+          type: string
+          format: date-time
+          description: Creation timestamp in UTC
+        updated:
+          type: string
+          format: date-time
+          description: Last update timestamp in UTC
     # --- String types with constraints ------------------------------------
     IdString:
       type: string
@@ -1531,6 +2082,73 @@ components:
         argument:
           type: string
           description: Argument for native linux operation
+    NativeLinuxSetFaclRequest:
+      required:
+        - operation
+        - aclString
+      type: object
+      properties:
+        operation: 
+          type: string
+          enum:
+            - ADD
+            - REMOVE
+            - REMOVE_DEFAULT
+            - REMOVE_ALL
+        recursionMethod:
+          type: string
+          enum:
+            - NONE
+            - PHYSICAL
+            - LOGICAL
+          default: NONE
+          description: |
+            Recursion may be set to physical (don't follow symlinks) or
+            logical (follow symlinks), or none (don't recurse).
+        aclString:
+          type: string
+          description: |
+            specifies the actual acl string to set.  Multiple acls may be separated by 
+            commas.
+            Examples - user:myuser:rwx,group 
+                       group:mygroup:rw 
+                       user:myuser:rwx,group,group:mygroup:rw 
+    CreatePostItRequest:
+      type: object
+      properties:
+        allowedUses:
+          type: integer
+          format: int32
+          description: | 
+            Number of times that the new PostIt can be redeemed. The
+            default is one use.  Setting the value to -1 (negative one)
+            will allow the PostIt to be redeemed an unlimited number of
+            times.
+          default: 1
+        expirationSeconds:
+          type: string
+          format: int32
+          description: | 
+            Number of seconds until the PostIt expires.  
+            Default is 30 days.
+          default: 2592000
+
+    UpdatePostItRequest:
+      type: object
+      properties:
+        allowedUses:
+          type: integer
+          format: int32
+          description: Number of times that the new PostIt can be redeemed.
+        expiration:
+          type: string
+          format: date-time
+          description: Expiration date of the PostIt.
+        unlimited:
+          type: boolean
+          description: If set to true, this PostIt will have unlimited uses and not expire.
+
+      
     # -------------------------------------------------------------------------
     # --- Response objects ----------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1586,6 +2204,26 @@ components:
           type: string
         metadata:
           type: object
+    RespChangeCount:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultChangeCount'
+        metadata:
+          type: object
+    ResultChangeCount:
+      type: object
+      properties:
+        changes:
+          type: integer
+          format: int32
+          example: 1
     RespFileList:
       type: object
       properties:
@@ -1639,6 +2277,46 @@ components:
           type: string
         stdErr:
           type: string
+    NativeLinuxSetFaclResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/NativeLinuxSetFaclResult'
+        version:
+          type: string
+        metadata:
+          type: object
+    NativeLinuxSetFaclResult:
+      type: object
+      properties:
+        command:
+          type: string
+        exitCode:
+          type: integer
+          format: int32
+        stdOut:
+          type: string
+        stdErr:
+          type: string
+    NativeLinuxGetFaclResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          items:
+            $ref: '#/components/schemas/AclEntryInfo'
+        version:
+          type: string
+        metadata:
+          type: object
+        
     FilePermissionResponse:
       type: object
       properties:
@@ -1720,6 +2398,34 @@ components:
           type: string
         metadata:
           type: object
+    PostItResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/PostIt'
+        version:
+          type: string
+        metadata:
+          type: object
+    PostItListResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/PostIt'
+        version:
+          type: string
+        metadata:
+          type: object
     # -------------------------------------------------------------------------
     # --- Enums ---------------------------------------------------------------
     # -------------------------------------------------------------------------
@@ -1741,3 +2447,10 @@ components:
       enum:
         - READ
         - MODIFY
+    ListTypeEnum:
+      type: string
+      default: OWNED
+      enum:
+        - OWNED
+        - ALL
+
