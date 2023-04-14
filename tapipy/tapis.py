@@ -805,8 +805,8 @@ class Tapis(object):
                              files={"file": open(source_file_path, 'rb')},
                              headers=headers).prepare()
         # call the plugins' pre-request callables:
-        for f in self.tapis_client.plugin_on_call_pre_request_callables:
-            f(self, r, **kwargs)
+        # for f in self.tapis_client.plugin_on_call_pre_request_callables:
+        #     f(self, r, **kwargs)
 
         # make the request and return the response object -
         try:
