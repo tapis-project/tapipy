@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.2.7'
+  version: '1.3.1'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -135,12 +135,6 @@ paths:
           schema:
             type: string
             default: 'summaryAttributes'
-        - name: resolveEffectiveUser
-          in: query
-          description: If effectiveUserId is ${apiUserId} then resolve it, else return value in system definition.
-          schema:
-            type: boolean
-            default: true
         - name: showDeleted
           in: query
           description: Indicates if Systems marked as deleted should be shown in the results. Default is false.
@@ -160,12 +154,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -181,12 +169,20 @@ paths:
         Name must begin with an alphabetic character and can be no more than 80 characters in length.
         Description is optional with a maximum length of 2048 characters.
 
+        The attribute *effectiveUserId* determines the user that is used to access the underlying host.
+        The attribute can be set to a static string indicating a specific user (such as a service account) or
+        dynamically specified as *${apiUserId}*. For the case of *${apiUserId}*, the service resolves the variable by
+        extracting the identity from the request to the service (i.e. the JWT).
+
         If the *effectiveUserId* is static (i.e. not *${apiUserId}*) then credentials may optionally be provided in the
         *authnCredential* attribute of the request body. The Systems service does not store the secrets in its
         database, they are persisted in the Security Kernel.
 
-        By default any credentials provided for LINUX type systems are verified. Use query parameter
+        By default for LINUX and S3 type systems credentials provided are verified. Use query parameter
         skipCredentialCheck=true to bypass initial verification of credentials.
+
+        The attribute *rootDir* serves as an effective root directory when operating on files through the Tapis
+        Files service. When using Files to list, copy, move, mkdir, etc. all paths are relative to this directory.
 
         Note that certain attributes in the request body (such as tenant) are allowed but ignored so that the JSON
         result returned by a GET may be modified and used when making a POST request to create a system.
@@ -201,7 +197,7 @@ paths:
       parameters:
         - name: skipCredentialCheck
           in: query
-          description: Bypass initial check for valid credentials. Default is false.
+          description: Bypass initial credential validation (for LINUX and S3). Default is false.
           schema:
             type: boolean
             default: false
@@ -220,13 +216,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespResourceUrl'
         '400':
-          description: Input error. Invalid JSON.
+          description: Input error. Invalid JSON or credential validation failed.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -318,12 +314,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -401,12 +391,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -437,12 +421,6 @@ paths:
                 $ref: '#/components/schemas/RespSystems'
         '400':
           description: Input error.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
           content:
             application/json:
               schema:
@@ -503,18 +481,16 @@ paths:
           description: Restricted. Only certain services may impersonate a Tapis user.
           schema:
             type: string
-        - name: resolveEffectiveUser
-          in: query
-          description: If effectiveUserId is ${apiUserId} then resolve it, else return value in system definition.
-          schema:
-            type: boolean
-            default: true
         - name: sharedAppCtx
           in: query
-          description: Restricted. Only certain services may indicate that the request is in a shared context.
+          description: Restricted. Only certain services may indicate that the request is in a shared context. Must be set to the grantor who shared the application.
           schema:
-            type: boolean
-            default: false
+            $ref: '#/components/schemas/UserNameString'
+        - name: resourceTenant
+          in: query
+          description: Restricted. May be used by Tapis services to set the tenant associated with the requested resource.
+          schema:
+            type: string
       responses:
         '200':
           description: System found.
@@ -528,8 +504,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -591,8 +567,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -620,7 +596,7 @@ paths:
         database, they are persisted in the Security Kernel.
 
 
-        By default any credentials provided for LINUX type systems are verified. Use query parameter
+        By default for LINUX and S3 type systems credentials provided are verified. Use query parameter
         skipCredentialCheck=true to bypass initial verification of credentials.
 
         Note that certain attributes in the request body (such as tenant) are allowed but ignored so that the JSON
@@ -655,7 +631,7 @@ paths:
             $ref: '#/components/schemas/IdString'
         - name: skipCredentialCheck
           in: query
-          description: Bypass initial check for valid credentials. Default is false.
+          description: Bypass initial credential validation (for LINUX and S3). Default is false.
           schema:
             type: boolean
             default: false
@@ -681,6 +657,12 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
         '401':
           description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -717,8 +699,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBoolean'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -755,8 +737,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -793,8 +775,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -831,8 +813,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -869,8 +851,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -912,8 +894,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespChangeCount'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -950,8 +932,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespSystemHistory'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1021,8 +1003,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1044,7 +1026,7 @@ paths:
         - Credentials
       description: |
         Create or update credentials in the Security Kernel for given system and target *userName* using a request body.
-        Requester must be owner of the system. Credentials for multiple authentication methods may be provided.
+        Credentials for multiple authentication methods may be provided.
 
         The Systems service does not store the secrets in its database, they are persisted in the Security Kernel.
 
@@ -1060,10 +1042,8 @@ paths:
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
         if *{userName}* is the Tapis user making the request.
 
-        Secrets for multiple authentication methods may be provided.
-
-        By default any credentials provided for LINUX type systems are verified. Use query parameter
-        *skipCredentialCheck=true* to bypass initial verification of credentials.
+        By default credentials for LINUX and S3 type systems are verified. Use query parameter
+        *skipCredentialCheck=true* to bypass initial credential validation.
       operationId: createUserCredential
       parameters:
         - name: systemId
@@ -1078,7 +1058,7 @@ paths:
             $ref: '#/components/schemas/UserNameString'
         - name: skipCredentialCheck
           in: query
-          description: Bypass initial check for valid credentials. Default is false.
+          description: Bypass initial credential validation (for LINUX and S3). Default is false.
           schema:
             type: boolean
             default: false
@@ -1097,13 +1077,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '400':
-          description: Input error. Invalid JSON.
+          description: Input error. Invalid JSON or credential validation failed.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1144,6 +1124,174 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
         '400':
           description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Permission denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/credential/{systemId}/user/{userName}/check':
+    post:
+      tags:
+        - Credentials
+      description: |
+        Check user credentials by connecting to the system host. Not supported for all system types. Currently supported
+        for LINUX and S3 type systems.
+
+        If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then *{userName}* is interpreted
+        as a Tapis user and a search is made for credentials associated with *{userName}*.
+
+        If the *effectiveUserId* for the system is static (i.e. not *${apiUserId}*) then *{userName}* is ignored and
+        a search is made for credentials associated with *effectiveUserId*.
+
+        Operation is allowed if requester is the system owner or a tenant administrator.
+        If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
+        if *{userName}* is the Tapis user making the request.
+
+        Desired authentication method may be specified using query parameter authnMethod=<method>. If not specified
+        then credentials for the system's default authentication method are verified.
+      operationId: checkUserCredential
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+        - name: userName
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+        - name: authnMethod
+          in: query
+          description: Desired authentication method to use when verifying, system default method used if not provided.
+          schema:
+            type: string
+            default: ''
+      responses:
+        '200':
+          description: Check successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Credential validation failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '403':
+          description: Permission denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/credential/globus/authUrl':
+    get:
+      tags:
+        - Credentials
+      summary: Retrieve a Globus URL that can be used to generate an authorization code for an OAuth2 flow.
+      description: |
+        Retrieve a Globus URL + Session Id that can be used to generate an oauth2 authorization code.
+        In Globus the code is referred to as a *Native App Authorization Code*.
+        The host property of the system is used as the Endpoint Id.
+        Once a user has obtained an authorization code the corresponding Systems endpoint for generating
+        Globus tokens should be called to exchange the code + sessionId for a pair of access and refresh tokens.
+        The session Id is a Tapis Id that is used to track the oauth2 flow that is started when this call is made.
+        Note that the authorization code as per Globus documentation is valid for 10 minutes.
+      operationId: getGlobusAuthUrl
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGlobusAuthUrl'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: System not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/systems/credential/{systemId}/user/{userName}/globus/tokens/{authCode}/{sessionId}':
+    post:
+      tags:
+        - Credentials
+      summary: Use a Globus authorization code + Tapis session Id to generate tokens
+      description: |
+        Use a Globus *Native App Authorization Code* and a Tapis session Id to generate a pair of access and refresh tokens.
+        The Systems service will use the Tapis Security Kernel to store the tokens for the given system and user.
+        The session Id is a Tapis Id that is used to track the oauth2 flow that is started when a call to the
+        getGlobusAuthUrl endpoint is made.
+        Note that the authorization code as per Globus documentation is valid for 10 minutes.
+      operationId: generateGlobusTokens
+      parameters:
+        - name: systemId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+        - name: userName
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/UserNameString'
+        - name: authCode
+          in: path
+          required: true
+          description: Authorization code to be exchanged for tokens.
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          required: true
+          description: Tapis session Id tracking the OAuth2 flow.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tokens generated and credentials updated.
           content:
             application/json:
               schema:
@@ -1193,8 +1341,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1249,8 +1397,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1295,8 +1443,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1345,8 +1493,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1387,8 +1535,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1439,8 +1587,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1473,8 +1621,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1520,8 +1668,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1554,8 +1702,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1587,8 +1735,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1637,8 +1785,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1681,8 +1829,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1724,8 +1872,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
-        '401':
-          description: Not authorized.
+        '403':
+          description: Permission denied.
           content:
             application/json:
               schema:
@@ -1797,12 +1945,19 @@ components:
           type: string
         dtnMountSourcePath:
           type: string
+        isPublic:
+          type: boolean
+        isDynamicEffectiveUser:
+          type: boolean
         isDtn:
           type: boolean
           default: false
         canExec:
           type: boolean
         canRunBatch:
+          type: boolean
+          default: false
+        enableCmdPrefix:
           type: boolean
           default: false
         mpiCmd:
@@ -1890,7 +2045,6 @@ components:
       type: object
       required:
         - name
-        - moduleLoadCommand
       properties:
         tenant:
           type: string
@@ -1900,6 +2054,21 @@ components:
           $ref: '#/components/schemas/DescriptionString'
         owner:
           $ref: '#/components/schemas/UserNameApiDefaultString'
+        moduleLoads:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleLoadSpec'
+        hiddenOptions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchedulerHiddenOptionEnum'
+
+    # --- ModuleLoadSpec ------------------------------------------------------------------
+    ModuleLoadSpec:
+      type: object
+      required:
+        - moduleLoadCommand
+      properties:
         moduleLoadCommand:
           type: string
           minLength: 1
@@ -1908,10 +2077,7 @@ components:
           items:
             type: string
             minLength: 1
-        hiddenOptions:
-          type: array
-          items:
-            $ref: '#/components/schemas/SchedulerHiddenOptionEnum'
+
     # --- LogicalQueue ------------------------------------------------------------------
     LogicalQueue:
       type: object
@@ -1980,6 +2146,10 @@ components:
         accessKey:
           type: string
         accessSecret:
+          type: string
+        accessToken:
+          type: string
+        refreshToken:
           type: string
         certificate:
           type: string
@@ -2108,6 +2278,9 @@ components:
         canRunBatch:
           type: boolean
           default: false
+        enableCmdPrefix:
+          type: boolean
+          default: false
         mpiCmd:
           type: string
           minLength: 1
@@ -2182,6 +2355,9 @@ components:
         canRunBatch:
           type: boolean
           default: false
+        enableCmdPrefix:
+          type: boolean
+          default: false
         mpiCmd:
           type: string
           minLength: 1
@@ -2252,6 +2428,8 @@ components:
           type: string
         canRunBatch:
           type: boolean
+        enableCmdPrefix:
+          type: boolean
         mpiCmd:
           type: string
           minLength: 1
@@ -2306,6 +2484,10 @@ components:
           type: string
         accessSecret:
           type: string
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
         certificate:
           type: string
     ReqPerms:
@@ -2342,7 +2524,6 @@ components:
       type: object
       required:
         - name
-        - moduleLoadCommand
       properties:
         name:
           $ref: '#/components/schemas/IdString'
@@ -2350,14 +2531,10 @@ components:
           $ref: '#/components/schemas/DescriptionString'
         owner:
           type: string
-        moduleLoadCommand:
-          type: string
-          minLength: 1
-        modulesToLoad:
+        moduleLoads:
           type: array
           items:
-            type: string
-            minLength: 1
+            $ref: '#/components/schemas/ModuleLoadSpec'
         hiddenOptions:
           type: array
           items:
@@ -2561,6 +2738,26 @@ components:
             $ref: '#/components/schemas/SchedulerProfile'
         metadata:
           type: object
+    RespGlobusAuthUrl:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultGlobusAuthUrl'
+        metadata:
+          type: object
+    ResultGlobusAuthUrl:
+      type: object
+      properties:
+        url:
+          type: string
+        sesssionId:
+          type: string
     RespShareInfo:
       type: object
       properties:
@@ -2597,6 +2794,7 @@ components:
         - PASSWORD
         - PKI_KEYS
         - ACCESS_KEY
+        - TOKEN
         - CERT
     CategoryEnum:
       type: string

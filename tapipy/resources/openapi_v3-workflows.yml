@@ -1796,22 +1796,31 @@ components:
     # ------------------------------------------------------------------------------
     
     # --- Pipelines ---
+    Env:
+      type: object
+      additionalProperties: true
+    
+    Params:
+      type: object
+      additionalProperties: true
 
     ExecutionProfile:
       type: object
       properties:
+        duplicate_submission_policy:
+          $ref: '#/components/schemas/EnumDuplicateSubmissionPolicy'
+        flavor:
+          $ref: '#/components/schemas/EnumTaskFlavor'
+        invocation_mode:
+          $ref: '#/components/schemas/EnumInvocationMode'
         max_retries:
           type: integer
           default: 0
         max_exec_time:
           type: integer
           default: 3600
-        invocation_mode:
-          $ref: '#/components/schemas/EnumInvocationMode'
         retry_policy:
           $ref: '#/components/schemas/EnumRetryPolicy'
-        duplicate_submission_policy:
-          $ref: '#/components/schemas/EnumDuplicateSubmissionPolicy'
 
     BaseArchive:
       type: object
@@ -1881,6 +1890,10 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/ID'
+        env:
+          $ref: "#/components/schemas/Env"
+        params:
+          $ref: "#/components/schemas/Params"
         group:
           type: string
           format: uuid
@@ -1891,6 +1904,12 @@ components:
           format: uuid
         execution_profile:
           $ref: '#/components/schemas/ExecutionProfile'
+        current_run:
+          type: string
+          format: uuid
+        last_run:
+          type: string
+          format: uuid
         tasks:
           type: array
           items:
@@ -1921,9 +1940,8 @@ components:
         pipeline_run:
           type: string
           format: uuid
-        task:
+        task_id:
           type: string
-          format: uuid
         status:
           $ref: "#/components/schemas/EnumRunStatus"
         started_at:
@@ -1971,8 +1989,10 @@ components:
           $ref: '#/components/schemas/ExecutionProfile'
         input:
           type: object
+          additionalProperties: true
         output:
           type: object
+          additionalProperties: true
 
     ImageBuildTask:
       allOf:
@@ -2029,7 +2049,7 @@ components:
 
     TapisActorTask:
       allOf:
-        - $ref: '#/components/schemas/ReqBaseTask'
+        - $ref: '#/components/schemas/BaseTask'
         - type: object
           properties:
             poll:
@@ -2037,14 +2057,28 @@ components:
               default: true
             tapis_actor_id:
               type: string
-
+            tapis_actor_message:
+              nullable: true
+              type: string
+                  
     FunctionTask:
       allOf:
-        - $ref: '#/components/schemas/ReqBaseTask'
+        - $ref: '#/components/schemas/BaseTask'
         - type: object
           properties:
             runtime:
               $ref: "#/components/schemas/EnumRuntimeEnvironment"
+            installer:
+              $ref: "#/components/schemas/EnumInstaller"
+            command:
+              type: string
+            code:
+              type: string
+              format: byte
+            packages:
+              type: array
+              items:
+                type: string
 
     # --- Task Dependency ---
     TaskDependency:
@@ -2348,6 +2382,10 @@ components:
             $ref: "#/components/schemas/ID"
         description:
           $ref: '#/components/schemas/DescriptionString'
+        env:
+          $ref: "#/components/schemas/Env"
+        params:
+          $ref: "#/components/schemas/Params"
         type:
           $ref: '#/components/schemas/EnumPipelineType'
         execution_profile:
@@ -2377,8 +2415,10 @@ components:
           $ref: "#/components/schemas/ExecutionProfile"
         input:
           type: object
+          additionalProperties: true
         output:
           type: object
+          additionalProperties: true
 
     ReqImageBuildTask:
       allOf:
@@ -2456,7 +2496,10 @@ components:
               default: true
             tapis_actor_id:
               type: string
-              default: null
+            tapis_actor_message:
+              nullable: true
+              type: string
+                    
     
     ReqFunctionTask:
       allOf:
@@ -2464,9 +2507,22 @@ components:
         - type: object
           required:
             - runtime
+            - installer
+            - code
           properties:
             runtime:
               $ref: "#/components/schemas/EnumRuntimeEnvironment"
+            installer:
+              $ref: "#/components/schemas/EnumInstaller"
+            command:
+              type: string
+            code:
+              type: string
+              format: byte
+            packages:
+              type: array
+              items:
+                type: string
 
     ReqTask:
       oneOf:
@@ -2728,6 +2784,8 @@ components:
     ReqRunPipeline:
       type: object
       properties:
+        params:
+          $ref: "#/components/schemas/Params"
         directives:
           type: array
           items:
@@ -2851,14 +2909,6 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/GroupUser'
-
-    # RespGroup:
-    #   allOf:
-    #     - $ref: '#/components/schemas/RespObject'
-    #     - type: object
-    #       properties:
-    #         result:
-    #           $ref: '#/components/schemas/Group'
 
     RespGroupList:
       allOf:
@@ -3024,6 +3074,7 @@ components:
         - archiving
         - terminated
         - terminating
+        - skipped
 
     EnumInvocationMode:
       type: string
@@ -3052,6 +3103,18 @@ components:
         - tapis_job
         - tapis_actor
         - function
+
+    EnumTaskFlavor:
+      type: string
+      enum:
+        - c1sml
+        - c1med
+        - c1lrg
+        - c1xlrg
+        - c1xxlrg
+        - g1nvdsml
+        - g1nvdmed
+        - g1nvdlrg
 
     EnumBuilder:
       type: string
@@ -3093,11 +3156,20 @@ components:
       enum:
         - github
         - dockerhub
+    
+    EnumInputType:
+      type: string
+      enum:
+        - string
+        - int
+        - float
+
+    EnumInstaller:
+      type: string
+      enum:
+        - pip
 
     EnumRuntimeEnvironment:
       type: string
       enum:
-        - python3.9
-        - python2.7
-        - node20
-        - java17
+        - python:3.9

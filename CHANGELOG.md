@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.3.2 - 2023-04-14
+### Added
+- No change.
+
+### Changed
+- Added support for requests with multipart/form-data headers. File uploading/etc now working natively.
+- t.files.insert is now usable.
+- Updating specs for systems, apps, workflows, notifications.
+
+### Removed
+- No change.
+
+
 ## 1.3.1 - 2023-03-23
 ### Added
 - No change.

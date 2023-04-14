@@ -803,7 +803,7 @@ class Tapis(object):
         r = requests.Request('POST',
                              url,
                              files={"file": open(source_file_path, 'rb')},
-                             _tapis_headers=headers).prepare()
+                             headers=headers).prepare()
         # call the plugins' pre-request callables:
         for f in self.tapis_client.plugin_on_call_pre_request_callables:
             f(self, r, **kwargs)
@@ -1089,6 +1089,7 @@ class Operation(object):
 
         # construct the data -
         data = None
+        files = None
         # these are the list of allowable request body content types; ex., 'application/json'.
         if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
             # Find possible headers, user specified
@@ -1125,8 +1126,27 @@ class Operation(object):
                 headers['Content-Type'] = 'application/x-www-form-urlencoded'
                 data = f"message={kwargs['message']}"
             elif 'multipart/form-data' in requestContentTypes:
-                # todo - iterate over parts in self.op_desc.request_body.content['multipart/form-data'].schema.properties
-                raise NotImplementedError
+                # We DO NOT set multipart/form-data headers. The requests library will do header creation for us.
+                # multipart/form-data should use request.Request(files={"formpart1": "formdata1", "formpart2": "formdata2}, ...)
+                # With the files arg, requests will set the Content-Type, boundary and Content-Length headers for us.
+                # It doesn't seem to work if we set Content-Type ourselves.
+                # headers['Content-Type'] = 'multipart/form-data'
+
+                required_fields = self.op_desc.request_body.content['multipart/form-data'].schema.required
+                data = {}
+                # if the request body has no defined properties, look for a single "request_body" parameter.
+                if self.op_desc.request_body.content['multipart/form-data'].schema.properties == {}:
+                    # choice of "request_body" is arbitrary, as the property name is not provided by the
+                    # openapi spec in this case
+                    data['request_body'] = kwargs['request_body']
+                else:
+                    # otherwise, the request body has defined properties, so look for each one in the function kwargs
+                    for p_name, p_desc in self.op_desc.request_body.content['multipart/form-data'].schema.properties.items():
+                        if p_name in kwargs:
+                            data[p_name] = kwargs[p_name]
+                        elif p_name in required_fields:
+                            raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
+                files = data
             else:
                 # We could default to providing message field
                 # Error seems better
@@ -1135,11 +1155,20 @@ class Operation(object):
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects
-        r = requests.Request(http_method,
-                             url,
-                             params=params,
-                             data=data,
-                             headers=headers).prepare()
+        # Either multipart/form-data (files) or every other type of header.
+        if files:
+            r = requests.Request(http_method,
+                                 url,
+                                 params=params,
+                                 files=files,
+                                 headers=headers).prepare()
+        else:
+            r = requests.Request(http_method,
+                                 url,
+                                 params=params,
+                                 data=data,
+                                 headers=headers).prepare()
+            
         # call the plugins' pre-request callables:
         for f in self.tapis_client.plugin_on_call_pre_request_callables:
             f(self, r, **kwargs)
