@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Files API
   description: The Tapis Files API provides for management of file resources on Tapis systems
-  version: '1.3.0'
+  version: '1.3.5'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Files API - CICSupport"
@@ -43,8 +43,8 @@ tags:
   - name: Sharing
     description: |
       In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
-      This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users
-      as well as share publicly with all users in a tenant. Sharing a path grants users READ access to the path.
+      This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users as
+      well as share publicly with all users in a tenant. Sharing a path grants users READ or MODIFY access to the path.
       
       Please note that the underlying host associated with a system typically also has it's own access controls.
 
@@ -85,7 +85,7 @@ paths:
         '503':
           description: Service unavailable.
 
-  # --- Paths for /files/ops --------------------------------------- --------------
+  # --- Paths for /files/ops -----------------------------------------------------
   /v3/files/ops/{systemId}/{path}:
     get:
       tags:
@@ -104,8 +104,9 @@ paths:
         Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*
         for the system.
         
-        Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
-        application context. Tapis authorization will be bypassed.
+        Certain services may use the query parameter *sharedCtx* to indicate that the request is in a shared
+        context. *sharedCtx* must be set to the share grantor.
+        Tapis will include the share grantor as part of authorization checks.
       operationId: listFiles
       parameters:
         - name: systemId
@@ -121,7 +122,7 @@ paths:
           required: true
           schema:
             type: string
-          example: /directoryA/directoryB/
+          example: directoryA/directoryB/
         - name: limit
           in: query
           description: pagination limit
@@ -150,12 +151,11 @@ paths:
           description: Restricted. Only certain services may impersonate a Tapis user.
           schema:
             type: string
-        - name: sharedAppCtx
+        - name: sharedCtx
           in: query
-          description: Restricted. Only certain services may indicate that the request is in a shared context.
+          description: Restricted. Only certain services may indicate that the request is in a shared context. Must be set to the share grantor.
           schema:
-            type: boolean
-            default: false
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
           description: A list of files
@@ -388,8 +388,10 @@ paths:
       description: |
         Create a directory on the system at the given path. Not supported for all system types. Currently supported
         for LINUX and IRODS type systems.
-        Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
-        application context. Tapis authorization will be bypassed.
+
+        Certain services may use the query parameter *sharedCtx* to indicate that the request is in a shared
+        context. *sharedCtx* must be set to the share grantor.
+        Tapis will include the share grantor as part of authorization checks.
       operationId: mkdir
       parameters:
         - name: systemId
@@ -398,12 +400,11 @@ paths:
           required: true
           schema:
             type: string
-        - name: sharedAppCtx
+        - name: sharedCtx
           in: query
-          description: Restricted. Only certain services may indicate that the request is in a shared context.
+          description: Restricted. Only certain services may indicate that the request is in a shared context. Must be set to the share grantor.
           schema:
-            type: boolean
-            default: false
+            $ref: '#/components/schemas/UserNameString'
       requestBody:
         content:
           application/json:
@@ -463,7 +464,7 @@ paths:
           required: true
           schema:
             type: string
-          example: /directoryA/file1
+          example: directoryA/file1
         - name: followLinks
           in: query
           description: When path is a symbolic link whether to get information about the link (false) or the link target (true)
@@ -718,8 +719,9 @@ paths:
         if system *rootDir* plus *path* would result in all files on the host being included. Please download
         individual directories, files or objects.
         
-        Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
-        application context. Tapis authorization will be bypassed.
+        Certain services may use the query parameter *sharedCtx* to indicate that the request is in a shared
+        context. *sharedCtx* must be set to the share grantor.
+        Tapis will include the share grantor as part of authorization checks.
       operationId: getContents
       parameters:
         - name: systemId
@@ -735,7 +737,7 @@ paths:
           required: true
           schema:
             type: string
-          example: /directoryA/directoryB/
+          example: directoryA/directoryB/
         - name: range
           in: header
           description: Optional range of bytes to send. If not specified all content
@@ -760,12 +762,11 @@ paths:
           description: Restricted. Only certain services may impersonate a Tapis user.
           schema:
             type: string
-        - name: sharedAppCtx
+        - name: sharedCtx
           in: query
-          description: Restricted. Only certain services may indicate that the request is in a shared context.
+          description: Restricted. Only certain services may indicate that the request is in a shared context. Must be set to the share grantor.
           schema:
-            type: boolean
-            default: false
+            $ref: '#/components/schemas/UserNameString'
       responses:
         '200':
           description: OK
@@ -889,7 +890,7 @@ paths:
           example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
         - name: impersonationId
           in: query
-          description: Highly restricted. Only certain services may impersonate a Tapis user.
+          description: Restricted. Only certain services may impersonate a Tapis user.
           schema:
             type: string
       responses:
@@ -1616,6 +1617,12 @@ paths:
           schema:
             type: boolean
           example: false
+        - name: download
+          in: query
+          description: If set to true, this will force a browser to initiate a file download.  If set to false, the content-disposition header will be set to inline causing the browser to render the document.  If download is not provided it defaults to false. 
+          schema:
+            type: boolean
+          example: false
       responses:
         '200':
           description: Success.
@@ -2059,14 +2066,10 @@ components:
           type: boolean
           default: false
           description: Allow the full transfer to succeed even if this element fails.
-        srcSharedAppCtx:
-          type: boolean
-          default: false
-          description: Certain services may indicate that the request is in a shared context.
-        destSharedAppCtx:
-          type: boolean
-          default: false
-          description: Certain services may indicate that the request is in a shared context.
+        srcSharedCtx:
+          $ref: '#/components/schemas/UserNameString'
+        destSharedCtx:
+          $ref: '#/components/schemas/UserNameString'
     NativeLinuxOpRequest:
       required:
         - argument
@@ -2125,7 +2128,7 @@ components:
             will allow the PostIt to be redeemed an unlimited number of
             times.
           default: 1
-        expirationSeconds:
+        validSeconds:
           type: string
           format: int32
           description: | 

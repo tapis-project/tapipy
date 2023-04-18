@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.3.3 - 2023-04-18
+### Added
+- No change.
+
+### Changed
+- Update spec for files.
+
+### Removed
+- No change.
+
+
 ## 1.3.2 - 2023-04-14
 ### Added
 - No change.
