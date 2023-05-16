@@ -5,18 +5,18 @@ class AttrDict(dict):
     def __setattr__(self, key, value):
         self[key] = value
 
-def serialize_result(result):
+def tapisresult_to_json_serializer(result):
         if type(result) in [str, int, float, type(None), bool]: return result
         
         if type(result) == list:
             modified_result = []
             for res in result:
-                modified_result.append(serialize_result(res))
+                modified_result.append(tapisresult_to_json_serializer(res))
 
             return modified_result
         
         modified_result = result.__dict__
         for prop in modified_result:
-            modified_result[prop] = serialize_result(modified_result[prop])
+            modified_result[prop] = tapisresult_to_json_serializer(modified_result[prop])
 
         return modified_result

@@ -1,6 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.3.4 - 2023-05-16
+### Added
+- No change.
+
+### Changed
+- Update spec for app and authenticator.
+- Nathan added json serializer for tapis result object serialization to dictionary.
+
+### Removed
+- No change.
+
+
 ## 1.3.3 - 2023-04-18
 ### Added
 - No change.

@@ -503,13 +503,20 @@ paths:
       tags:
         - jobs
       description: >-
-        Download job's output files for previously submitted job by its UUID.
-        The job must be in a terminal state (FINISHED or FAILED or CANCELLED).  
+        Download job's output files for previously submitted job by its UUID. 
+
+        The job must be in a terminal state (FINISHED or FAILED or CANCELLED).
+        By default, allowIfRunning=false. 
+
+        allowIfRunning=true allows job output download even if job is not in the
+        terminal state.  
 
 
         The caller must be the job owner, creator or a tenant administrator.
 
         The URL must ends with '/' even if there is no outputPath is specified. 
+
+        outputPath is relative to the job output path. 
       operationId: getJobOutputDownload
       parameters:
         - name: jobUuid
@@ -533,6 +540,11 @@ paths:
           schema:
             type: string
             default: zip
+        - name: allowIfRunning
+          in: query
+          schema:
+            type: boolean
+            default: false
         - name: pretty
           in: query
           schema:
@@ -584,13 +596,20 @@ paths:
         - jobs
       description: >-
         Retrieve job's output files list for previously submitted job by its
-        UUID. The job must be in a terminal state (FINISHED or FAILED or
-        CANCELLED)  
+        UUID. 
+
+        The job must be in a terminal state (FINISHED or FAILED or CANCELLED).
+        By default, allowIfRunning=false. 
+
+        allowIfRunning=true allows job output listing even if job is not in the
+        terminal state.  
 
 
         The caller must be the job owner, creator or a tenant administrator.
 
-        The URL must ends with '/' even if there is no outputPath is specified. 
+        The URL must ends with '/' even if there is no outputPath is specified.
+
+        outputPath is relative to the job output path. 
       operationId: getJobOutputList
       parameters:
         - name: jobUuid
@@ -614,6 +633,11 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: allowIfRunning
+          in: query
+          schema:
+            type: boolean
+            default: false
         - name: pretty
           in: query
           schema:
@@ -1828,7 +1852,7 @@ components:
         cmdPrefix:
           type: string
         sharedAppCtx:
-          type: boolean
+          type: string
         sharedAppCtxAttribs:
           type: array
           items:
