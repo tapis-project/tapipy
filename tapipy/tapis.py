@@ -7,25 +7,28 @@ import json
 import jwt
 import os
 import requests
-from openapi_core import create_spec
-from openapi_core.schema.parameters.enums import ParameterLocation
+from openapi_core import Spec
+from jsonschema_spec.handlers.file import BaseFilePathHandler
 import yaml
-from . import errors
 import pickle
 import shutil
+import time
 import concurrent.futures
 import copy
 from typing import Dict, NewType, Mapping, Optional
 from atomicwrites import atomic_write
-import openapi_core
 
+from tapipy.util import dereference_spec
 import tapipy.errors
+from . import errors
+
+start_time = time.time()
 
 # Type declarations
 ResourceName = NewType('ResourceName', str)
 ResourceUrl = NewType('ResourceUrl', str)
 SpecPath = NewType('SpecPath', str)
-OpenApiSpec = NewType('OpenApiSpec', openapi_core.schema.specs.models.Spec)
+OpenApiSpec = NewType('OpenApiSpec', Spec)
 Resources = Dict[ResourceName, ResourceUrl]
 Specs = Dict[ResourceName, OpenApiSpec]
 ResourceInfo = Mapping[ResourceName, SpecPath]
@@ -70,7 +73,7 @@ RESOURCES = {
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml',
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml',
-        'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
+        'pods': 'https://raw.githubusercontent.com/tapis-project/tapipy/main/tapipy/resources/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-jobs.yml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml',
         'workflows': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-workflows.yml',
@@ -177,6 +180,19 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
     #pool.close()
     #pool.join()
 
+from urllib.parse import urlparse
+def new_call(self, uri):
+    if hasattr(uri, 'read'):
+        return super(BaseFilePathHandler, self).__call__(uri)
+    
+    parsed_url = urlparse(uri)
+    if parsed_url.scheme not in self.allowed_schemes:
+        raise ValueError("Not allowed scheme")
+
+    return self._open(uri)
+
+BaseFilePathHandler.__call__ = new_call
+
 
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     """
@@ -189,21 +205,18 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     response = requests.get(resource_url)
     if response.status_code == 200:
         try:
-            # Loads yaml into Python dictionary
-            spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
-        except Exception as e:
-            print(f'Got exception when attempting to load yaml for '
-                  f'"{resource_name}" resource; exception: {e}')
-            return
-        try:
-            # Attempts to create spec from dict to ensure the spec is valid
-            # We do a deepcopy as create_spec for some reason adds fields
-            # to the dictionary that's given
-            test_spec_dict = copy.deepcopy(spec_dict)
-            create_spec(test_spec_dict)
+            # Directly creates spec from response. This validates spec as valid.
+            spec = Spec.from_file(response.content)
         except Exception as e:
             print(f'Got exception when test creating spec for "{resource_name}" '
                   f'resource; Spec probably not verifying; exception: {e}')
+            return
+        try:
+            # Dereference spec so we have a dict we can pickle.
+            spec_dict = dereference_spec(spec)
+        except Exception as e:
+            print(f'Got exception when derefrencing spec for "{resource_name}" '
+                  f'resource; exception: {e}')
             return
         try:
             # Pickles and saves the spec dict to the spec_path atomically
@@ -230,23 +243,23 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
         if "local:" in url:
             try:
                 spec_path = url.replace('local:', '').strip()
-                with open(spec_path, 'rb') as spec_file:
-                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
-                specs.update({resource_name: create_spec(spec_dict)})
+                spec = Spec.from_file_path(spec_path)
+                spec_dict = dereference_spec(spec)
+                specs.update({resource_name: spec_dict})
                 dicts.update({resource_name: spec_dict})
             except Exception as e:
                 print(f'Error reading local "{resource_name}" resource. '
-                      f'Ensure path is absolute. e:{e}')
+                      f'Ensure path is absolute {spec_path}. e:{e}')
             continue
         _, _, spec_path = get_file_info_from_url(url, spec_dir)
         try:
             # Unpickle and create_spec
             with open(spec_path, 'rb') as spec_file:
                 spec_dict = pickle.load(spec_file)
-            specs.update({resource_name: create_spec(spec_dict)})
+            specs.update({resource_name: spec_dict})
             dicts.update({resource_name: spec_dict})
         except Exception as e:
-            print(f'Got exception trying to unpickle and create spec for '
+            print(f'Got exception trying to unpickle spec for '
                   f'spec_path: "{resource_name}"; exception: {e}')
             # Using resource name to look if the resource exists in the
             # tapipy prod resources. If it is found, we fall back and use that!
@@ -258,9 +271,9 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                 try:
                     # Unpickle and create_spec
                     with open(spec_path, 'rb') as spec_file:
-                        spec_dict = pickle.load(spec_file)
-                    specs.update({resource_name: create_spec(spec_dict)})
-                    dicts.update({resource_name: spec_dict})
+                        spec = pickle.load(spec_file)
+                    specs.update({resource_name: spec})
+                    dicts.update({resource_name: spec})
                 except Exception as e:
                     print('Error opening tapipy prod spec. This is bad.')
             else:
@@ -319,7 +332,11 @@ def get_spec_dir(spec_dir: str):
     return spec_dir
     
 
+print(f"TIMING: Before _get_specs for tapipy resources: Took: {time.time() - start_time} seconds")
+before_time = time.time()
 RESOURCE_SPECS, RESOURCE_DICTS = _get_specs(RESOURCES['tapipy'])
+print(f"TIMING: After _get_specs for tapipy resources: Took: {time.time() - before_time} seconds for get_specs")
+print(f"TIMING: After _get_specs for tapipy resources: Took: {time.time() - start_time} seconds from start")
 
 
 def get_basic_auth_header(username: str, password: str) -> str:
@@ -483,7 +500,7 @@ class Tapis(object):
         # create resources for each API defined above. In the future we could make this more dynamic in multiple ways.
         for resource_name, spec in resource_specs.items():
             # each API is a top-level attribute on the DynaTapy object, a Resource object constructed as follows:
-            setattr(self, resource_name, Resource(resource_name, spec.paths, self))
+            setattr(self, resource_name, Resource(resource_name, spec['paths'], self))
 
         # deal with plugins
         self.plugins = plugins
@@ -924,29 +941,29 @@ class Resource(object):
         # tapis_client stores configuration data (api_server, token, etc..)
         self.tapis_client = tapis_client
 
-        # Here we create an attr on the object for each operation_id in the spec. The attr is itself an
+        # Here we create an attr on the object for each operationId in the spec. The attr is itself an
         # Operation object, defined below, with a special __call__ method.
-        # Examples operation_id's inclue "list_files", "upload_file", etc...
+        # Examples operationId's include "list_files", "upload_file", etc...
         for path_name, path_desc in self.resource_spec.items():
             # Each path_desc is an openapi_core.schema.paths.models.Path object
             # it has an operations object, which is a dictionary of operations associated with the path:
-            for op, op_desc in path_desc.operations.items():
+            for op, op_desc in path_desc.items():
                 # each op_desc is an openapi_core.schema.operations.models.Operation object.
-                # the op_desc has a number of associated attributes, including operation_id, parameters, path_name, etc.
+                # the op_desc has a number of associated attributes, including operationId, parameters, etc.
                 # we create an Operation object for each one of these:
-                if not op_desc.operation_id:
-                    print(f"invalid op_dec for {resource_name}; missing operation_id. op_dec: {op_desc}")
+                if not op_desc["operationId"]:
+                    print(f"invalid op_dec for {resource_name}; missing operationId. op_desc: {op_desc}")
                     continue
-                setattr(self, op_desc.operation_id, Operation(self.resource_name, op_desc, self.tapis_client))
+                setattr(self, op_desc["operationId"], Operation(self.resource_name, op_desc, path_name, op, self.tapis_client))
 
 
 class Operation(object):
     """
     Represents a single operation on an API resource defined by an OpenAPI spec file.
-    Operation objects are in one-to-one correspondence with operation_id's defined in the spec file.
+    Operation objects are in one-to-one correspondence with operationId's defined in the spec file.
     """
 
-    def __init__(self, resource_name, op_desc, tapis_client):
+    def __init__(self, resource_name, op_desc, path_name, http_method, tapis_client):
         """
         Instantiate an operation. The op_desc should an openapi_core Operation object associated with the operation.
         :param resource_name: (str) The resource associated with this operation.
@@ -956,14 +973,15 @@ class Operation(object):
         """
         self.resource_name = resource_name
         self.op_desc = op_desc
+        self.path_name = path_name
+        self.http_method = http_method
         self.tapis_client = tapis_client
 
         # derived attributes - for convenience
-        self.operation_id = op_desc.operation_id
-        self.http_method = op_desc.http_method
-        self.path_parameters = [p for _, p in op_desc.parameters.items() if p.location == ParameterLocation.PATH]
-        self.query_parameters = [p for _, p in op_desc.parameters.items() if p.location == ParameterLocation.QUERY]
-        self.request_body = op_desc.request_body
+        self.operation_id = op_desc["operationId"]
+        self.path_parameters = [p for p in op_desc.get('parameters', []) if p['in'] == 'path']
+        self.query_parameters = [p for p in op_desc.get('parameters', []) if p['in'] == 'query']
+        self.request_body = op_desc.get('requestBody', {})
 
     def __call__(self, **kwargs):
         """
@@ -984,25 +1002,26 @@ class Operation(object):
         # construct the http path -
         # some API definitions, such as SK, chose to not include the "/v3/" at the beginning of their paths,
         # so we add it in:
-        if not self.op_desc.path_name.startswith('/v3/'):
-            self.url = f'{base_url}/v3{self.op_desc.path_name}'  # base url
+        if not self.path_name.startswith('/v3/'):
+            self.url = f'{base_url}/v3{self.path_name}'  # base url
         else:
-            self.url = f'{base_url}{self.op_desc.path_name}'  # base url
+            self.url = f'{base_url}{self.path_name}'  # base url
+
         url = self.url
         for param in self.path_parameters:
             # look for the name in the kwargs
-            if param.required:
-                if param.name not in kwargs:
-                    raise errors.InvalidInputError(msg=f"{param.name} is a required argument.")
-            p_val = kwargs.pop(param.name)
+            if param.get("required"):
+                if param["name"] not in kwargs:
+                    raise errors.InvalidInputError(msg=f"{param['name']} is a required argument.")
+            p_val = kwargs.pop(param["name"])
             if isinstance(p_val, int):
                 p_val = str(p_val)
             if isinstance(p_val, float):
                 p_val = str(p_val)
-            if param.required and not p_val:
-                raise errors.InvalidInputError(msg=f"{param.name} is a required argument and cannot be None.")
+            if param.get("required") and not p_val:
+                raise errors.InvalidInputError(msg=f"{param['name']} is a required argument and cannot be None.")
             # replace the parameter in the path template with the parameter value
-            s = '{' + f'{param.name}' + '}'
+            s = '{' + f'{param["name"]}' + '}'
             url = url.replace(s, p_val)
 
         # check for the _tapis_debug flag for generating debug data
@@ -1017,13 +1036,13 @@ class Operation(object):
         params = {}
         for param in self.query_parameters:
             # look for the name in the kwargs
-            if param.required:
-                if param.name not in kwargs:
-                    raise errors.InvalidInputError(msg=f"{param.name} is a required argument.")
+            if param.get("required"):
+                if param["name"] not in kwargs:
+                    raise errors.InvalidInputError(msg=f"{param['name']} is a required argument.")
             # only set the parameter if it was actually sent in the function -
-            if param.name in kwargs:
-                p_val = kwargs.pop(param.name, None)
-                params[param.name] = p_val
+            if param["name"] in kwargs:
+                p_val = kwargs.pop(param["name"], None)
+                params[param["name"]] = p_val
         
         # allow arbitrary query parameters to b passed in via the special "_tapis_query_parameters" kwarg --
         if '_tapis_query_parameters' in kwargs:
@@ -1091,57 +1110,58 @@ class Operation(object):
         data = None
         files = None
         # these are the list of allowable request body content types; ex., 'application/json'.
-        if hasattr(self.op_desc.request_body, 'content') and hasattr(self.op_desc.request_body.content, 'keys'):
+        if 'content' in self.request_body and hasattr(self.request_body['content'], 'keys'):
             # Find possible headers, user specified
             # headers override spec's possibilities.
             if 'Content-Type' in headers:
-                requestContentTypes = headers['Content-Type']
+                request_content_types = headers['Content-Type']
             else:
-                requestContentTypes = self.op_desc.request_body.content.keys()
+                request_content_types = self.request_body['content'].keys()
 
             # Note: If multiple content types, we use first content type we have code for
-            if 'application/json' in requestContentTypes:
+            if 'application/json' in request_content_types:
                 headers['Content-Type'] = 'application/json'
-                required_fields = self.op_desc.request_body.content['application/json'].schema.required
+                required_fields = self.request_body['content']['application/json']['schema'].get('required', {})
+
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.op_desc.request_body.content['application/json'].schema.properties == {}:
+                if self.request_body['content']['application/json']['schema']['properties'] == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
                     data = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.op_desc.request_body.content['application/json'].schema.properties.items():
+                    for p_name, p_desc in self.request_body['content']['application/json']['schema']['properties'].items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
                             raise errors.InvalidInputError(msg=f'{p_name} is a required argument.')
                     # serialize data before passing it to the request
                 data = json.dumps(data)
-            elif 'application/octet-stream' in requestContentTypes:
+            elif 'application/octet-stream' in request_content_types:
                 headers['Content-Type'] = 'application/octet-stream'
                 data = kwargs['message']
             # x-www-form-urlencoded
-            elif 'application/x-www-form-urlencoded' in requestContentTypes:
+            elif 'application/x-www-form-urlencoded' in request_content_types:
                 headers['Content-Type'] = 'application/x-www-form-urlencoded'
                 data = f"message={kwargs['message']}"
-            elif 'multipart/form-data' in requestContentTypes:
+            elif 'multipart/form-data' in request_content_types:
                 # We DO NOT set multipart/form-data headers. The requests library will do header creation for us.
                 # multipart/form-data should use request.Request(files={"formpart1": "formdata1", "formpart2": "formdata2}, ...)
                 # With the files arg, requests will set the Content-Type, boundary and Content-Length headers for us.
                 # It doesn't seem to work if we set Content-Type ourselves.
                 # headers['Content-Type'] = 'multipart/form-data'
 
-                required_fields = self.op_desc.request_body.content['multipart/form-data'].schema.required
+                required_fields = self.request_body['content']['multipart/form-data']['schema']['required']
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.op_desc.request_body.content['multipart/form-data'].schema.properties == {}:
+                if self.request_body['content']['multipart/form-data']['schema']['properties'] == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
                     data['request_body'] = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.op_desc.request_body.content['multipart/form-data'].schema.properties.items():
+                    for p_name, p_desc in self.request_body['content']['multipart/form-data']['schema']['properties'].items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
@@ -1151,7 +1171,8 @@ class Operation(object):
                 # We could default to providing message field
                 # Error seems better
                 # data = kwargs['message']
-                raise NotImplementedError(f'Content type/s specified have not been implemented. Types: {requestContentTypes}')
+                raise NotImplementedError(f'Content type/s specified have not been implemented. Types: {request_content_types}')
+
 
         # create a prepared request -
         # cf., https://requests.kennethreitz.org/en/master/user/advanced/#request-and-response-objects
@@ -1168,11 +1189,11 @@ class Operation(object):
                                  params=params,
                                  data=data,
                                  headers=headers).prepare()
-            
+
         # call the plugins' pre-request callables:
         for f in self.tapis_client.plugin_on_call_pre_request_callables:
             f(self, r, **kwargs)
-        
+
         # the create_token operation requires HTTP basic auth, though some services, such as the authenticator, need to
         # use create_token to generate tokens on behalf of other users; in these cases, it is important to not set the
         # BasicAuth header, so we look for a special kwarg in this case
@@ -1311,7 +1332,6 @@ class TapisResult(object):
                 setattr(self, 'result', [x for x in arg])
             else:
                 setattr(self, 'result', arg)
-
         for k, v in kwargs.items():
             # primitive types
             if type(v) in TapisResult.PRIMITIVE_TYPES:
@@ -1357,3 +1377,5 @@ class Debug(object):
     def __init__(self, request, response):
         self.request = request
         self.response = response
+
+print(f"TIMING: After entire tapis.py file. Took: {time.time() - start_time} seconds")
