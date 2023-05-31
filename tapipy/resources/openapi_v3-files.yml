@@ -2129,7 +2129,7 @@ components:
             times.
           default: 1
         validSeconds:
-          type: string
+          type: integer
           format: int32
           description: | 
             Number of seconds until the PostIt expires.  

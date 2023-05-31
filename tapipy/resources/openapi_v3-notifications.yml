@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Notifications API
   description: The Tapis Notifications API provides for management of subscriptions and event publication
-  version: '1.3.1'
+  version: '1.3.4'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Notifications API - CICSupport"
@@ -173,10 +173,10 @@ paths:
           - name: Optional short descriptive name. *owner+name* must be unique. If one is not provided the service will create one.
           - description: Optional more verbose description. Maximum length of 2048 characters.
           - owner: A specific user set at create time. Default is *${apiUserId}*.
-          - enabled: Indicates if subscription is active. By default enabled is true. 
-          - typeFilter: Filter to use when matching events. Filter for event type. Has three dot separated parts: *service*, *category* and *detail*. Each field may be a specific type or the wildcard character. Examples are *jobs.job.complete*, *jobs.new_status.**.
+          - enabled: Indicates if subscription is active. By default enabled is true.
+          - typeFilter: Filter to use when matching events. Filter for event type. Has three dot separated parts: *service*, *category* and *detail*. Each field may be a specific type or the wildcard character. Examples are *jobs.job.complete*, *jobs.new_status.\**.
           - subjectFilter: Filter to use when matching events. Filter for subject. This may be a specific subject such as a job Id or the wildcard character *.
-          - deliveryTargets: List of delivery targets to be used when delivering a matching event. Each target includes delivery method (EMAIL or WEBHOOK) and delivery address.
+          - deliveryTargets: List of delivery targets to be used when delivering a matching event. Must have at least one. Each target includes delivery method (EMAIL or WEBHOOK) and delivery address.
           - ttlMinutes: Time to live in minutes specified when subscription is created or TTL is updated. Service will compute expiry based on TTL. Default is one week from creation. Value of 0 indicates no expiration.
       operationId: postSubscription
       requestBody:
