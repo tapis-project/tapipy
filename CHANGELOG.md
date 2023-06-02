@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.3.5 - 2023-06-02
+### Added
+- No change.
+
+### Changed
+- Update spec for apps, pods, files, notifications, systems, and workflows.
+- Nathan added json serializer for tapis result object serialization to dictionary.
+
+### Removed
+- No change.
+
+
 ## 1.3.4 - 2023-05-16
 ### Added
 - No change.
