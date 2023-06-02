@@ -1121,17 +1121,17 @@ class Operation(object):
             # Note: If multiple content types, we use first content type we have code for
             if 'application/json' in request_content_types:
                 headers['Content-Type'] = 'application/json'
-                required_fields = self.request_body['content']['application/json']['schema'].get('required', {})
+                required_fields = self.request_body['content']['application/json'].get('schema', {}).get('required', {})
 
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.request_body['content']['application/json']['schema']['properties'] == {}:
+                if self.request_body['content']['application/json'].get('schema', {}).get('properties', {}) == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
                     data = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.request_body['content']['application/json']['schema']['properties'].items():
+                    for p_name, p_desc in self.request_body['content']['application/json'].get('schema', {}).get('properties', {}).items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
@@ -1152,16 +1152,16 @@ class Operation(object):
                 # It doesn't seem to work if we set Content-Type ourselves.
                 # headers['Content-Type'] = 'multipart/form-data'
 
-                required_fields = self.request_body['content']['multipart/form-data']['schema']['required']
+                required_fields = self.request_body['content']['multipart/form-data'].get('schema', {}).get('required', {})
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.request_body['content']['multipart/form-data']['schema']['properties'] == {}:
+                if self.request_body['content']['multipart/form-data'].get('schema', {}).get('properties', {}) == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
                     data['request_body'] = kwargs['request_body']
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.request_body['content']['multipart/form-data']['schema']['properties'].items():
+                    for p_name, p_desc in self.request_body['content']['multipart/form-data'].get('schema', {}).get('properties', {}).items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
