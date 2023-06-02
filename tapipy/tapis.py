@@ -1128,7 +1128,7 @@ class Operation(object):
                 if self.request_body['content']['application/json'].get('schema', {}).get('properties', {}) == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
-                    data = kwargs['request_body']
+                    data = kwargs.get('request_body', {})
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
                     for p_name, p_desc in self.request_body['content']['application/json'].get('schema', {}).get('properties', {}).items():
@@ -1140,11 +1140,11 @@ class Operation(object):
                 data = json.dumps(data)
             elif 'application/octet-stream' in request_content_types:
                 headers['Content-Type'] = 'application/octet-stream'
-                data = kwargs['message']
+                data = kwargs.get('message', {})
             # x-www-form-urlencoded
             elif 'application/x-www-form-urlencoded' in request_content_types:
                 headers['Content-Type'] = 'application/x-www-form-urlencoded'
-                data = f"message={kwargs['message']}"
+                data = f"message={kwargs.get('message', {})}"
             elif 'multipart/form-data' in request_content_types:
                 # We DO NOT set multipart/form-data headers. The requests library will do header creation for us.
                 # multipart/form-data should use request.Request(files={"formpart1": "formdata1", "formpart2": "formdata2}, ...)
@@ -1158,7 +1158,7 @@ class Operation(object):
                 if self.request_body['content']['multipart/form-data'].get('schema', {}).get('properties', {}) == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
-                    data['request_body'] = kwargs['request_body']
+                    data['request_body'] = kwargs.get('request_body', {})
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
                     for p_name, p_desc in self.request_body['content']['multipart/form-data'].get('schema', {}).get('properties', {}).items():
