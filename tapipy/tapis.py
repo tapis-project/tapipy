@@ -330,14 +330,7 @@ def get_spec_dir(spec_dir: str):
         # Fallback on the spec folder from the Tapipy package directory
         spec_dir = os.path.join(os.path.dirname(__file__), 'specs')
     return spec_dir
-    
-
-print(f"TIMING: Before _get_specs for tapipy resources: Took: {time.time() - start_time} seconds")
-before_time = time.time()
 RESOURCE_SPECS, RESOURCE_DICTS = _get_specs(RESOURCES['tapipy'])
-print(f"TIMING: After _get_specs for tapipy resources: Took: {time.time() - before_time} seconds for get_specs")
-print(f"TIMING: After _get_specs for tapipy resources: Took: {time.time() - start_time} seconds from start")
-
 
 def get_basic_auth_header(username: str, password: str) -> str:
     """
@@ -1377,5 +1370,3 @@ class Debug(object):
     def __init__(self, request, response):
         self.request = request
         self.response = response
-
-print(f"TIMING: After entire tapis.py file. Took: {time.time() - start_time} seconds")
