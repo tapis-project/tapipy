@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.3.6 - 2023-06-06
+### Added
+- No change.
+
+### Changed
+- Update spec for apps and systems.
+
+### Removed
+- No change.
+
+
 ## 1.3.5 - 2023-06-02
 ### Added
 - No change.
