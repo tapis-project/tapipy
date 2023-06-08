@@ -28,13 +28,6 @@ def dereference_spec(spec, new_spec=None):
     Function to traverse through a Spec object, dereference $ref whenever it is encountered, 
     and store the dereferenced schema in a new dictionary.
 
-    Note: The spec object is quite odd, it uses jsonschema-spec as it's library which is
-    created by the same author as openapi_core. This uses / notation (overiding division)
-    to traverse the spec object. Users have to `with spec.open() as k: print(k)` it to access
-    dict it creates. The library lazy derefs, as in, it only derefs if you access the parent
-    key of $ref. I'm not a huge fan, but this dereferences all $ref statements so we can 
-    pickle and use the spec later.
-
     Parameters:
     spec (openapi_core.Spec): The Spec object.
     new_spec (dict, optional): The dictionary where the dereferenced schema will be stored. 
@@ -47,6 +40,8 @@ def dereference_spec(spec, new_spec=None):
     if new_spec is None:
         new_spec = {}
 
+    # At this point we should only have spec objects or dictionaries.
+    # Spec objects are traversed with vars(spec)
     if isinstance(spec, dict):
         iter_spec = spec
     elif hasattr(spec, "__dict__"):
@@ -55,14 +50,17 @@ def dereference_spec(spec, new_spec=None):
         iter_spec = spec
 
     for key, val in iter_spec.items():
+        # Both of these keys aren't used, so we can skip them
+        # They'll parse correctly, but components in particular will double the output size
         if key in  ["_resolver", "components"]:
             continue
 
+        # For dictionaries we set key = to recursively dereferenced output
         if isinstance(val, dict):
             new_spec[key] = {}
             dereference_spec(val, new_spec[key])
 
-        # If the value at the current key is a list, create a new list in new_spec
+        # For lists we create a new list in new_spec
         # and iterate over each item in the list
         elif isinstance(val, list):
             new_spec[key] = []
@@ -75,13 +73,17 @@ def dereference_spec(spec, new_spec=None):
                 else:
                     new_spec[key].append(item)
 
+        # There are a few openapi enums, openapi_core.schema.parameters.enums.ParameterLocation
+        # for example, in this case we generally just want the name, so we store key = enum.name
         elif isinstance(val, Enum):
             new_spec[key] = val.name
-            
+        
+        # This generally catches spec objects which we recursively dereference
         elif hasattr(val, "__dict__"):
             new_spec[key] = {}
             dereference_spec(val, new_spec[key])
 
+        # Set non-dicts/specs equal to key. This is generally for strings, ints, floats, etc.
         elif not hasattr(val, "__dict__"):
             new_spec[key] = val
 
