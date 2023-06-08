@@ -1,3 +1,5 @@
+from enum import Enum
+
 class AttrDict(dict):
     def __getattr__(self, key):
         return self[key]
@@ -45,37 +47,42 @@ def dereference_spec(spec, new_spec=None):
     if new_spec is None:
         new_spec = {}
 
-    # Open the Spec object and store the result in spec_obj
-    with spec.open() as k:
-        spec_obj = k
+    if isinstance(spec, dict):
+        iter_spec = spec
+    elif hasattr(spec, "__dict__"):
+        iter_spec = vars(spec)
+    else:
+        iter_spec = spec
 
-    # Iterate over all keys in spec_obj
-    for key, _ in spec_obj.items():
-        next_val = spec_obj[key]
+    for key, val in iter_spec.items():
+        if key in  ["_resolver", "components"]:
+            continue
 
-        # If the value at the current key is a dictionary, create a new dictionary in new_spec
-        # and recursively dereference the spec at the current key
-        if isinstance(next_val, dict):
+        if isinstance(val, dict):
             new_spec[key] = {}
-            dereference_spec(spec / key, new_spec[key])
+            dereference_spec(val, new_spec[key])
 
         # If the value at the current key is a list, create a new list in new_spec
         # and iterate over each item in the list
-        elif isinstance(next_val, list):
+        elif isinstance(val, list):
             new_spec[key] = []
-            for i, item in enumerate(next_val):
+            for i, item in enumerate(val):
                 # If the item is a dictionary, append a new dictionary to the list in new_spec
                 # and recursively dereference the spec for the item
-                if isinstance(item, dict):
+                if hasattr(item, "__dict__"):
                     new_spec[key].append({})
-                    dereference_spec(spec / key / i, new_spec[key][i])
-                # If the item is not a dictionary, append it directly to the list in new_spec
+                    dereference_spec(val[i], new_spec[key][i])
                 else:
                     new_spec[key].append(item)
-        # If the value at the current key is neither a dictionary nor a list,
-        # copy it directly to new_spec
-        else:
-            new_spec[key] = spec_obj[key]
 
-    # Return the new dictionary containing the dereferenced schema
+        elif isinstance(val, Enum):
+            new_spec[key] = val.name
+            
+        elif hasattr(val, "__dict__"):
+            new_spec[key] = {}
+            dereference_spec(val, new_spec[key])
+
+        elif not hasattr(val, "__dict__"):
+            new_spec[key] = val
+
     return new_spec

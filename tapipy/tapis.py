@@ -1,3 +1,4 @@
+import time
 from asyncio.log import logger
 from base64 import b64encode
 from collections.abc import Sequence
@@ -7,12 +8,9 @@ import json
 import jwt
 import os
 import requests
-from openapi_core import Spec
-from jsonschema_spec.handlers.file import BaseFilePathHandler
 import yaml
 import pickle
 import shutil
-import time
 import concurrent.futures
 import copy
 from typing import Dict, NewType, Mapping, Optional
@@ -22,15 +20,11 @@ from tapipy.util import dereference_spec
 import tapipy.errors
 from . import errors
 
-start_time = time.time()
-
 # Type declarations
 ResourceName = NewType('ResourceName', str)
 ResourceUrl = NewType('ResourceUrl', str)
 SpecPath = NewType('SpecPath', str)
-OpenApiSpec = NewType('OpenApiSpec', Spec)
 Resources = Dict[ResourceName, ResourceUrl]
-Specs = Dict[ResourceName, OpenApiSpec]
 ResourceInfo = Mapping[ResourceName, SpecPath]
 
 
@@ -133,7 +127,7 @@ RESOURCES = {
 }
 
 
-def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
+def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False):
     """
     Gets specs requested in resources.
     Will download any spec that is not already downloaded.
@@ -180,19 +174,6 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
     #pool.close()
     #pool.join()
 
-from urllib.parse import urlparse
-def new_call(self, uri):
-    if hasattr(uri, 'read'):
-        return super(BaseFilePathHandler, self).__call__(uri)
-    
-    parsed_url = urlparse(uri)
-    if parsed_url.scheme not in self.allowed_schemes:
-        raise ValueError("Not allowed scheme")
-
-    return self._open(uri)
-
-BaseFilePathHandler.__call__ = new_call
-
 
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     """
@@ -205,23 +186,32 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
     response = requests.get(resource_url)
     if response.status_code == 200:
         try:
-            # Directly creates spec from response. This validates spec as valid.
-            spec = Spec.from_file(response.content)
+            # Loads yaml into Python dictionary
+            spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
+        except Exception as e:
+            print(f'Got exception when attempting to load yaml for '
+                  f'"{resource_name}" resource; exception: {e}')
+            return
+        try:
+            # We import here as this takes a while to import
+            from openapi_core import create_spec
+            # Attempts to create spec from dict to ensure the spec is valid
+            spec = create_spec(spec_dict)
         except Exception as e:
             print(f'Got exception when test creating spec for "{resource_name}" '
                   f'resource; Spec probably not verifying; exception: {e}')
             return
         try:
             # Dereference spec so we have a dict we can pickle.
-            spec_dict = dereference_spec(spec)
+            deref_spec_dict = dereference_spec(spec)
         except Exception as e:
-            print(f'Got exception when derefrencing spec for "{resource_name}" '
+            print(f'Got exception when dereferencing spec for "{resource_name}" '
                   f'resource; exception: {e}')
             return
         try:
             # Pickles and saves the spec dict to the spec_path atomically
             with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
-                pickle.dump(spec_dict, spec_file, protocol=4)
+                pickle.dump(deref_spec_dict, spec_file, protocol=4)
         except Exception as e:
             print(f'Got exception when attempting to pickle spec_dict for '
                   f'"{resource_name}" resource; exception: {e}')
@@ -231,22 +221,24 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
                        f'Did not get 200, got the following back:\n{response.text}')
 
 
-def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
+def unpickle_and_create_specs(resources: Resources, spec_dir: str):
     """
     Pickles loads a specifed spec_path and creates said spec.
     Can't be threaded, map doesn't allow spec object to be sent back.
     """
     specs = {}
-    dicts = {}
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
         if "local:" in url:
+            spec_path = url.replace('local:', '').strip()
             try:
-                spec_path = url.replace('local:', '').strip()
-                spec = Spec.from_file_path(spec_path)
-                spec_dict = dereference_spec(spec)
-                specs.update({resource_name: spec_dict})
-                dicts.update({resource_name: spec_dict})
+                # We import here as this takes a while to import
+                from openapi_core import create_spec
+                with open(spec_path, 'rb') as spec_file:
+                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
+                spec = create_spec(spec_dict)
+                deref_spec_dict = dereference_spec(spec)
+                specs.update({resource_name: deref_spec_dict})
             except Exception as e:
                 print(f'Error reading local "{resource_name}" resource. '
                       f'Ensure path is absolute {spec_path}. e:{e}')
@@ -257,7 +249,6 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
             with open(spec_path, 'rb') as spec_file:
                 spec_dict = pickle.load(spec_file)
             specs.update({resource_name: spec_dict})
-            dicts.update({resource_name: spec_dict})
         except Exception as e:
             print(f'Got exception trying to unpickle spec for '
                   f'spec_path: "{resource_name}"; exception: {e}')
@@ -273,12 +264,11 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
                     with open(spec_path, 'rb') as spec_file:
                         spec = pickle.load(spec_file)
                     specs.update({resource_name: spec})
-                    dicts.update({resource_name: spec})
                 except Exception as e:
                     print('Error opening tapipy prod spec. This is bad.')
             else:
                 print(f'No "{resource_name}" spec was found to fallback on')
-    return specs, dicts
+    return specs, specs
 
 
 def update_spec_cache(resources: Resources = None, spec_dir: str = None) -> None:
@@ -940,14 +930,14 @@ class Resource(object):
         for path_name, path_desc in self.resource_spec.items():
             # Each path_desc is an openapi_core.schema.paths.models.Path object
             # it has an operations object, which is a dictionary of operations associated with the path:
-            for op, op_desc in path_desc.items():
+            for op, op_desc in path_desc["operations"].items():
                 # each op_desc is an openapi_core.schema.operations.models.Operation object.
                 # the op_desc has a number of associated attributes, including operationId, parameters, etc.
                 # we create an Operation object for each one of these:
-                if not op_desc["operationId"]:
-                    print(f"invalid op_dec for {resource_name}; missing operationId. op_desc: {op_desc}")
+                if not op_desc["operation_id"]:
+                    print(f"invalid op_dec for {resource_name}; missing operation_id. op_desc: {op_desc}")
                     continue
-                setattr(self, op_desc["operationId"], Operation(self.resource_name, op_desc, path_name, op, self.tapis_client))
+                setattr(self, op_desc["operation_id"], Operation(self.resource_name, op_desc, path_name, op, self.tapis_client))
 
 
 class Operation(object):
@@ -971,10 +961,10 @@ class Operation(object):
         self.tapis_client = tapis_client
 
         # derived attributes - for convenience
-        self.operation_id = op_desc["operationId"]
-        self.path_parameters = [p for p in op_desc.get('parameters', []) if p['in'] == 'path']
-        self.query_parameters = [p for p in op_desc.get('parameters', []) if p['in'] == 'query']
-        self.request_body = op_desc.get('requestBody', {})
+        self.operation_id = op_desc["operation_id"]
+        self.path_parameters = [p for _, p in op_desc['parameters'].items() if p['location'] == 'PATH']
+        self.query_parameters = [p for _, p in op_desc['parameters'].items() if p['location'] == 'QUERY']
+        self.request_body = op_desc['request_body'] or {}
 
     def __call__(self, **kwargs):
         """
@@ -1114,17 +1104,17 @@ class Operation(object):
             # Note: If multiple content types, we use first content type we have code for
             if 'application/json' in request_content_types:
                 headers['Content-Type'] = 'application/json'
-                required_fields = self.request_body['content']['application/json'].get('schema', {}).get('required', {})
+                required_fields = self.request_body['content']['application/json']['schema'].get('required', [])
 
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.request_body['content']['application/json'].get('schema', {}).get('properties', {}) == {}:
+                if self.request_body['content']['application/json']['schema']['properties'] == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
                     data = kwargs.get('request_body', {})
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.request_body['content']['application/json'].get('schema', {}).get('properties', {}).items():
+                    for p_name, p_desc in self.request_body['content']['application/json']['schema']['properties'].items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:
@@ -1145,16 +1135,16 @@ class Operation(object):
                 # It doesn't seem to work if we set Content-Type ourselves.
                 # headers['Content-Type'] = 'multipart/form-data'
 
-                required_fields = self.request_body['content']['multipart/form-data'].get('schema', {}).get('required', {})
+                required_fields = self.request_body['content']['multipart/form-data']['schema'].get('required', [])
                 data = {}
                 # if the request body has no defined properties, look for a single "request_body" parameter.
-                if self.request_body['content']['multipart/form-data'].get('schema', {}).get('properties', {}) == {}:
+                if self.request_body['content']['multipart/form-data']['schema']['properties'] == {}:
                     # choice of "request_body" is arbitrary, as the property name is not provided by the
                     # openapi spec in this case
                     data['request_body'] = kwargs.get('request_body', {})
                 else:
                     # otherwise, the request body has defined properties, so look for each one in the function kwargs
-                    for p_name, p_desc in self.request_body['content']['multipart/form-data'].get('schema', {}).get('properties', {}).items():
+                    for p_name, p_desc in self.request_body['content']['multipart/form-data']['schema']['properties'].items():
                         if p_name in kwargs:
                             data[p_name] = kwargs[p_name]
                         elif p_name in required_fields:

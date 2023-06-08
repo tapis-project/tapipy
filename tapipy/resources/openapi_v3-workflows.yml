@@ -2191,19 +2191,15 @@ components:
       properties:
         branch:
           type: string
-          nullable: true
           default: null
         commit:
-          nullable: true
           type: string
           default: null
         commit_sha:
           type: string
-          nullable: true
           default: null
         context_url:
           type: string
-          nullable: true
           default: null
         directives:
           type: string
@@ -2217,7 +2213,6 @@ components:
           $ref: '#/components/schemas/Username'
         identity:
           type: string
-          nullable: true
           default: null
         uuid:
           type: string

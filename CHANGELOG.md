@@ -3,14 +3,11 @@ All notable changes to this project will be documented in this file.
 
 ## 1.4.0 - 2023-05-31
 ### Added
-- Added new dereferencing function for up to date openapi-spec and jsonschema-spec libraries.
+- Added new dereferencing function to current openapi-spec 0.12 library.
 
 ### Changed
-- Updated openapi-spec to the latest version. This changes create_spec to Spec.from_file().
-- spec object created is different, less proprietary objects.
-- $refs are lazy dereferenced, so I wrote a dereferencer to output a ready spec that we can pickle.
+- Instead of running create_spec at runtime, a spec is created and spec download time, made into a dict, and we use that at runtime.
 - Updates to accommodate these changes.
-- Found one bug in jsonschema-spec that I created an issue about, fixed it locally by overwriting a class method.
 
 ### Removed
 - Spec are no longer created at initialization, only need to be loaded. 7 seconds -> .04 seconds.
