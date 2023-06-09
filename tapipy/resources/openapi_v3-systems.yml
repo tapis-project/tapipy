@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.3.3'
+  version: '1.3.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -240,7 +240,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
 
-  '/v3/systems/{parentId}/createChildSystem':
+  '/v3/systems/createChildSystem':
     post:
       tags:
         - Child Systems
@@ -1074,7 +1074,7 @@ paths:
             default: false
       requestBody:
         required: false
-        description: A JSON object containing information about which systems should be unlinked.
+        description: A JSON object specifying credentials.
         content:
           application/json:
             schema:
@@ -1212,7 +1212,7 @@ paths:
             $ref: '#/components/schemas/UserNameString'
         - name: skipCredentialCheck
           in: query
-          description: Bypass initial credential validation. Default is false.
+          description: Bypass initial credential validation (for LINUX and S3). Default is false.
           schema:
             type: boolean
             default: false
@@ -1222,7 +1222,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqUpdateCredential'
+              $ref: '#/components/schemas/Credential'
       responses:
         '200':
           description: Credentials updated.
@@ -2658,27 +2658,6 @@ components:
           type: string
         certificate:
           type: string
-    ReqUpdateCredential:
-      type: object
-      properties:
-        loginUser:
-          $ref: '#/components/schemas/UserNameString'
-        password:
-          type: string
-        privateKey:
-          type: string
-        publicKey:
-          type: string
-        accessKey:
-          type: string
-        accessSecret:
-          type: string
-        accessToken:
-          type: string
-        refreshToken:
-          type: string
-        certificate:
-          type: string
     ReqPerms:
       type: object
       required:
@@ -2743,7 +2722,6 @@ components:
       properties:
         childSystemIds:
           type: array
-          description: List containing the IDs of the child systems to unlink from the parent system.
           minItems: 1
           items:
             $ref: '#/components/schemas/IdString'
@@ -2760,10 +2738,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           type: object
         metadata:
@@ -2776,10 +2750,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultBoolean'
@@ -2798,10 +2768,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultNameArray'
@@ -2823,10 +2789,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/ResultChangeCount'
         metadata:
@@ -2846,10 +2808,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/ResultResourceUrl'
         metadata:
@@ -2868,10 +2826,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/TapisSystem'
         metadata:
@@ -2884,10 +2838,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           type: array
@@ -2917,10 +2867,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           type: array
           minItems: 1
@@ -2937,10 +2883,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/Credential'
         metadata:
@@ -2954,10 +2896,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/SchedulerProfile'
         metadata:
@@ -2970,10 +2908,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           type: array
@@ -2989,10 +2923,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultGlobusAuthUrl'
@@ -3013,10 +2943,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/ShareInfo'

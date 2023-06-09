@@ -1344,10 +1344,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           type: object
         metadata:
@@ -1360,10 +1356,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultBoolean'
@@ -1382,10 +1374,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultNameArray'
@@ -1407,10 +1395,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/ResultChangeCount'
         metadata:
@@ -1430,10 +1414,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/ResultResourceUrl'
         metadata:
@@ -1452,10 +1432,6 @@ components:
           type: string
         version:
           type: string
-        commit:
-          type: string
-        build:
-          type: string
         result:
           $ref: '#/components/schemas/TapisSubscription'
         metadata:
@@ -1468,10 +1444,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           type: array
@@ -1500,10 +1472,6 @@ components:
         message:
           type: string
         version:
-          type: string
-        commit:
-          type: string
-        build:
           type: string
         result:
           $ref: '#/components/schemas/TestSequence'

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Files API
   description: The Tapis Files API provides for management of file resources on Tapis systems
-  version: '1.3.6'
+  version: '1.3.5'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Files API - CICSupport"
@@ -27,16 +27,11 @@ tags:
   - name: General
     description: General service health and readiness
   - name: File Operations
-    description: |
-      Manage file resources on Tapis systems. List, upload, copy, native operations, etc.
-      Note that not all operations are supported for all system types.
+    description: Manage file resources on Tapis systems. List, upload, copy, native operations, etc.
   - name: Content
-    description: Download a file or directory. Not supported for all system types.
+    description: Download a file or directory.
   - name: Transfers
-    description: |
-      Manage file transfers between two systems. Initiate, cancel and retrieve status.
-      Note that not all combinations of system types are supported. For example, transfers involving a GLOBUS
-      system must be GLOBUS to GLOBUS.
+    description: Manage file transfers. Initiate, cancel and retrieve status.
   - name: Permissions
     description: |
       The permissions model allows for fine grained access control of paths on a Tapis system. The system owner
@@ -202,8 +197,8 @@ paths:
       tags:
         - File Operations
       description: |
-        Move or copy a file, directory or object on {systemID} at path {path}.
-        Not all operations supported for all system types.
+        Move or copy a file, directory or object on {systemID} at path {path}. Not all operations supported for all
+        system types.
       operationId: moveCopy
       parameters:
         - name: systemId
@@ -392,13 +387,11 @@ paths:
         - File Operations
       description: |
         Create a directory on the system at the given path. Not supported for all system types. Currently supported
-        for LINUX, IRODS and GLOBUS type systems.
+        for LINUX and IRODS type systems.
 
         Certain services may use the query parameter *sharedCtx* to indicate that the request is in a shared
         context. *sharedCtx* must be set to the share grantor.
         Tapis will include the share grantor as part of authorization checks.
-
-        If the path already exists as a directory, no error will be returned.
       operationId: mkdir
       parameters:
         - name: systemId
@@ -590,7 +583,7 @@ paths:
       tags:
         - File Operations
       description: |
-        Get file ACLs for files or directories for a system of type LINUX.
+        Get file ACLs for files or directories.
       operationId: getFacl
       parameters:
         - name: systemId
@@ -642,7 +635,7 @@ paths:
       tags:
         - File Operations
       description: |
-        Set file ACLs for files or directories for a system of type LINUX.
+        Set file ACLs for files or directories.
 
         This can be used for a single file or directory, or can be recursive.  If recursion is
         used, it can be made to follow symlinks, or not follow symlinks.
@@ -823,8 +816,6 @@ paths:
         - Transfers
       description: |
         Create a background task which will transfer files between systems.
-        Note that not all combinations of system types are supported. For example, transfers involving a GLOBUS
-        system must be GLOBUS to GLOBUS.
       operationId: createTransferTask
       requestBody:
         content:
@@ -1684,7 +1675,7 @@ components:
         mimeType:
           type: string
         type:
-          $ref: '#/components/schemas/FileTypeEnum'
+          type: string
         owner:
           type: string
         group:
@@ -2465,12 +2456,4 @@ components:
       enum:
         - OWNED
         - ALL
-    FileTypeEnum:
-      type: string
-      enum:
-        - file
-        - dir
-        - symbolic_link
-        - other
-        - unknown
 

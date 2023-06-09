@@ -10,7 +10,7 @@ import copy
 import yaml
 import requests
 import pickle
-from openapi_core import create_spec
+from openapi_core import Spec
 from atomicwrites import atomic_write
 from tapipy.util import dereference_spec
 
@@ -54,31 +54,25 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
         if "local:" in source_url:
             # Loads yaml into Python dictionary
             try:
+                # Creates spec from file. This validates spec as valid.
                 source_path = source_url.replace('local:', '').strip()
-                with open(source_path, 'rb') as spec_file:
-                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
-            except Exception as e:
-                print(f'Got exception when attempting to load yaml for '
-                    f'"{source_url}" resource; exception: {e}')
-                return
-            try:
-                # Attempts to create spec from dict to ensure the spec is valid
-                spec = create_spec(spec_dict)
+                spec = Spec.from_file_path(source_path)
             except Exception as e:
                 print(f'Got exception when test creating spec for "{source_url}" '
-                    f'resource; Spec probably not verifying; exception: {e}')
-                return
+                      f'resource; Reading from local path: "{source_path}"; '
+                      f'Ensure path is absolute; exception: {e}')
+                continue
             try:
                 # Dereference spec so we have a dict we can pickle.
-                deref_spec_dict = dereference_spec(spec)
+                spec_dict = dereference_spec(spec)
             except Exception as e:
-                print(f'Got exception when dereferencing spec for "{source_url}" '
+                print(f'Got exception when derefrencing spec for "{source_url}" '
                     f'resource; exception: {e}')
                 return
             # Pickles and saves the spec dict to the dest_path atomically
             try:
                 with atomic_write(f'{dest_path}', overwrite=True, mode='wb') as spec_file:
-                    pickle.dump(deref_spec_dict, spec_file, protocol=4)
+                    pickle.dump(spec_dict, spec_file, protocol=4)
             except Exception as e:
                 print(f'Got exception when attempting to pickle spec_dict and '
                       f'write to "{dest_path}"; exception: {e}')
@@ -87,30 +81,23 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
             response = requests.get(source_url)
             if response.status_code == 200:
                 try:
-                    # Loads yaml into Python dictionary
-                    spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
-                except Exception as e:
-                    print(f'Got exception when attempting to load yaml for '
-                        f'"{source_url}" resource; exception: {e}')
-                    return
-                try:
                     # Directly creates spec from response. This validates spec as valid.
-                    spec = create_spec(spec_dict)
+                    spec = Spec.from_file(response.content)
                 except Exception as e:
                     print(f'Got exception when test creating spec for "{source_url}" '
                         f'resource; Spec probably not verifying; exception: {e}')
                     return
                 try:
                     # Dereference spec so we have a dict we can pickle.
-                    deref_spec_dict = dereference_spec(spec)
+                    spec_dict = dereference_spec(spec)
                 except Exception as e:
-                    print(f'Got exception when dereferencing spec for "{source_url}" '
+                    print(f'Got exception when derefrencing spec for "{source_url}" '
                         f'resource; exception: {e}')
                     return
                 # Pickles and saves the spec dict to the dest_path atomically
                 try:
                     with atomic_write(f'{dest_path}', overwrite=True, mode='wb') as spec_file:
-                        pickle.dump(deref_spec_dict, spec_file, protocol=4)
+                        pickle.dump(spec_dict, spec_file, protocol=4)
                 except Exception as e:
                     print(f'Got exception when attempting to pickle spec_dict and '
                         f'write to "{dest_path}"; exception: {e}')

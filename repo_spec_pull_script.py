@@ -17,7 +17,7 @@ import yaml
 import copy
 import base64
 import requests as r
-from openapi_core import create_spec
+from openapi_core import Spec
 # Get spec urls to check.
 from repo_spec_creation_script import RESOURCES
 from tapipy.util import dereference_spec
@@ -58,22 +58,25 @@ for specKey, specUrl in RESOURCES['prod'].items():
         raise Exception(f'Unexpected response status code for url: {url}; Issue: {res.status_code} - {res.content}')
     if res.status_code == 200:
         print(f'Got new spec for "{specKey}" resource.')
+        retrieved_spec = base64.b64decode(res.json()['content']).decode('utf-8')
         try:
-            spec_dict = yaml.load(base64.b64decode(res.json()['content']).decode('utf-8'), Loader=yaml.FullLoader)
+            # Directly creates spec from response. This validates spec as valid.
+            spec = Spec.from_file(retrieved_spec)
         except Exception as e:
-            print(f'Got exception when attempting to load yaml for '
+            print(f'Got exception when attempting to load create spec for '
                   f'"{specKey}" resource; exception: {e}')
             continue
         try:
-            copy_spec_dict = copy.deepcopy(spec_dict)
-            create_spec(copy_spec_dict)
+            # Dereference spec so we have a dict we can pickle.
+            spec_dict = dereference_spec(spec)
         except Exception as e:
-            print(f'Got exception when test creating spec for "{specKey}" '
-                  f'resource; Spec probably not verifying; exception: {e}')
+            print(f'Got exception when derefrencing spec for "{specKey}" '
+                    f'resource; Spec probably not verifying; exception: {e}')
             continue
+
         try:
             with open(f'{resourceFolderPath}/openapi_v3-{specKey}.yml', 'w') as f:
-                f.write(base64.b64decode(res.json()['content']).decode('utf-8'))
+                f.write(retrieved_spec)
             etagsDict[specKey] = res.headers['ETag']
             newSpecs.append(specKey)
         except FileNotFoundError:
