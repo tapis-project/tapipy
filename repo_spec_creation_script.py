@@ -29,8 +29,8 @@ def get_file_info_from_url(url: str, spec_dir: str):
                    .replace('.yaml', '')\
                    .replace('/', '-')\
                    .lower()
-    full_spec_name = f'{spec_name}.pickle'
-    spec_path = f'{spec_dir}/{spec_name}.pickle'
+    full_spec_name = f'v2-{spec_name}.pickle'
+    spec_path = f'{spec_dir}/v2-{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
 
 

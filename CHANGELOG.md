@@ -1,16 +1,19 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 1.4.0 - 2023-05-31
+## 1.4.0 - 2023-06-12
 ### Added
 - Added new dereferencing function for up to date openapi-spec and jsonschema-spec libraries.
 
 ### Changed
-- Updated openapi-spec to the latest version. This changes create_spec to Spec.from_file().
+- Updated openapi-core to 0.16.0. This changes create_spec to Spec.from_file().
 - spec object created is different, less proprietary objects.
-- $refs are lazy dereferenced, so I wrote a dereferencer to output a ready spec that we can pickle.
+- $refs are lazy dereferenced, so there's a dereferencer to output a ready spec that we can pickle.
 - Updates to accommodate these changes.
-- Found one bug in jsonschema-spec that I created an issue about, fixed it locally by overwriting a class method.
+- Found one bug in jsonschema-spec that I created an issue about, fixed it locally. Package author suggested to lock typing-extensions<4.6 which solves the problem for Python==3.7
+- To note, openapi-core 0.16.1 and above seem to require flask==2.0
+- `from openapi_core import Spec` was moved from top level imports to only when needed as import was decently slow (1.5+ sec).
+- Adding `v2-` prefix to pickled files to ensure compatibility. Without this there's a possibility of old specs being read and that causing errors.
 
 ### Removed
 - Spec are no longer created at initialization, only need to be loaded. 7 seconds -> .04 seconds.

@@ -7,8 +7,6 @@ import json
 import jwt
 import os
 import requests
-from openapi_core import Spec
-from jsonschema_spec.handlers.file import BaseFilePathHandler
 import yaml
 import pickle
 import shutil
@@ -28,9 +26,7 @@ start_time = time.time()
 ResourceName = NewType('ResourceName', str)
 ResourceUrl = NewType('ResourceUrl', str)
 SpecPath = NewType('SpecPath', str)
-OpenApiSpec = NewType('OpenApiSpec', Spec)
 Resources = Dict[ResourceName, ResourceUrl]
-Specs = Dict[ResourceName, OpenApiSpec]
 ResourceInfo = Mapping[ResourceName, SpecPath]
 
 
@@ -133,7 +129,7 @@ RESOURCES = {
 }
 
 
-def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False) -> Specs:
+def _get_specs(resources: Resources, spec_dir: str = None, download_latest_specs: bool = False):
     """
     Gets specs requested in resources.
     Will download any spec that is not already downloaded.
@@ -169,29 +165,14 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
     # Set off some parallel threads cause it's quick.
     # Switched from multiprocessing due to some startup warnings when import Tapipy in scripts
     if urls_to_download:
+        # This has a serious 1+ sec import, so we only import when needed.
+        from openapi_core import Spec
         POOL_SIZE = os.environ.get('POOL_SIZE', 16)
         with concurrent.futures.ThreadPoolExecutor(max_workers=POOL_SIZE) as executor:
             executor.map(_thread_download_spec_dict, urls_to_download)
 
-    # Set off some parallel processes cause it's quick.
-    #POOL_SIZE = os.environ.get('POOL_SIZE', 16)
-    #pool = multiprocessing.Pool(processes=POOL_SIZE)
-    #pool.map(_thread_download_spec_dict, urls_to_download)
-    #pool.close()
-    #pool.join()
 
-from urllib.parse import urlparse
-def new_call(self, uri):
-    if hasattr(uri, 'read'):
-        return super(BaseFilePathHandler, self).__call__(uri)
-    
-    parsed_url = urlparse(uri)
-    if parsed_url.scheme not in self.allowed_schemes:
-        raise ValueError("Not allowed scheme")
 
-    return self._open(uri)
-
-BaseFilePathHandler.__call__ = new_call
 
 
 def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
@@ -231,7 +212,7 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
                        f'Did not get 200, got the following back:\n{response.text}')
 
 
-def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
+def unpickle_and_create_specs(resources: Resources, spec_dir: str):
     """
     Pickles loads a specifed spec_path and creates said spec.
     Can't be threaded, map doesn't allow spec object to be sent back.
@@ -241,8 +222,10 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str) -> Specs:
     # Get resource path to point the unpickling at.
     for resource_name, url in resources.items():
         if "local:" in url:
+            spec_path = url.replace('local:', '').strip()
             try:
-                spec_path = url.replace('local:', '').strip()
+                # This has a serious 1+ import, so we only import if needed.
+                from openapi_core import Spec
                 spec = Spec.from_file_path(spec_path)
                 spec_dict = dereference_spec(spec)
                 specs.update({resource_name: spec_dict})
@@ -307,8 +290,8 @@ def get_file_info_from_url(url: str, spec_dir: str):
                    .replace('/', '-')\
                    .lower()
     # Get directory and full name for spec file
-    full_spec_name = f'{spec_name}.pickle'
-    spec_path = f'{spec_dir}/{spec_name}.pickle'
+    full_spec_name = f'v2-{spec_name}.pickle'
+    spec_path = f'{spec_dir}/v2-{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
 
 
