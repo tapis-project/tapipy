@@ -166,6 +166,7 @@ def download_and_pickle_spec_dicts(resources: Resources, spec_dir: str, download
     # Switched from multiprocessing due to some startup warnings when import Tapipy in scripts
     if urls_to_download:
         # This has a serious 1+ sec import, so we only import when needed.
+        global Spec
         from openapi_core import Spec
         POOL_SIZE = os.environ.get('POOL_SIZE', 16)
         with concurrent.futures.ThreadPoolExecutor(max_workers=POOL_SIZE) as executor:

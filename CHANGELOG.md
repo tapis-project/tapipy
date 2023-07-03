@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.4.1 - 2023-07-03
+### Added
+- No change.
+
+### Changed
+- `from openapi_core import Spec` is now done globally instead of the local scope so threaded processes work.
+
+### Removed
+- No change.
+
+
 ## 1.4.0 - 2023-06-12
 ### Added
 - Added new dereferencing function for up to date openapi-spec and jsonschema-spec libraries.
