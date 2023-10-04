@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Notifications API
   description: The Tapis Notifications API provides for management of subscriptions and event publication
-  version: '1.3.4'
+  version: '1.4.1'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Notifications API - CICSupport"
@@ -903,7 +903,7 @@ paths:
         The attributes *source*, *type* and *timestamp* are required.
         Event attributes:
           - source: Context in which event happened: Examples: *Jobs*, *Systems*.
-          - type: Type of event. Used for routing notifications. A series of 3 fields separated by the dot character. Pattern is *<service>.<category>.<detail>*. Examples: *jobs.new_status.complete*, *systems.system.create*, *files.object.delete*
+          - type: Type of event. Used for routing notifications. A series of 3 fields separated by the dot character. Pattern is *service.category.detail*. Examples: *jobs.new_status.complete*, *systems.system.create*, *files.object.delete*
           - subject: Subject of event in the context of the service. Examples: job Id, system Id, file path, role name, etc.
           - seriesId: Optional Id that may be used to group events from the same source in a series, thereby preserving event order during notification delivery.
           - timestamp: When the event happened.
@@ -911,6 +911,18 @@ paths:
         
         Note that events are not persisted by the front end api service. When received they are simply sent to a
         message broker. The back end dispatch service will persist events temporarily in order to support recovery.
+        
+        An event is delivered to the delivery target in a Notification object. Notification attributes:
+          - uuid: Unique identifier for the notification.
+          - subscriptionName: Name of subscription associated with the event.
+          - event: All information contained in the event.
+          - eventUuid: Unique identifier for the event.
+          - tenant: tenant associated with the event.
+          - deliveryTarget: the delivery target
+          - created: When the notification was created.
+        
+        For details on the schema for a Notification object, please see the request body specification included under
+        the endpoint for *recordTestNotification*, at path */v3/notifications/test/callback/{name}*
       operationId: postEvent
       parameters:
         - name: tenant
@@ -1227,22 +1239,17 @@ components:
     # --- Notification ------------------------------------------------------------
     Notification:
       type: object
-      required:
-        - uuid
-        - tenant
-        - name
-        - deliveryTarget
-        - event
-        - created
       properties:
         uuid:
           type: string
         tenant:
           type: string
-        name:
+        subscriptionName:
           type: string
         deliveryTarget:
           $ref: '#/components/schemas/DeliveryTarget'
+        eventUuid:
+          type: string
         event:
           $ref: '#/components/schemas/Event'
         created:
@@ -1344,6 +1351,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         result:
           type: object
         metadata:
@@ -1356,6 +1367,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultBoolean'
@@ -1374,6 +1389,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultNameArray'
@@ -1395,6 +1414,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         result:
           $ref: '#/components/schemas/ResultChangeCount'
         metadata:
@@ -1414,6 +1437,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         result:
           $ref: '#/components/schemas/ResultResourceUrl'
         metadata:
@@ -1432,6 +1459,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         result:
           $ref: '#/components/schemas/TapisSubscription'
         metadata:
@@ -1444,6 +1475,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         result:
           type: array
@@ -1472,6 +1507,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         result:
           $ref: '#/components/schemas/TestSequence'

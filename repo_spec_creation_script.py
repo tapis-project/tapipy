@@ -10,9 +10,9 @@ import copy
 import yaml
 import requests
 import pickle
-from openapi_core import create_spec
+from openapi_core import Spec
 from atomicwrites import atomic_write
-
+from tapipy.util import dereference_spec
 
 ###~~~#### FILL THESE IN ####~~~###
 spec_dir = 'tapipy/specs'
@@ -29,8 +29,8 @@ def get_file_info_from_url(url: str, spec_dir: str):
                    .replace('.yaml', '')\
                    .replace('/', '-')\
                    .lower()
-    full_spec_name = f'{spec_name}.pickle'
-    spec_path = f'{spec_dir}/{spec_name}.pickle'
+    full_spec_name = f'v2-{spec_name}.pickle'
+    spec_path = f'{spec_dir}/v2-{spec_name}.pickle'
     return spec_name, full_spec_name, spec_path
 
 
@@ -54,23 +54,21 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
         if "local:" in source_url:
             # Loads yaml into Python dictionary
             try:
+                # Creates spec from file. This validates spec as valid.
                 source_path = source_url.replace('local:', '').strip()
-                with open(source_path, 'rb') as spec_file:
-                    spec_dict = yaml.load(spec_file, Loader=yaml.FullLoader)
-            except Exception as e:
-                print(f'Error reading local "{source_path}" resource. '
-                      f'Ensure path is absolute. e:{e}')
-                continue
-            # Attempts to create spec from dict to ensure the spec is valid
-            # We do a deepcopy as create_spec for some reason adds fields
-            # to the dictionary that's given
-            try:
-                test_spec_dict = copy.deepcopy(spec_dict)
-                create_spec(test_spec_dict)
+                spec = Spec.from_file_path(source_path)
             except Exception as e:
                 print(f'Got exception when test creating spec for "{source_url}" '
-                      f'resource; Spec probably not verifying; exception: {e}')
+                      f'resource; Reading from local path: "{source_path}"; '
+                      f'Ensure path is absolute; exception: {e}')
                 continue
+            try:
+                # Dereference spec so we have a dict we can pickle.
+                spec_dict = dereference_spec(spec)
+            except Exception as e:
+                print(f'Got exception when derefrencing spec for "{source_url}" '
+                    f'resource; exception: {e}')
+                return
             # Pickles and saves the spec dict to the dest_path atomically
             try:
                 with atomic_write(f'{dest_path}', overwrite=True, mode='wb') as spec_file:
@@ -82,23 +80,20 @@ def save_url_as_other_url(spec_and_alias, spec_dir):
         else:
             response = requests.get(source_url)
             if response.status_code == 200:
-                # Loads yaml into Python dictionary
                 try:
-                    spec_dict = yaml.load(response.content, Loader=yaml.FullLoader)
-                except Exception as e:
-                    print(f'Got exception when attempting to load yaml from '
-                          f'"{source_url}" resource; exception: {e}')
-                    continue
-                # Attempts to create spec from dict to ensure the spec is valid
-                # We do a deepcopy as create_spec for some reason adds fields
-                # to the dictionary that's given
-                try:
-                    test_spec_dict = copy.deepcopy(spec_dict)
-                    create_spec(test_spec_dict)
+                    # Directly creates spec from response. This validates spec as valid.
+                    spec = Spec.from_file(response.content)
                 except Exception as e:
                     print(f'Got exception when test creating spec for "{source_url}" '
-                          f'resource; Spec probably not verifying; exception: {e}')
-                    continue
+                        f'resource; Spec probably not verifying; exception: {e}')
+                    return
+                try:
+                    # Dereference spec so we have a dict we can pickle.
+                    spec_dict = dereference_spec(spec)
+                except Exception as e:
+                    print(f'Got exception when derefrencing spec for "{source_url}" '
+                        f'resource; exception: {e}')
+                    return
                 # Pickles and saves the spec dict to the dest_path atomically
                 try:
                     with atomic_write(f'{dest_path}', overwrite=True, mode='wb') as spec_file:
@@ -138,7 +133,7 @@ RESOURCES = {
         'tenants': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tenants.yml',
         'tokens': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-tokens.yml',
         'pgrest': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-pgrest.yml',
-        'pods': 'https://raw.githubusercontent.com/tapis-project/pods_service/prod/docs/openapi_v3-pods.yml',
+        'pods': 'https://raw.githubusercontent.com/tapis-project/tapipy/main/tapipy/resources/openapi_v3-pods.yml',
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-jobs.yml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml',
         'workflows': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-workflows.yml',

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.3.3'
+  version: '1.4.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -40,7 +40,7 @@ tags:
       In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
       This approach is known simply as *sharing*. The sharing API allows an application owner to share an application
       with a set of users as well as share publicly with all users in a tenant. Sharing grants users READ access to the
-      application and more importantly allows others to run a job using the application.
+      application and more importantly facilitates allowing others to run a job using the application.
 
       Please note that sharing an application gives a user certain implicit access to resources in the context of running
       a job. For example, if the application has defined a specific execution system id then while the job is running the
@@ -174,7 +174,7 @@ paths:
         - Applications
       description: |
         Create an application using a request body. App id+version must be unique within tenant and can be composed of
-        alphanumeric characters and the following special characters [-._~]. Id must begin with an alphabetic character
+        alphanumeric characters and the following special characters [-._~]. Id must begin with an alphanumeric character
         and can be no more than 80 characters in length.
 
         Note that certain attributes (such as tenant) are allowed but ignored so that the JSON result returned by a GET
@@ -531,8 +531,9 @@ paths:
           - id
           - owner
           - enabled
+          - locked
 
-        Note that the attributes owner and enabled may be modified using other endpoints.
+        Note that the attributes owner, enabled and locked may be modified using other endpoints.
       operationId: patchApp
       parameters:
         - name: appId
@@ -607,8 +608,9 @@ paths:
           - version
           - owner
           - enabled
+          - locked
 
-        Note that the attributes owner and enabled may be modified using other endpoints.
+        Note that the attributes owner, enabled and locked may be modified using other endpoints.
       operationId: putApp
       parameters:
         - name: appId
@@ -751,6 +753,94 @@ paths:
       responses:
         '200':
           description: Application disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '403':
+          description: Permission denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/{appVersion}/lock':
+    post:
+      tags:
+        - Applications
+      description: |
+        Lock a version of an application to prevent updates via PUT or PATCH.
+        Requester must be owner of the app or a tenant administrator.
+      operationId: lockApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+        - name: appVersion
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppVersionString'
+      responses:
+        '200':
+          description: Application locked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespChangeCount'
+        '403':
+          description: Permission denied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/apps/{appId}/{appVersion}/unlock':
+    post:
+      tags:
+        - Applications
+      description: |
+        Unlock a version of an application to allow updates via PUT and PATCH.
+        Requester must be owner of the app or a tenant administrator.
+      operationId: unlockApp
+      parameters:
+        - name: appId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/IdString'
+        - name: appVersion
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AppVersionString'
+      responses:
+        '200':
+          description: Application unlocked.
           content:
             application/json:
               schema:
@@ -1366,8 +1456,15 @@ components:
         enabled:
           type: boolean
           default: true
+        locked:
+          type: boolean
+          default: false
         isPublic:
           type: boolean
+        sharedWithUsers:
+          type: array
+          items:
+            type: string
         runtime:
           $ref: '#/components/schemas/RuntimeEnum'
         runtimeVersion:
@@ -1516,6 +1613,16 @@ components:
             includeLaunchFiles:
                 type: boolean
                 default: true
+        logConfig:
+          type: object
+          required:
+            - stdoutFilename
+            - stderrFilename
+          properties:
+            stdoutFilename:
+              type: string
+            stderrFilename:
+              type: string
     # --- AppFileInput --------------------------------------------------------
     AppFileInput:
       type: object
@@ -1532,6 +1639,8 @@ components:
         autoMountLocal:
           type: boolean
           default: true
+        notes:
+          type: object
         sourceUrl:
           type: string
           minLength: 1
@@ -1551,6 +1660,8 @@ components:
           $ref: '#/components/schemas/ArgDescriptionString'
         inputMode:
           $ref: '#/components/schemas/FileInputModeEnum'
+        notes:
+          type: object
         sourceUrls:
           type: array
           items:
@@ -1590,6 +1701,10 @@ components:
           default: ""
         description:
           $ref: '#/components/schemas/DescriptionString'
+        inputMode:
+          $ref: '#/components/schemas/KeyValueInputModeEnum'
+        notes:
+          type: object
     # --- ReqSubscribe -------------------------------------------
     ReqSubscribe:
       type: object
@@ -1717,6 +1832,9 @@ components:
         enabled:
           type: boolean
           default: true
+        locked:
+          type: boolean
+          default: false
         runtime:
           $ref: '#/components/schemas/RuntimeEnum'
         runtimeVersion:
@@ -2095,6 +2213,14 @@ components:
         - INCLUDE_ON_DEMAND
         - INCLUDE_BY_DEFAULT
       default: INCLUDE_ON_DEMAND
+    KeyValueInputModeEnum:
+      type: string
+      enum:
+        - REQUIRED
+        - FIXED
+        - INCLUDE_ON_DEMAND
+        - INCLUDE_BY_DEFAULT
+      default: INCLUDE_BY_DEFAULT
     OperationTypeEnum:
       type: string
       enum:
@@ -2108,6 +2234,8 @@ components:
         - CHANGE_OWNER
         - ENABLE
         - DISABLE
+        - LOCK
+        - UNLOCK
         - GET_PERMS
         - GRANT_PERMS
         - REVOKE_PERMS

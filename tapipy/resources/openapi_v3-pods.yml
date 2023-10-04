@@ -1056,7 +1056,9 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
   /traefik-config:
     get:
-      summary: Api Traefik Config
+      tags:
+        - Misc
+      summary: traefik_config
       description: >-
         Supplies traefik-config to service. Returns json traefik-config object
         for
@@ -1065,7 +1067,7 @@ paths:
         in 
 
         Kubernetes.
-      operationId: api_traefik_config_traefik_config_get
+      operationId: traefik_config
       responses:
         '200':
           description: Successful Response
@@ -1074,11 +1076,13 @@ paths:
               schema: {}
   /healthcheck:
     get:
-      summary: Api Healthcheck
+      tags:
+        - Misc
+      summary: healthcheck
       description: |-
         Health check for service. Returns healthy when api is running.
         Should add database health check, should add kubernetes health check
-      operationId: api_healthcheck_healthcheck_get
+      operationId: healthcheck
       responses:
         '200':
           description: Successful Response
@@ -1087,39 +1091,17 @@ paths:
               schema: {}
   '/error-handler/{status}':
     get:
-      summary: Error Codes
+      tags:
+        - Misc
+      summary: error_handler
       description: Handles all error codes from Traefik.
-      operationId: error_codes_error_handler__status__get
+      operationId: error_handler
       parameters:
         - required: true
           schema:
             title: Status
           name: status
           in: path
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TapisApiModel'
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /error-handler:
-    get:
-      summary: Error Codes
-      description: Handles all error codes from Traefik.
-      operationId: error_codes_error_handler_get
-      parameters:
-        - required: true
-          schema:
-            title: Status
-          name: status
-          in: query
       responses:
         '200':
           description: Successful Response
@@ -1780,17 +1762,15 @@ components:
           type: string
           description: Time (UTC) that this pod was created.
           format: date-time
-          default: '2023-05-25T20:51:46.112775Z'
         update_ts:
           title: Update Ts
           type: string
           description: Time (UTC) that this pod was updated.
           format: date-time
-          default: '2023-05-25T20:51:46.112782Z'
         start_instance_ts:
           title: Start Instance Ts
           type: string
-          description: Time (UTC) that this pod instance was started.
+          description: Time (UdTC) that this pod instance was started.
           format: date-time
       additionalProperties: false
       description: Response object for Pod class.
@@ -1984,13 +1964,11 @@ components:
           type: string
           description: Time (UTC) that this snapshot was created.
           format: date-time
-          default: '2023-05-25T20:51:46.092862Z'
         update_ts:
           title: Update Ts
           type: string
           description: Time (UTC) that this snapshot was updated.
           format: date-time
-          default: '2023-05-25T20:51:46.092887Z'
       additionalProperties: false
       description: Response object for Snapshot class.
     SnapshotsResponse:
@@ -2020,11 +1998,6 @@ components:
         version:
           title: Version
           type: string
-      additionalProperties: false
-    TapisApiModel:
-      title: TapisApiModel
-      type: object
-      properties: {}
       additionalProperties: false
     UpdatePod:
       title: UpdatePod
@@ -2278,20 +2251,18 @@ components:
         status:
           title: Status
           type: string
-          description: Current status of snapshot.
+          description: Current status of volume.
           default: REQUESTED
         creation_ts:
           title: Creation Ts
           type: string
-          description: Time (UTC) that this snapshot was created.
+          description: Time (UTC) that this volume was created.
           format: date-time
-          default: '2023-05-25T20:51:45.865346Z'
         update_ts:
           title: Update Ts
           type: string
-          description: Time (UTC) that this snapshot was updated.
+          description: Time (UTC) that this volume was updated.
           format: date-time
-          default: '2023-05-25T20:51:45.865353Z'
       additionalProperties: false
       description: Response object for Volume class.
     VolumesResponse:
