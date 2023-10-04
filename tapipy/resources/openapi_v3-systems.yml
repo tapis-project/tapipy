@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.3.3'
+  version: '1.4.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -34,13 +34,19 @@ tags:
     description: |
       The permissions model allows for fine grained access control of resources. The system owner
       may grant READ and MODIFY permission to specific users. MODIFY implies READ.
+      Note that Tapis permissions are independent of native permissions enforced by the underlying
+      system host.
   
-      Please note that Tapis also supports a higher level approach to granting access known as *Sharing*.
+      Tapis also supports a higher level approach to granting access known as *Sharing*.
   - name: Sharing
     description: |
       In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
       This approach is known simply as *sharing*. The sharing API allows you to share a system with a set of users
       as well as share publicly with all users in a tenant. Sharing grants users READ and EXECUTE access to the system.
+      When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
+      made through the Files service.
+      Note that Tapis permissions and sharing are independent of native permissions enforced by the underlying
+      system host.
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------
@@ -166,13 +172,17 @@ paths:
       description: |
         Create a system using a request body. System name must be unique within a tenant and can be composed of
         alphanumeric characters and the following special characters [-._~].
-        Name must begin with an alphabetic character and can be no more than 80 characters in length.
+        Name must begin with an alphanumeric character and can be no more than 80 characters in length.
         Description is optional with a maximum length of 2048 characters.
 
-        The attribute *effectiveUserId* determines the user that is used to access the underlying host.
+        The attribute *host* represents a host name, IP address, Globus Endpoint Id or Globus Collection Id.
+
+        The attribute *effectiveUserId* determines the host login user, the user used to access the underlying host.
         The attribute can be set to a static string indicating a specific user (such as a service account) or
         dynamically specified as *${apiUserId}*. For the case of *${apiUserId}*, the service resolves the variable by
-        extracting the identity from the request to the service (i.e. the JWT).
+        extracting the identity from the request to the service (i.e. the JWT) and applying a mapping to a host login
+        user if such a mapping has been provided. If no mapping is provided, then the extracted identity is taken to be
+        the host login user.
 
         If the *effectiveUserId* is static (i.e. not *${apiUserId}*) then credentials may optionally be provided in the
         *authnCredential* attribute of the request body. The Systems service does not store the secrets in its
@@ -252,7 +262,7 @@ paths:
           - *rootDir*
           - *owner*
 
-        The owner will be the user who is creating the system.  The caller must have read permission to the parent
+        The owner will be the user who is creating the system. The caller must have read permission to the parent.
         system.
       operationId: createChildSystem
       parameters:
@@ -505,7 +515,7 @@ paths:
         Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*.
 
         Certain services may use the query parameter *sharedAppCtx* to indicate that the request is in a shared
-        application context. Tapis authorization will be bypassed.
+        application context.
       operationId: getSystem
       parameters:
         - name: systemId
@@ -1116,7 +1126,7 @@ paths:
         Retrieve credentials for given system, target *userName* and authentication method.
 
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then *{userName}* is
-        interpreted as a Tapis user. Note that their may me a mapping of the Tapis user to a host *loginUser*.
+        interpreted as a Tapis user. Note that there may me a mapping of the Tapis user to a host *loginUser*.
 
         If the *effectiveUserId* for the system is static (i.e. not *${apiUserId}*) then *{userName}* is interpreted
         as the host *loginUser* that is used when accessing the host.
@@ -1254,7 +1264,7 @@ paths:
       description: |
         Remove credentials from the Security Kernel for given system and *target user*. Requester must be owner of the system.
 
-        Operation is allowed if requester the system owner or a tenant administrator.
+        Operation is allowed if requester is the system owner or a tenant administrator.
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
         if *{userName}* is the Tapis user making the request.
       operationId: removeUserCredential
@@ -1305,14 +1315,16 @@ paths:
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then *{userName}* is interpreted
         as a Tapis user and a search is made for credentials associated with *{userName}*.
 
-        If the *effectiveUserId* for the system is static (i.e. not *${apiUserId}*) then *{userName}* is ignored and
-        a search is made for credentials associated with *effectiveUserId*.
+        If the *effectiveUserId* for the system is static (i.e. not *${apiUserId}*) then *{userName}* is interpreted
+        as the login user to be used when accessing the host. Note that this would typically be the current
+        *effectiveUserId* defined for the system, but that is not a requirement. This allows for registering and
+        checking credentials for a login user prior to updating the system definition.
 
         Operation is allowed if requester is the system owner or a tenant administrator.
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
         if *{userName}* is the Tapis user making the request.
 
-        Desired authentication method may be specified using query parameter authnMethod=<method>. If not specified
+        Desired authentication method may be specified using query parameter authnMethod=<method>. If not specified,
         then credentials for the system's default authentication method are verified.
       operationId: checkUserCredential
       parameters:
@@ -1371,11 +1383,13 @@ paths:
       description: |
         Retrieve a Globus URL + Session Id that can be used to generate an oauth2 authorization code.
         In Globus the code is referred to as a *Native App Authorization Code*.
-        The host property of the system is used as the Endpoint Id.
-        Once a user has obtained an authorization code the corresponding Systems endpoint for generating
+        The host property of the system is used as the Globus Endpoint Id or Globus Collection Id.
+        Once a user has obtained an authorization code, the corresponding Systems endpoint for generating
         Globus tokens should be called to exchange the code + sessionId for a pair of access and refresh tokens.
         The session Id is a Tapis Id that is used to track the oauth2 flow that is started when this call is made.
-        Note that the authorization code as per Globus documentation is valid for 10 minutes.
+        The authorization code, as per Globus documentation, is valid for 10 minutes.
+        Please note that the Tapis installation for your site must be configured by the site administrator to
+        support systems of type GLOBUS.
       operationId: getGlobusAuthUrl
       responses:
         '200':
@@ -1418,7 +1432,9 @@ paths:
         The Systems service will use the Tapis Security Kernel to store the tokens for the given system and user.
         The session Id is a Tapis Id that is used to track the oauth2 flow that is started when a call to the
         getGlobusAuthUrl endpoint is made.
-        Note that the authorization code as per Globus documentation is valid for 10 minutes.
+        The authorization code, as per Globus documentation, is valid for 10 minutes.
+        Please note that the Tapis installation for your site must be configured by the site administrator to
+        support systems of type GLOBUS.
       operationId: generateGlobusTokens
       parameters:
         - name: systemId
@@ -1713,7 +1729,9 @@ paths:
       summary: Share a system with one or more users.
       description: |
         Create or update sharing information for a system. The system will be shared with the list of users
-        provided in the request body. Sharing allows READ and EXECUTE access. Requester must be owner of the system.
+        provided in the request body. Sharing allows READ and EXECUTE access. When the system has a dynamic
+        *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls made through the
+        Files service. Requester must be owner of the system.
       operationId: shareSystem
       parameters:
         - name: systemId
@@ -1760,7 +1778,10 @@ paths:
         - Sharing
       summary: Share a system publicly with all users in the tenant.
       description: |
-        Share a system with all users in the tenant. Sharing allows READ and EXECUTE access. Requester must be owner of the system.
+        Share a system with all users in the tenant. Sharing allows READ and EXECUTE access.
+        When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access
+        to all paths for calls made through the Files service.
+        Requester must be owner of the system.
       operationId: shareSystemPublic
       parameters:
         - name: systemId
@@ -2060,7 +2081,7 @@ components:
         tenant:
           type: string
         id:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/SysId'
         description:
           $ref: '#/components/schemas/DescriptionString'
         systemType:
@@ -2068,20 +2089,19 @@ components:
         owner:
           $ref: '#/components/schemas/UserNameApiDefaultString'
         host:
-          $ref: '#/components/schemas/HostString'
+          $ref: '#/components/schemas/SysHost'
         enabled:
-          type: boolean
-          default: true
+          $ref: '#/components/schemas/Enabled'
         effectiveUserId:
-          $ref: '#/components/schemas/UserNameApiDefaultString'
+          $ref: '#/components/schemas/EffectiveUserId'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
           $ref: '#/components/schemas/Credential'
         bucketName:
-          type: string
+          $ref: '#/components/schemas/BucketName'
         rootDir:
-          $ref: '#/components/schemas/DirString'
+          $ref: '#/components/schemas/RootDir'
         port:
           type: integer
           format: int32
@@ -2094,7 +2114,7 @@ components:
           type: integer
           format: int32
         dtnSystemId:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/DtnSysId'
         dtnMountPoint:
           type: string
         dtnMountSourcePath:
@@ -2108,9 +2128,10 @@ components:
           default: false
         canExec:
           type: boolean
+          description: Indicates if system can be used to execute jobs.
         canRunBatch:
           type: boolean
-          default: false
+          description: Indicates if system supports running jobs using a batch scheduler.
         enableCmdPrefix:
           type: boolean
           default: false
@@ -2145,6 +2166,10 @@ components:
           $ref: '#/components/schemas/QueueNameString'
         batchSchedulerProfile:
           $ref: '#/components/schemas/IdString'
+        sharedWithUsers:
+          type: array
+          items:
+            type: string
         jobCapabilities:
           type: array
           items:
@@ -2334,12 +2359,31 @@ components:
           default: ""
         description:
           $ref: '#/components/schemas/DescriptionString'
+        inputMode:
+          $ref: '#/components/schemas/KeyValueInputModeEnum'
+        notes:
+          type: object
 
     # --- String types with constraints ------------------------------------
+    SysHost:
+      type: string
+      minLength: 1
+      maxLength: 256
+      description: FQDN, IP address, Globus endpoint ID or Globus collection ID.
     HostString:
       type: string
       minLength: 1
       maxLength: 256
+    SysId:
+      type: string
+      minLength: 1
+      maxLength: 80
+      description: Short descriptive name for the system that is unique within the tenant.
+    DtnSysId:
+      type: string
+      minLength: 1
+      maxLength: 80
+      description: An alternate system to use as a Data Transfer Node (DTN) during job execution.
     IdString:
       type: string
       minLength: 1
@@ -2348,6 +2392,16 @@ components:
       type: string
       minLength: 1
       maxLength: 60
+    EffectiveUserId:
+      type: string
+      minLength: 1
+      maxLength: 60
+      default: "${apiUserId}"
+      description: Username to use when accessing the system. A specific user (such as a service account) or the dynamic user ``${apiUserId}``.
+    Enabled:
+      type: boolean
+      default: true
+      description: Indicates if system is currently considered active and available for use.
     UserNameApiDefaultString:
       type: string
       minLength: 1
@@ -2356,9 +2410,18 @@ components:
     DescriptionString:
       type: string
       maxLength: 2048
+      description: Optional more verbose description.
+    BucketName:
+      type: string
+      description: Name of the bucket for an S3 type system.
     ArgDescriptionString:
       type: string
       maxLength: 8096
+    RootDir:
+      type: string
+      minLength: 1
+      maxLength: 4096
+      description: Effective root directory to be used when listing files or moving files to and from the system.
     DirString:
       type: string
       minLength: 1
@@ -2385,28 +2448,29 @@ components:
         - canExec
       properties:
         id:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/SysId'
         description:
           $ref: '#/components/schemas/DescriptionString'
         systemType:
           $ref: '#/components/schemas/SystemTypeEnum'
         owner:
           type: string
+          description: A specific user set at system creation.
         host:
-          $ref: '#/components/schemas/HostString'
+          $ref: '#/components/schemas/SysHost'
         enabled:
-          type: boolean
-          default: true
+          $ref: '#/components/schemas/Enabled'
         effectiveUserId:
-          $ref: '#/components/schemas/UserNameApiDefaultString'
+          $ref: '#/components/schemas/EffectiveUserId'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
           $ref: '#/components/schemas/ReqPostPutCredential'
         bucketName:
           type: string
+          description: Name of the bucket for an S3 type system.
         rootDir:
-          $ref: '#/components/schemas/DirString'
+          $ref: '#/components/schemas/RootDir'
         port:
           type: integer
           format: int32
@@ -2419,22 +2483,28 @@ components:
           type: integer
           format: int32
         dtnSystemId:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/DtnSysId'
         dtnMountPoint:
           type: string
+          description: Mount point (aka target) used when running the mount command on this system. Used during job execution.
         dtnMountSourcePath:
           type: string
+          description: The path exported by *dtnSystemId* that matches the *dtnMountPoint* on this system. This will be relative to *rootDir* on *dtnSystemId*. Used during job execution.
         isDtn:
           type: boolean
           default: false
+          description: Indicates if system will be used as a data transfer node (DTN).
         canExec:
           type: boolean
+          description: Indicates if system can be used to execute jobs.
         canRunBatch:
           type: boolean
           default: false
+          description: Indicates if system supports running jobs using a batch scheduler.
         enableCmdPrefix:
           type: boolean
           default: false
+          description: Indicates if system allows a job submission request to specify a *cmdPrefix*.
         mpiCmd:
           type: string
           minLength: 1
@@ -2472,8 +2542,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/TagString'
+          description: List of tags as simple strings.
         notes:
           type: object
+          description: Metadata in the form of a Json object. Not used by Tapis.
         importRefId:
           type: string
     ReqPostChildSystem:
@@ -2483,20 +2555,20 @@ components:
         - rootDir
       properties:
         id:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/SysId'
         effectiveUserId:
-          $ref: '#/components/schemas/UserNameApiDefaultString'
+          $ref: '#/components/schemas/EffectiveUserId'
         rootDir:
-          $ref: '#/components/schemas/DirString'
+          $ref: '#/components/schemas/RootDir'
     ReqPutSystem:
       type: object
       properties:
         description:
           $ref: '#/components/schemas/DescriptionString'
         host:
-          $ref: '#/components/schemas/HostString'
+          $ref: '#/components/schemas/SysHost'
         effectiveUserId:
-          $ref: '#/components/schemas/UserNameApiDefaultString'
+          $ref: '#/components/schemas/EffectiveUserId'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         authnCredential:
@@ -2513,14 +2585,14 @@ components:
           type: integer
           format: int32
         dtnSystemId:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/DtnSysId'
         dtnMountPoint:
           type: string
         dtnMountSourcePath:
           type: string
         canRunBatch:
           type: boolean
-          default: false
+          description: Indicates if system supports running jobs using a batch scheduler.
         enableCmdPrefix:
           type: boolean
           default: false
@@ -2571,9 +2643,9 @@ components:
         description:
           $ref: '#/components/schemas/DescriptionString'
         host:
-          $ref: '#/components/schemas/HostString'
+          $ref: '#/components/schemas/SysHost'
         effectiveUserId:
-          $ref: '#/components/schemas/UserNameString'
+          $ref: '#/components/schemas/EffectiveUserId'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
         port:
@@ -2587,13 +2659,14 @@ components:
           type: integer
           format: int32
         dtnSystemId:
-          $ref: '#/components/schemas/IdString'
+          $ref: '#/components/schemas/DtnSysId'
         dtnMountPoint:
           type: string
         dtnMountSourcePath:
           type: string
         canRunBatch:
           type: boolean
+          description: Indicates if system supports running jobs using a batch scheduler.
         enableCmdPrefix:
           type: boolean
         allowChildren:
@@ -3028,6 +3101,7 @@ components:
     # -------------------------------------------------------------------------
     SystemTypeEnum:
       type: string
+      description: Type of system
       enum:
         - LINUX
         - S3
@@ -3102,3 +3176,11 @@ components:
         - SET_CRED
         - REMOVE_CRED
         - GET_CRED
+    KeyValueInputModeEnum:
+      type: string
+      enum:
+        - REQUIRED
+        - FIXED
+        - INCLUDE_ON_DEMAND
+        - INCLUDE_BY_DEFAULT
+      default: INCLUDE_BY_DEFAULT

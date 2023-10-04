@@ -1470,6 +1470,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespTask'
+    
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task
+      description: |
+        Delete a task
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: deleteTask
+      responses:
+        '200':
+          description: Task deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespString'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot delete task for this pipeline.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Task not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
   
   '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs':
     get:
@@ -3173,3 +3222,4 @@ components:
       type: string
       enum:
         - python:3.9
+        - tapis/workflows-python-singularity:0.1.0
