@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.5.0 - 2023-12-05
+### Added
+- No change.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
 ## 1.4.1 - 2023-07-03
 ### Added
 - No change.
@@ -28,6 +39,29 @@ All notable changes to this project will be documented in this file.
 
 ### Removed
 - Spec are no longer created at initialization, only need to be loaded. 7 seconds -> .04 seconds.
+
+
+## 1.3.6 - 2023-06-06
+### Added
+- No change.
+
+### Changed
+- Update spec for apps and systems.
+
+### Removed
+- No change.
+
+
+## 1.3.5 - 2023-06-02
+### Added
+- No change.
+
+### Changed
+- Update spec for apps, pods, files, notifications, systems, and workflows.
+- Nathan added json serializer for tapis result object serialization to dictionary.
+
+### Removed
+- No change.
 
 
 ## 1.3.4 - 2023-05-16
