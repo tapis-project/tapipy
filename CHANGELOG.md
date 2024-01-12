@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.5.1 - 2023-01-12
+### Added
+- No change.
+
+### Changed
+- Updating specs for authenticator, streams, systems, tokens, apps, notifications.
+
+### Removed
+- No change.
+
+
 ## 1.5.0 - 2023-12-05
 ### Added
 - No change.

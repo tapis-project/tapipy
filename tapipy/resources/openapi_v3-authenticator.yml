@@ -25,6 +25,7 @@ servers:
 - url: /
   description: catch-all server definition for other Tapis instances.
 
+
 paths:
   /v3/oauth2/hello:
     get:
@@ -80,6 +81,8 @@ paths:
         - Admin
       operationId: get_config
       description: Get the authenticator configuraion for the tenant; restricted to Tenant admins.
+      security:
+        - TapisJWT: []
       responses:
         '200':
           description: OK
@@ -102,6 +105,8 @@ paths:
             schema:
               $ref: '#/components/schemas/NewTenantConfig'
       description: Update the authenticator configuraion for the tenant; restricted to Tenant admins.
+      security:
+        - TapisJWT: []
       responses:
         '200':
           description: OK
@@ -131,6 +136,8 @@ paths:
         description: index (offset) to start list.
         schema:
           type: integer
+      security:
+        - TapisJWT: []
       responses:
         '200':
           description: OK
@@ -152,6 +159,8 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/NewClient'
+      security:
+        - TapisJWT: []
       responses:
         '201':
           description: Created
@@ -171,6 +180,8 @@ paths:
       summary: Get client details
       description: Get details of a specific client by its id.
       operationId: get_client
+      security:
+        - TapisJWT: []
       parameters:
       - name: client_id
         in: path
@@ -195,6 +206,8 @@ paths:
       summary: Update client details
       description: Update details of a specific client by its id.
       operationId: update_client
+      security:
+        - TapisJWT: []
       parameters:
       - name: client_id
         in: path
@@ -222,9 +235,11 @@ paths:
     delete:
       tags:
       - Clients
-      summary: Delete a tenant
-      description: Permenantly delete a client.
+      summary: Permanently set a client to inactive.
+      description: Permanently set a client to inactive. Once set to inactive clients cannot be used.
       operationId: delete_client
+      security:
+        - TapisJWT: []
       parameters:
       - name: client_id
         in: path
@@ -252,6 +267,8 @@ paths:
     post:
       tags:
         - Tokens
+      summary: Generate a Tapis JWT
+      description: Generate a Tapis JWT using some OAuth2 grant type. Typically, a request to this endpoint is the last step in the token generation process. The fields required in the request payload depend on the grant type being used (see details below).
       operationId: create_token
       requestBody:
         required: true
@@ -278,7 +295,11 @@ paths:
     post:
       tags:
         - Tokens
+      summary: Create a v2 bearer token from a Tapis v3 JWT.
+      description: Create a v2 token from a Tapis v3 JWT. Note that only some tenants for both v2 and v3 are supported.
       operationId: create_v2_token
+      security:
+        - TapisJWT: []
       requestBody:
         required: true
         content:
@@ -326,6 +347,8 @@ paths:
         - Profiles
       operationId: get_userinfo
       description: Return the user profile associated with the Tapis Token. Also can be used to validate the token.
+      security:
+        - TapisJWT: []
       responses:
         '200':
           description: OK
@@ -343,6 +366,8 @@ paths:
       tags:
         - Profiles
       operationId: list_profiles
+      security:
+        - TapisJWT: []
       parameters:
       - name: limit
         in: query
@@ -371,6 +396,8 @@ paths:
       tags:
         - Profiles
       operationId: get_profile
+      security:
+        - TapisJWT: []
       parameters:
       - name: username
         in: path
@@ -394,6 +421,8 @@ paths:
     post:
       tags:
         - Tokens
+      summary: Generate a device code.
+      description: Generate a device code; this is the first step in the device_code grant type. See the OAuth2 documentation for details.
       operationId: generate_device_code
       requestBody:
         required: true
@@ -414,6 +443,12 @@ paths:
                     $ref: '#/components/schemas/DeviceCodeResposne'
 
 components:
+  securitySchemes:
+    TapisJWT:
+      type: apiKey
+      description: Tapis signed JWT token authentication
+      name: X-Tapis-Token
+      in: header
   schemas:
     BasicResponse:
       type: object
@@ -581,6 +616,9 @@ components:
         password:
           type: string
           description: The password assoicated with the username being authenticated (for password grant).
+        client_id:
+          type: string
+          description: The client_id being authenticated (for device_code grant).
         grant_type:
           type: string
           description: The OAuth2 grant type being used; either password, authorization_code or refresh_token.
