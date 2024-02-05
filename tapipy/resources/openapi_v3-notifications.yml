@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Notifications API
   description: The Tapis Notifications API provides for management of subscriptions and event publication
-  version: '1.5.0'
+  version: '1.6.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Notifications API - CICSupport"
@@ -79,10 +79,10 @@ paths:
         Retrieve list of subscriptions owned by the requesting user. Use search and select query parameters to limit results.
         
         Query parameter *ownedBy* may be used to retrieve subscriptions owned by a user other than the requesting user.
-        Ignored if *anyOwner* is set to true.
+        Ignored if *anyOwner* is set to true. Only services or tenant administrators may set *ownedBy*.
         
         Query parameter *anyOwner* may be used to retrieve all subscriptions owned by any user.
-        Query parameter *anyOwner* takes precedence over parameter *ownedBy*
+        Query parameter *anyOwner* takes precedence over parameter *ownedBy*. Only services may set *anyOwner*. 
       operationId: getSubscriptions
       parameters:
         - name: search
@@ -125,12 +125,12 @@ paths:
             default: 'summaryAttributes'
         - name: ownedBy
           in: query
-          description: Retrieve subscriptions owned by a user other than the requesting user. Ignored if *anyOwner* is true.
+          description: Retrieve subscriptions owned by a user other than the requesting user. Ignored if *anyOwner* is true. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
         - name: anyOwner
           in: query
-          description: Include subscriptions owned by any user. If set to true then *ownedBy* is ignored. Default is false.
+          description: Include subscriptions owned by any user. If set to true then *ownedBy* is ignored. Default is false. Requester must be a service.
           schema:
             type: boolean
             default: false
@@ -163,7 +163,7 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Create a subscription using a request body. Only services may create subscriptions.
+        Create a subscription using a request body. Only services may perform this operation.
 
         For each owner the *name* must be unique and can be composed of alphanumeric characters and the following
         special characters [-._~]. If attribute *name* is not provided then the service will generate one.
@@ -225,6 +225,7 @@ paths:
         Retrieve details for subscriptions owned by the requesting user.
         Use query parameters to specify search conditions. For example name.eq=MySubscription.
         Query parameter *ownedBy* may be used to retrieve subscriptions owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: searchSubscriptionsQueryParameters
       parameters:
         - name: freeFormParameterName
@@ -272,7 +273,7 @@ paths:
             default: 'summaryAttributes'
         - name: ownedBy
           in: query
-          description: Retrieve subscriptions owned by a user other than the requesting user.
+          description: Retrieve subscriptions owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -307,6 +308,7 @@ paths:
         Retrieve details for subscriptions owned by the requesting user.
         Use request body to specify SQL-like search conditions.
         Query parameter *ownedBy* may be used to retrieve subscriptions owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: searchSubscriptionsRequestBody
       parameters:
         - name: limit
@@ -344,7 +346,7 @@ paths:
             default: 'summaryAttributes'
         - name: ownedBy
           in: query
-          description: Retrieve subscriptions owned by a user other than the requesting user.
+          description: Retrieve subscriptions owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       requestBody:
@@ -386,6 +388,7 @@ paths:
       description: |
         Retrieve a subscription owned by the requesting user and whose name matches the provided value.
         Query parameter *ownedBy* may be used to retrieve a subscription owned by another user.
+        Only services or tenant administrators may set the *ownedBy* query parameter.
 
         Summary of subscription attributes. For details please see *postSubscription*:
           - owner: Tapis user who owns the subscription.
@@ -415,7 +418,7 @@ paths:
             default: 'allAttributes'
         - name: ownedBy
           in: query
-          description: Retrieve subscription owned by a user other than the requesting user.
+          description: Retrieve subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -453,9 +456,11 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Update selected attributes of a subscription owned by the requesting user and whose name matches the provided value.
+        Update selected attributes of a subscription. Only services may perform this operation.
+        
         Request body may only contain updatable attributes. Subscription must exist.
         Query parameter *ownedBy* may be used to patch a subscription owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
 
         Attributes that may not be updated via PATCH are
 
@@ -474,7 +479,7 @@ paths:
             $ref: '#/components/schemas/NameString'
         - name: ownedBy
           in: query
-          description: Patch a subscription owned by a user other than the requesting user.
+          description: Patch a subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       requestBody:
@@ -519,9 +524,11 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Delete a subscription owned by the requesting user and whose name matches the provided value.
+        Delete a subscription. Only services may perform this operation.
+        
         Events will stop being delivered. Subscription must be re-created to resume event delivery.
         Query parameter *ownedBy* may be used to delete a subscription owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: deleteSubscriptionByName
       parameters:
         - name: name
@@ -531,7 +538,7 @@ paths:
             $ref: '#/components/schemas/NameString'
         - name: ownedBy
           in: query
-          description: Delete a subscription owned by a user other than the requesting user.
+          description: Delete a subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -627,7 +634,7 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Delete a subscription whose UUID matches the provided value.
+        Delete a subscription whose UUID matches the provided value. Only services may perform this operation.
       operationId: deleteSubscriptionByUuid
       parameters:
         - name: uuid
@@ -666,12 +673,14 @@ paths:
         - Subscriptions
       description: |
         Delete all subscriptions whose *subjectFilter* matches the specific *subject* provided.
+        Only services may perform this operation.
 
         Query parameter *ownedBy* may be used to delete subscriptions owned by a user other than the requesting user.
-        Ignored if *anyOwner* is set to true.
+        Ignored if *anyOwner* is set to true. Only services or tenant administrators may set *ownedBy*.
         
         Query parameter *anyOwner* may be used to delete subscriptions owned by any user.
-        Query parameter *anyOwner* takes precedence over parameter *ownedBy*
+        Query parameter *anyOwner* takes precedence over parameter *ownedBy*.
+        Only services may set *anyOwner*.
       operationId: deleteSubscriptionsBySubject
       parameters:
         - name: subject
@@ -681,12 +690,12 @@ paths:
             type: string
         - name: ownedBy
           in: query
-          description: Delete subscriptions owned by a user other than the requesting user. Ignored if *anyOwner* is true.
+          description: Delete subscriptions owned by a user other than the requesting user. Ignored if *anyOwner* is true. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
         - name: anyOwner
           in: query
-          description: Delete subscriptions owned by any user. If set to true then *ownedBy* is ignored. Default is false.
+          description: Delete subscriptions owned by any user. If set to true then *ownedBy* is ignored. Default is false. Requester must be a service.
           schema:
             type: boolean
             default: false
@@ -716,6 +725,7 @@ paths:
       description: |
         Check if a subscription owned by the requesting user is currently active.
         Query parameter *ownedBy* may be used to check a subscription owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: isEnabled
       parameters:
         - name: name
@@ -725,7 +735,7 @@ paths:
             $ref: '#/components/schemas/NameString'
         - name: ownedBy
           in: query
-          description: Check a subscription owned by a user other than the requesting user.
+          description: Check a subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -758,8 +768,11 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Update a subscription owned by the requesting user to be active. Matching events will start being delivered.
+        Update a subscription to be active. Only services may perform this operation.
+        
+        Matching events will start being delivered.
         Query parameter *ownedBy* may be used to enable a subscription owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: enableSubscription
       parameters:
         - name: name
@@ -769,7 +782,7 @@ paths:
             $ref: '#/components/schemas/NameString'
         - name: ownedBy
           in: query
-          description: Update a subscription owned by a user other than the requesting user.
+          description: Update a subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -802,8 +815,11 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Update a subscription owned by the requesting user to be inactive. Matching events will stop being delivered.
+        Update a subscription to be inactive. Only services may perform this operation.
+        
+        Matching events will stop being delivered.
         Query parameter *ownedBy* may be used to disable a subscription owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: disableSubscription
       parameters:
         - name: name
@@ -813,7 +829,7 @@ paths:
             $ref: '#/components/schemas/NameString'
         - name: ownedBy
           in: query
-          description: Update a subscription owned by a user other than the requesting user.
+          description: Update a subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -846,9 +862,11 @@ paths:
       tags:
         - Subscriptions
       description: |
-        Update Time-To-Live (TTL) for a subscription owned by the requesting user.
+        Update Time-To-Live (TTL) for a subscription. Only services may perform this operation.
+        
         TTL provided as number of minutes. Use 0 to indicate subscription should never expire.
         Query parameter *ownedBy* may be used to update a subscription owned by another user.
+        Only services or tenant administrators may set *ownedBy*.
       operationId: updateTTL
       parameters:
         - name: name
@@ -863,7 +881,7 @@ paths:
             type: integer
         - name: ownedBy
           in: query
-          description: Update a subscription owned by a user other than the requesting user.
+          description: Update a subscription owned by a user other than the requesting user. Requester must be a service or tenant administrator.
           schema:
             $ref: '#/components/schemas/UserNameString'
       responses:
@@ -969,6 +987,8 @@ paths:
         - Test
       description: |
         Start a test sequence by creating a subscription and publishing an initial event matching the subscription.
+        Only services may perform this operation.
+        
         The subscription will have the following properties:
           - owner: <api_user>
           - name: <subscription_uuid>
@@ -1066,7 +1086,7 @@ paths:
       tags:
         - Test
       description: |
-        Delete all test sequence artifacts including the subscription and results.
+        Delete all test sequence artifacts including the subscription and results. Only services may perform this operation.
       operationId: deleteTestSequence
       parameters:
         - name: name

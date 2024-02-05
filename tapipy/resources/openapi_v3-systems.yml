@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.5.0'
+  version: '1.6.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -1190,7 +1190,8 @@ paths:
         - Credentials
       description: |
         Create or update credentials in the Security Kernel for given system and target *userName* using a request body.
-        Credentials for multiple authentication methods may be provided.
+        Credentials for multiple authentication methods may be provided. Note that there is support for only one set of
+        credentials per user per system. Updating credentials overwrites previously registered data.
 
         The Systems service does not store the secrets in its database, they are persisted in the Security Kernel.
 
@@ -2419,7 +2420,6 @@ components:
       maxLength: 8096
     RootDir:
       type: string
-      minLength: 1
       maxLength: 4096
       description: Effective root directory to be used when listing files or moving files to and from the system.
     DirString:
@@ -3146,6 +3146,7 @@ components:
       enum:
         - DOCKER
         - SINGULARITY
+        - ZIP
     SchedulerTypeEnum:
       type: string
       enum:
