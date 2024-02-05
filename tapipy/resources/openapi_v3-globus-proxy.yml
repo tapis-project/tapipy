@@ -1,0 +1,1199 @@
+openapi: 3.0.2
+info:
+  title: Tapis Globus Proxy API
+  description: The Tapis Globus Proxy API proxies calls to Globus coming from a Tapis service.
+  version: '1.3.0'
+  termsOfService: "https://tapis-project.org"
+  contact:
+    name: "Tapis Globux Proxy API - CICSupport"
+    url: "https://tapis-project.org"
+    email: "cicsupport@tacc.utexas.edu"
+  license:
+    name: 3-Clause BSD License
+    url: 'https://opensource.org/licenses/BSD-3-Clause'
+externalDocs:
+  description: Tapis Project
+  url: 'https://tapis-project.org'
+servers:
+  - url: 'http://localhost:8080/'
+    description: Local test environment
+    variables: {}
+  - url: 'https://dev.develop.tapis.io/'
+    description: Development environment
+    variables: {}
+security:
+  - TapisJWT: []
+tags:
+  - name: General
+    description: General service health
+  - name: Auth
+    description: Manage Globus authorization related actions.
+  - name: File Operations
+    description: Manage file resources. Operations are list, mkdir, rename and delete
+  - name: Transfers
+    description: Manage file transfers. Initiate, cancel and retrieve status.
+
+# ------------------------------------------------------------------------------
+# --- Paths -------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+paths:
+
+  # --- Paths for General -----------------------------------------------------
+  '/v3/globus-proxy/healthcheck':
+    get:
+      tags:
+        - General
+      description: Health check.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Message received.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+
+  # --- Paths for Auth -----------------------------------------------------
+  '/v3/globus-proxy/auth/url/{client_id}':
+    get:
+      tags:
+        - Auth
+      summary: Return authorization URL given client Id
+      description: |
+        Given a Globus Client Id return the authorization URL that can be used by an end-user to
+        authenticate and obtain a *Native App Authorization Code*.
+      operationId: getAuthInfo
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGlobusAuthInfo'
+        '404':
+          description: Client not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/globus-proxy/auth/tokens/{client_id}/{session_id}/{auth_code}':
+# Python SDK:
+#auth_code = input("Please enter the code you get after login here: ").strip()
+#token_response = client.oauth2_exchange_code_for_tokens(auth_code)
+#globus_transfer_data = token_response.by_resource_server["transfer.api.globus.org"]
+#TRANSFER_ACCESS_TOKEN = globus_transfer_data["access_token"]
+#TRANSFER_REFRESH_TOKEN = globus_transfer_data["refresh_token"]
+    get:
+      tags:
+        - Auth
+      summary: Exchange authorization code for access and refresh tokens
+      description: |
+        Exchange a Globus *Native App Authorization Code* for a pair of access and refresh tokens.
+      operationId: getTokens
+      parameters:
+        - name: client_id
+          in: path
+          required: true 
+          schema:
+            type: string
+        - name: session_id
+          in: path
+          required: true 
+          description: Tapis session Id tracking the OAuth2 flow.
+          schema:
+            type: string
+        - name: auth_code
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/AuthCodeString'
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespAuthTokens'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  '/v3/globus-proxy/auth/check_tokens/{client_id}/{endpoint_id}':
+    # Python SDK:
+    get:
+      tags:
+        - Auth
+      summary: Check token pair and refresh as needed
+      description: |
+        Given an endpoint and a pair of tokens refresh the pair as needed. Return the refreshed token pair
+        which may be the same as the provided pair.
+        Access and refresh tokens must be provided as query parameters.
+      operationId: checkTokens
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: endpoint_id
+          in: path
+          description: Endpoint Id
+          required: true
+          schema:
+            type: string
+          example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespAuthTokens'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for File Operations -----------------------------------------------------
+  '/v3/globus-proxy/ops/{client_id}/{endpoint_id}/{path}':
+    get:
+      tags:
+        - File Operations
+      summary: List files at path
+      description: |
+        List files for an endpoint at given path relative to the default directory of the endpoint.
+        Access token and refresh token must be provided as a query parameters.
+      operationId: listFiles
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: endpoint_id
+          in: path
+          description: Endpoint Id
+          required: true
+          schema:
+            type: string
+          example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+        - name: path
+          in: path
+          description: Path relative to default directory of the endpoint
+          required: true
+          schema:
+            type: string
+          example: "/dirA/dirB/"
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: pagination limit
+          schema:
+            type: integer
+            default: 1000
+          example: 100
+        - name: offset
+          in: query
+          description: pagination offset
+          schema:
+            type: integer
+            default: 0
+          example: 50
+        - name: filter
+          in: query
+          description: select filter
+          schema:
+            type: string
+          example: "name:=test1.txt"
+      responses:
+        '200':
+          description: A list of files
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespFileList'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - File Operations
+      summary: Delete a path
+      description: |
+        Delete a file or directory on an endpoint at path {path} relative to the default directory.
+        Access token and refresh token must be provided as a query parameters.
+      operationId: deletePath
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: endpoint_id
+          in: path
+          description: Endpoint Id
+          required: true
+          schema:
+            type: string
+          example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+        - name: path
+          in: path
+          description: Path relative to default directory of the endpoint
+          required: true
+          schema:
+            type: string
+          example: "/dirA/dirB/"
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+        - name: recurse
+          in: query
+          description: remove the directory and all subdirectories
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    put:
+      tags:
+        - File Operations
+      summary: Rename a path
+      description: |
+        Rename a file or directory on the endpoint. Paths are relative to the endpoint default directory.
+        Source and destination paths must be specified in the request body.
+        When renaming to a different parent directory, the parent directory of the new path must already exist.
+        Access token and refresh token must be provided as a query parameters.
+      operationId: renamePath
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: endpoint_id
+          in: path
+          description: Endpoint Id
+          required: true
+          schema:
+            type: string
+          example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+        - name: path
+          in: path
+          description: Source path relative to default directory of the endpoint
+          required: true
+          schema:
+            type: string
+          example: "/dirA/dirB/"
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqRename'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Source path not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    post:
+      tags:
+        - File Operations
+      summary: Create a directory
+      description: |
+        Create a directory on the endpoint. Path is relative to the endpoint default directory.
+        Access token and refresh token must be provided as a query parameters.
+      operationId: makeDir
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: endpoint_id
+          in: path
+          description: Endpoint Id
+          required: true
+          schema:
+            type: string
+          example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+        - name: path
+          in: path
+          description: Path relative to default directory of the endpoint
+          required: true
+          schema:
+            type: string
+          example: "/dirA/dirB/"
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqMakeDir'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+  # --- Paths for Transfers -----------------------------------------------------
+  '/v3/globus-proxy/transfers/{client_id}':
+    post:
+      tags:
+        - Transfers
+      summary: Create task to transfer paths from one endpoint to another
+      description: |
+        Create a task to transfer files from a source endpoint to a destination endpoint.
+        File paths are relative to the endpoint default directories.
+        Endpoints are activated as needed.
+        Access token and refresh token must be provided as a query parameters.
+      operationId: createTransferTask
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqCreateTransfer'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespTransferTask'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+  '/v3/globus-proxy/transfers/{client_id}/{task_id}':
+    get:
+      tags:
+        - Transfers
+      summary: Retrieve transfer task
+      description: |
+        Retrieve a transfer task given the task Id.
+        Access token and refresh token must be provided as a query parameters.
+      operationId: getTransferTask
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskIdString'
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespTransferTask'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+    delete:
+      tags:
+        - Transfers
+      summary: Cancel a transfer task
+      description: |
+        Request that a transfer task be cancelled. Note that even if the response indicates that the task has been
+        cancelled the task still may have succeeded. Task status must be checked. See Globus documentation.
+      operationId: cancelTransferTask
+      parameters:
+        - name: client_id
+          in: path
+          required: true
+          description: Globus client associated with the request.
+          schema:
+            $ref: '#/components/schemas/ClientIdString'
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TaskIdString'
+        - name: access_token
+          in: query
+          description: Globus transfer access token
+          required: true
+          schema:
+            type: string
+        - name: refresh_token
+          in: query
+          description: Globus transfer refresh token
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cancel request submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespCancelTask'
+        '401':
+          description: Access token invalid. Please provide valid token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '407':
+          description: Unable to activate one or more endpoints.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespEndpointArray'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+
+# ------------------------------------------------------------------------------
+# --- Components ---------------------------------------------------------------
+components:
+  schemas:
+    # ------------------------------------------------------------------------------
+    # --- Model objects ------------------------------------------------------------
+    # ------------------------------------------------------------------------------
+    # --- AuthTokens -------------------------------------------------------------
+    AuthTokens:
+      required:
+        - access_token
+        - refresh_token
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+    #Please enter the code you get after login here: T0aymuUlUyLaOovR58xxDCzycq3Cd3
+    #token_response:
+    #  ============================================================================================
+    #  {
+    #    "auth.globus.org": {
+    #      "scope": "email profile openid",
+    #      "access_token": "AgYO4by6BKBjlBNmOVq2JMyJv2Pdn6qd1VKaYj4nYlyk1NpKKJsWCD1dJBl1JD50OrpN2B4lBBBwO2CVM7J36hrvDwSweNqc5Jzb",
+    #      "refresh_token": "Agjdle1w1VVvxdPlmq9zOGOaBlzYjGe5YYbmz0belBrkbaMPePIKUQJwylP5DekYKvOWgly82V95b61OnDy0gjV7dWy05",
+    #      "token_type": "Bearer",
+    #      "expires_at_seconds": 1643577990,
+    #      "resource_server": "auth.globus.org"
+    #    },
+    #    "transfer.api.globus.org": {
+    #      "scope": "urn:globus:auth:scope:transfer.api.globus.org:all",
+    #      "access_token": "Ag4g5YoNM9Q6lzJ8BwOaOoYOg8Jk0MWY32Ma9NY44ynnGbJKeqf7C86d0zpPmbzj1ezr2laxjgvjJNTjrMWzvIYNQ3",
+    #      "refresh_token": "AgeXpvEnovWX2M4XdXVVJv59jazn72YvvnMyj4kKG6x2qp4ovOiqUMD8eJ2Ny2kNyr9jlXJQ47pO7wNkbl8oJBMvWw9P7",
+    #      "token_type": "Bearer",
+    #      "expires_at_seconds": 1643577990,
+    #      "resource_server": "transfer.api.globus.org"
+    #    }
+    #  }
+    #  ============================================================================================
+    # --- GlobusFileInfo -------------------------------------------------------------
+    GlobusFileInfo:
+      type: object
+      properties:
+        type:
+          type: string
+        user:
+          type: string
+        group:
+          type: string
+        permissions:
+          type: string
+        last_modified:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        size:
+          type: integer
+          description: size in bytes
+    # --- GlobusTransferItem -------------------------------------------------------------
+    GlobusTransferItem:
+      required:
+        - source_path
+        - destination_path
+        - recursive
+      type: object
+      properties:
+        source_path:
+          type: string
+        destination_path:
+          type: string
+        recursive:
+          type: boolean
+          description: "Must be true for a directory path and false for a file."
+    # --- GlobusTransferTask -------------------------------------------------------------
+    GlobusTransferTask:
+      type: object
+      properties:
+        bytes_transferred:
+          type: integer
+        completion_time:
+          type: string
+        deadline:
+          type: string
+        destination_endpoint_display_name:
+          type: string
+          example: "my-connect-personal-laptop"
+        destination_endpoint_id:
+          type: string
+          example: "4544fddc-7941-113c-9f32-ed182a728dff"
+        directories:
+          type: integer
+        effective_bytes_per_second:
+          type: integer
+        encrypt_data:
+          type: boolean
+        fail_on_quota_errors:
+          type: boolean
+        fatal_error:
+          type: object
+          properties:
+            code:
+              type: string
+            description:
+              type: string
+        faults:
+          type: integer
+        files:
+          type: integer
+        files_skipped:
+          type: integer
+        files_transferred:
+          type: integer
+        history_deleted:
+          type: boolean
+        is_ok:
+          type: boolean
+        is_paused:
+          type: boolean
+        label:
+          type: string
+        owner_id:
+          type: string
+        request_time:
+          type: string
+        skip_source_errors:
+          type: boolean
+        source_endpoint_display_name:
+          type: string
+          example: "Globus Tutorial Endpoint 1"
+        source_endpoint_id:
+          type: string
+          example: "ddb59aef-6d04-11e5-ba46-22000b92c6ec"
+        status:
+          $ref: '#/components/schemas/GlobusTaskStatusEnum'
+        symlinks:
+          type: integer
+        sync_level:
+          type: integer
+        task_id:
+          type: string
+          example: "36ccfc18-8493-11ec-9008-3132d806a822"
+        type:
+          $ref: '#/components/schemas/GlobusTaskTypeEnum'
+        verify_checksum:
+          type: boolean
+    # TRANSFER TASK
+    #  {
+    #    "DATA_TYPE": "task",
+    #    "bytes_checksummed": 0,
+    #    "bytes_transferred": 0,
+    #    "canceled_by_admin": null,
+    #    "canceled_by_admin_message": null,
+    #    "command": "API 0.10",
+    #    "completion_time": null,
+    #    "deadline": "2022-02-04T01:47:16+00:00",
+    #    "delete_destination_extra": false,
+    #    "destination_endpoint": "u_jcvcz2azvnh5tjtduh2oagvezq#4549fadc-7941-11ec-9f32-ed182a728dff",
+    #    "destination_endpoint_display_name": "scblack-test-laptop",
+    #    "destination_endpoint_id": "4549fadc-7941-11ec-9f32-ed182a728dff",
+    #    "directories": 0,
+    #    "effective_bytes_per_second": 0,
+    #    "encrypt_data": false,
+    #    "fail_on_quota_errors": false,
+    #    "fatal_error": null,
+    #    "faults": 0,
+    #    "files": 3,
+    #    "files_skipped": 0,
+    #    "files_transferred": 0,
+    #    "filter_rules": null,
+    #    "history_deleted": false,
+    #    "is_ok": true,
+    #    "is_paused": false,
+    #    "label": "",
+    #    "nice_status": "OK",
+    #    "nice_status_details": null,
+    #    "nice_status_expires_in": -1,
+    #    "nice_status_short_description": "OK",
+    #    "owner_id": "48aa2ce8-19ab-4fd9-a663-a1f4e01aa4cc",
+    #    "preserve_timestamp": false,
+    #    "recursive_symlinks": "ignore",
+    #    "request_time": "2022-02-03T01:47:16+00:00",
+    #    "skip_source_errors": false,
+    #    "source_endpoint": "go#ep1",
+    #    "source_endpoint_display_name": "Globus Tutorial Endpoint 1",
+    #    "source_endpoint_id": "ddb59aef-6d04-11e5-ba46-22000b92c6ec",
+    #    "status": "ACTIVE",
+    #    "subtasks_canceled": 0,
+    #    "subtasks_expired": 0,
+    #    "subtasks_failed": 0,
+    #    "subtasks_pending": 3,
+    #    "subtasks_retrying": 0,
+    #    "subtasks_skipped_errors": 0,
+    #    "subtasks_succeeded": 3,
+    #    "subtasks_total": 6,
+    #    "symlinks": 0,
+    #    "sync_level": 1,
+    #    "task_id": "36ccfc18-8493-11ec-9008-3132d806a822",
+    #    "type": "TRANSFER",
+    #    "username": "u_jcvcz2azvnh5tjtduh2oagvezq",
+    #    "verify_checksum": false
+    #  }
+    # DELETE TASK
+    #  {
+    #    "DATA_TYPE": "task",
+    #    "bytes_checksummed": 0,
+    #    "bytes_transferred": 0,
+    #    "canceled_by_admin": null,
+    #    "canceled_by_admin_message": null,
+    #    "command": "API 0.10",
+    #    "completion_time": null,
+    #    "deadline": "2022-02-04T02:11:58+00:00",
+    #    "delete_destination_extra": false,
+    #    "destination_endpoint": null,
+    #    "destination_endpoint_display_name": null,
+    #    "destination_endpoint_id": null,
+    #    "directories": 0,
+    #    "effective_bytes_per_second": 0,
+    #    "encrypt_data": false,
+    #    "fail_on_quota_errors": false,
+    #    "fatal_error": null,
+    #    "faults": 0,
+    #    "files": 1,
+    #    "files_skipped": 0,
+    #    "files_transferred": 0,
+    #    "filter_rules": null,
+    #    "history_deleted": false,
+    #    "is_ok": true,
+    #    "is_paused": false,
+    #    "label": null,
+    #    "nice_status": "Queued",
+    #    "nice_status_details": null,
+    #    "nice_status_expires_in": -1,
+    #    "nice_status_short_description": "Queued",
+    #    "owner_id": "48aa2ce8-19ab-4fd9-a663-a1f4e01aa4cc",
+    #    "preserve_timestamp": false,
+    #    "recursive_symlinks": null,
+    #    "request_time": "2022-02-03T02:11:58+00:00",
+    #    "skip_source_errors": false,
+    #    "source_endpoint": "u_jcvcz2azvnh5tjtduh2oagvezq#4549fadc-7941-11ec-9f32-ed182a728dff",
+    #    "source_endpoint_display_name": "scblack-test-laptop",
+    #    "source_endpoint_id": "4549fadc-7941-11ec-9f32-ed182a728dff",
+    #    "status": "ACTIVE",
+    #    "subtasks_canceled": 0,
+    #    "subtasks_expired": 0,
+    #    "subtasks_failed": 0,
+    #    "subtasks_pending": 1,
+    #    "subtasks_retrying": 0,
+    #    "subtasks_skipped_errors": 0,
+    #    "subtasks_succeeded": 0,
+    #    "subtasks_total": 1,
+    #    "symlinks": 0,
+    #    "sync_level": null,
+    #    "task_id": "aa4d6148-8496-11ec-9008-3132d806a822",
+    #    "type": "DELETE",
+    #    "username": "u_jcvcz2azvnh5tjtduh2oagvezq",
+    #    "verify_checksum": false
+    #  }
+
+    # Example of fatal_error, task was cancelled before completing
+    # ...
+    #    "fail_on_quota_errors": false,
+    #    "fatal_error": {
+    #      "code": "CANCELED",
+    #      "description": "canceled"
+    #    },
+    #    "faults": 0,
+    #    "files": 0,
+    # ...
+
+    # --- String types with constraints ------------------------------------
+    ClientIdString:
+      type: string
+      example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+      minLength: 1
+    AuthCodeString:
+      type: string
+      example: "T0aymuUlUyLaOvvR58xxDCzycq5Cd3"
+      minLength: 1
+    TaskIdString:
+      type: string
+      minLength: 1
+
+    # -------------------------------------------------------------------------
+    # --- Request objects -----------------------------------------------------
+    # -------------------------------------------------------------------------
+    ReqMakeDir:
+      type: object
+      properties:
+        not_used:
+          description: Not used but some request body is required
+          type: string
+    ReqRename:
+      required:
+        - destination
+      type: object
+      properties:
+        destination:
+          pattern: ^(?!.*\.\.).*
+          type: string
+          example: "dirA/file_new.txt"
+    ReqCreateTransfer:
+      required:
+        - source_endpoint
+        - destination_endpoint
+        - transfer_items
+      type: object
+      properties:
+        source_endpoint:
+          type: string
+        destination_endpoint:
+          type: string
+        transfer_items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/GlobusTransferItem'
+
+    # -------------------------------------------------------------------------
+    # --- Response objects ----------------------------------------------------
+    # -------------------------------------------------------------------------
+    RespBasic:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          type: object
+        metadata:
+          type: object
+    RespUrl:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultUrl'
+        metadata:
+          type: object
+    ResultUrl:
+      type: object
+      properties:
+        url:
+          type: string
+    RespGlobusAuthInfo:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultGlobusAuthInfo'
+        metadata:
+          type: object
+    ResultGlobusAuthInfo:
+      type: object
+      properties:
+        url:
+          type: string
+        session_id:
+          type: string
+    RespAuthTokens:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/AuthTokens'
+        metadata:
+          type: object
+    RespEndpointArray:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultEndpointArray'
+        metadata:
+          type: object
+    ResultEndpointArray:
+      type: object
+      properties:
+        names:
+          type: array
+          items:
+            type: string
+    RespFileList:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        result:
+          $ref: '#/components/schemas/RespFileListData'
+        version:
+          type: string
+        metadata:
+          type: object
+    RespFileListData:
+      type: object
+      properties:
+        DATA:
+          type: array
+          items:
+            $ref: '#/components/schemas/GlobusFileInfo'
+    RespTransferTask:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/GlobusTransferTask'
+        metadata:
+          type: object
+    RespCancelTask:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/ResultCancelTask'
+        metadata:
+          type: object
+    ResultCancelTask:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/GlobusTaskCancelEnum'
+# CancelEnum
+#   COMPLETE - task was already done when request made.
+#     code = TaskComplete
+#   CANCELLED - request completed during call and task should no longer be ACTIVE.
+#             - note that task still may have completed successfully. Task status must be checked.
+#     code = Canceled
+#   ACCEPTED - request was accepted but did not complete during call.
+#     code = CancelAccepted
+#  {
+#    "DATA_TYPE": "result",
+#    "code": "Canceled",
+#    "message": "The task has been cancelled successfully.",
+#    "request_id": "4evUy9jR9",
+#    "resource": "/task/2eb8894a-8518-11ec-8fde-dfc5b31adbac/cancel"
+#  }
+#  {
+#    "DATA_TYPE": "result",
+#    "code": "TaskComplete",
+#    "message": "The task completed before the cancel request was processed.",
+#    "request_id": "cXIfEcTmw",
+#    "resource": "/task/2eb8894a-8518-11ec-8fde-dfc5b31adbac/cancel"
+#  }
+
+    # -------------------------------------------------------------------------
+    # --- Enums ---------------------------------------------------------------
+    # -------------------------------------------------------------------------
+    GlobusTaskTypeEnum:
+      type: string
+      enum:
+        - TRANSFER
+        - DELETE
+    GlobusTaskStatusEnum:
+      type: string
+      enum:
+        - ACTIVE
+        - INACTIVE
+        - SUCCEEDED
+        - FAILED
+    GlobusTaskCancelEnum:
+      type: string
+      enum:
+        - COMPLETE
+        - CANCELLED
+        - ACCEPTED
+# CancelEnum
+#   COMPLETE - task was already done when request made.
+#     code = TaskComplete
+#   CANCELLED - request completed during call and task should no longer be ACTIVE.
+#             - note that task still may have completed successfully. Task status must be checked.
+#     code = Canceled
+#   ACCEPTED - request was accepted but did not complete during call.
+#     code = CancelAccepted

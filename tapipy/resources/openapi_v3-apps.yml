@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.4.2'
+  version: '1.5.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -2176,6 +2176,7 @@ components:
       enum:
         - SINGULARITY
         - DOCKER
+        - ZIP
     # NOTE: RuntimeOption starts with NONE due to a bug in client code generation.
     #       Without an initial entry the prefix SINGULARITY_ gets stripped off the other 2 entries.
     RuntimeOptionEnum:

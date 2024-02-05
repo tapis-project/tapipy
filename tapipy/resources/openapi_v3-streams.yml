@@ -1475,6 +1475,11 @@ paths:
           description: a formated query string for measurements.
           schema:
             type: string
+        - name: var_ids
+          in: query
+          description: a comma seperated list of variable ids
+          schema:
+            type: string
         - name: limit
           in: query
           description: limit the number of records returned.
@@ -1567,6 +1572,11 @@ paths:
         - name: query
           in: query
           description: a formated query string for measurements.
+          schema:
+            type: string
+        - name: var_ids
+          in: query
+          description: a comma seperated list of variable ids
           schema:
             type: string
         - name: limit
@@ -2953,6 +2963,79 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 ### End of Transfer
 
+ ### Begin of Search
+  /v3/streams/search/{resource_type}:
+    get:
+      tags:
+        - Search across all streams end points
+      summary: Search projects, sites, intruments and variables
+               owned by a user
+      description: Search endpoint for streams resources
+      operationId: search
+      x-swagger-router-controller: connexContr
+      parameters:
+        - name: resource_type
+          in: path
+          required: true
+          schema: 
+            enum: [project,site,instrument,variable]
+        - name: listType
+          in: query
+          description: Determines additional filtering of results based on ownership, permissions and sharing. Default is to only see items owned by requester.
+          schema:
+            $ref: '#/components/schemas/ListTypeEnum'
+        - name: skip
+          in: query
+          schema:
+            type: integer
+            format: int32
+        - name: computeTotal
+          in: query
+          description: Compute total number of results that would have been returned if unlimited. Default is false.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/BasicResponse"
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/SearchResponse"
+
+        "400":
+          description: Input error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+        "401":
+          description: Not authorized.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Resource not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+### End of Transfer
+
 ### Begin of Components
 components:
   schemas:
@@ -3036,6 +3119,40 @@ components:
         last_updated:
           type: string
           description: ISO8601 datetime string for object updated date
+  
+    SearchProject:
+      type: object
+      properties:
+        project_name:
+          type: string
+          description: Project name
+        project_id:
+          type: string
+          description: The unique identifier for project
+        owner:
+          type: string
+          description: The owner of project
+        funding_resource:
+          type: string
+          description: Funding for the project.
+        pi:
+          type: string
+          description: Principal investigator
+        project_url:
+          type: string
+          description: url of the project
+        bucket:
+          type: string
+          description: id of the infludx storage bucket
+        active:
+          type: boolean
+          description: Current status of the project
+        created_at:
+          type: string
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
 
     NewProject:
       type: object
@@ -3081,6 +3198,36 @@ components:
         metadata:
           type: object
           description: User defined metadata for the site
+        longitude:
+          type: number
+          description: longitude
+        latitude:
+          type: number
+          description: latitude
+        elevation:
+          type: number
+          description: elevation
+        created_at:
+          type: string
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
+    SearchSite:
+      type: object
+      properties:
+        site_name:
+          type: string
+          description: Site name
+        site_id:
+          type: string
+          description: User uniquely defined ID for site.
+        owner:
+          type: string
+          description: The owner for site
+        project_id:
+          type: string
+          description: Necessary to search site
         longitude:
           type: number
           description: longitude
@@ -3185,7 +3332,39 @@ components:
         metadata:
           type: object
           description: User entered metadata for the instruments
-
+    SearchInstrument:
+        type: object
+        properties:
+          inst_id:
+            type: string
+            description: User provided Instrument ID
+          inst_name:
+            type: string
+            description: Instrument name
+          inst_description:
+            type: string
+            description: Instrument description
+          owner:
+            type: string
+            description: Owner of the instrument
+          site_id:
+            type: string
+            description: The CHORDS site id to which instrument attached to
+          project_id:
+            type: string
+            description: The project id to which instrument attached to
+          created_at:
+            type: string
+            description: ISO8601 datetime string for object creation date
+          last_updated:
+            type: string
+            description: ISO8601 datetime string for object updated date
+          tags:
+            type: array
+            items:
+              type: string
+            description: arrays of tags on the instruments
+         
     NewInstRequest:
       type: array
       items:
@@ -3284,6 +3463,46 @@ components:
       required: [var_name]
 
     Variable:
+      type: object
+      properties:
+        var_name:
+          type: string
+          description: The name of variable.
+        var_id:
+          type: string
+          description: The unique identifier for variable.
+        owner:
+          type: string
+          description: The owner for variable.
+        inst_id:
+          type: string
+          description: The instrument id generated by CHORDS.
+        shortname:
+          type: string
+          description: The shortname of variable.
+        unit:
+          type: string
+          description: The unit to measure property of variable.
+        unit_abbrev:
+          type: string
+          description: The unit abbrevation to measure variable.
+        measured_property:
+          type: string
+          description: The property measured by variable.
+        metadata:
+          type: object
+          description: User entered metadata for the variable
+        chords_id:
+          type: integer
+          description: Variable ID in chords
+        created_at:
+          type: string
+          description: ISO8601 datetime string for object creation date
+        last_updated:
+          type: string
+          description: ISO8601 datetime string for object updated date
+          
+    SearchVariable:
       type: object
       properties:
         var_name:
@@ -3556,7 +3775,15 @@ components:
                     type: string
       required:
         - channel_name
-
+        
+    ListTypeEnum:
+      type: string
+      default: OWNED
+      enum:
+        - OWNED
+        - SHARED_PUBLIC
+        - ALL
+        
     Threshold:
       type: object
       properties:
@@ -3871,7 +4098,54 @@ components:
         end_date:
           type: string
           description: A ISO8601 formatted datetime string for the ending time for archival data
+    
+    ResultMetadata:
+       type: object
+       properties:
+        total_count:
+          type: integer
+          description: count of result set
 
+    SearchObject:
+      type: object
+      properties:
+        name:
+          type: string
+          description: name of project, site, instrument or variable
+        created_at:
+          type: string
+          description: ISO8601 datetime string for resource creation date
+        owner:
+          type: string
+          description: Owner of this resource
+        resource_id:
+          type: string
+          description: Resource id.
+
+    SearchResponse:
+      type: object
+      properties:
+        metadata:
+          type: object
+          properties:
+            recordCount:
+              type: integer
+            recordLimit:
+              type: integer
+            recordsSkipped:
+              type: integer
+            orderBy:
+              type: string
+            startAfter:
+              type: string
+            totalCount:
+              type: integer
+        result_set:
+          type: array
+          items:
+            type: object 
+            $ref: '#/components/schemas/SearchObject'
+             
     Application:
       type: object
 ### End of Components

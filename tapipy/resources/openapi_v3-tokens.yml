@@ -56,8 +56,6 @@ paths:
           description: Server error.
   /v3/tokens:
     post:
-      security:
-        - basicAuth: []
       tags:
       - Tokens
       summary: Generate a token.
