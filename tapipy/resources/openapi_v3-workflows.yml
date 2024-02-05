@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Workflows API
   description: Create and manage pipelines
-  version: '1.2.0'
+  version: '1.6.0'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Workflows API - CICSupport"
@@ -39,10 +39,10 @@ tags:
     description: Manage collections of tasks. Create, retrieve and delete.
   - name: Tasks
     description: Manage tasks to be executed as part of a workflow. Create, retrieve and delete.
-  - name: Events
-    description: Trigger workflows. Create and retrieve.
   - name: CI/CD
     description: Create CI/CD-specific workflows (Image builds and http requests).
+  - name: ETL
+    description: Create ETL pipelines within the Tapis ecosystem.
 
 # ------------------------------------------------------------------------------
 # --- Paths -------------------------------------------------------------------
@@ -728,6 +728,84 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespError'
 
+  # --- Paths for ETL pipelines -----------------------------------------------------
+  '/v3/workflows/beta/groups/{group_id}/etl':
+    post:
+      tags:
+        - ETL
+      summary: Create an ETL pipeline
+      description: |
+        Convenience endpoint for create ETL pipelines in the Tapis ecosystem.
+      operationId: createETLPipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqCreateETLPipeline'
+      responses:
+        '201':
+          description: Pipeline created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceURL'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot create a pipeline for specified group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '405':
+          description: Method not allowed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '409':
+          description: Conflict.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '422':
+          description: Unprocessable entity.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+
   # --- Paths for archives ------------------------------------------------------
   '/v3/workflows/groups/{group_id}/archives':
     get:
@@ -1345,40 +1423,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespError'
 
-  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/webhook':
-    post:
-      tags:
-        - Events
-      summary: Trigger a pipeline run
-      description: |
-        Trigger a pipeline run
-      operationId: runPipelineWebhook
-      parameters:
-        - name: group_id
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - name: pipeline_id
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      requestBody:
-        required: true
-        description: A JSON object specifying information for the pipeline to be created.
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ReqWebhookEvent'
-      responses:
-        '200':
-          description: Events found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespEvent'
-
   '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/tasks':
     post:
       tags:
@@ -1607,12 +1651,13 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/EnumRunStatus"
-      # requestBody:
-      #   required: false
-      #   description: Empty JSON object.
-      #   content:
-      #     application/json:
-      #       schema: {}
+      requestBody:
+        required: false
+        description: Empty JSON object.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReqPatchPipelineRun"
       responses:
         '200':
           description: Pipeline Run updated.
@@ -1648,12 +1693,13 @@ paths:
           required: true
           schema:
             $ref: "#/components/schemas/EnumRunStatus"
-      # requestBody:
-      #   required: false
-      #   description: Empty JSON object.
-      #   content:
-      #     application/json:
-      #       schema: {}
+      requestBody:
+        required: false
+        description: Empty JSON object.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReqPatchTaskExecution"
       responses:
         '200':
           description: Success
@@ -1690,7 +1736,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReqTaskExecution'
+              $ref: '#/components/schemas/ReqCreateTaskExecution'
       responses:
         '200':
           description: Success
@@ -1771,35 +1817,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespTaskExecutionList'
 
-  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/events':
-    get:
-      tags:
-        - Events
-      summary: Retrieve Event details
-      description: |
-        Retrieve all events for a given pipeline
-      operationId: listEvents
-      parameters:
-        - name: group_id
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-        - name: pipeline_id
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/ID'
-      responses:
-        '200':
-          description: Events found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/RespEvent'
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/run':
     post:
       tags:
-        - Events
+        - Pipelines
       summary: Trigger a pipeline run
       description: |
         Trigger a pipeline run
@@ -1824,11 +1845,11 @@ paths:
               $ref: '#/components/schemas/ReqRunPipeline'
       responses:
         '200':
-          description: Events found.
+          description: Pipeline triggered successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespEvent'
+                $ref: '#/components/schemas/RespPipelineRun'
 
 # ------------------------------------------------------------------------------
 # --- Components ---------------------------------------------------------------
@@ -1845,21 +1866,9 @@ components:
     # ------------------------------------------------------------------------------
     
     # --- Pipelines ---
-    Env:
-      type: object
-      additionalProperties: true
-    
-    Params:
-      type: object
-      additionalProperties: true
-
     ExecutionProfile:
       type: object
       properties:
-        duplicate_submission_policy:
-          $ref: '#/components/schemas/EnumDuplicateSubmissionPolicy'
-        flavor:
-          $ref: '#/components/schemas/EnumTaskFlavor'
         invocation_mode:
           $ref: '#/components/schemas/EnumInvocationMode'
         max_retries:
@@ -1870,6 +1879,22 @@ components:
           default: 3600
         retry_policy:
           $ref: '#/components/schemas/EnumRetryPolicy'
+
+    TaskExecutionProfile:
+      allOf:
+        - $ref: '#/components/schemas/ExecutionProfile'
+        - type: object
+          properties:
+            flavor:
+              $ref: '#/components/schemas/EnumTaskFlavor'
+
+    PipelineExecutionProfile:
+      allOf:
+        - $ref: '#/components/schemas/ExecutionProfile'
+        - type: object
+          properties:
+            duplicate_submission_policy:
+              $ref: '#/components/schemas/EnumDuplicateSubmissionPolicy'
 
     BaseArchive:
       type: object
@@ -1939,6 +1964,10 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/ID'
+        description:
+          $ref: '#/components/schemas/DescriptionString'
+        uses:
+          $ref: '#/components/schemas/Uses'
         env:
           $ref: "#/components/schemas/Env"
         params:
@@ -1952,7 +1981,7 @@ components:
           type: string
           format: uuid
         execution_profile:
-          $ref: '#/components/schemas/ExecutionProfile'
+          $ref: '#/components/schemas/PipelineExecutionProfile'
         current_run:
           type: string
           format: uuid
@@ -1967,6 +1996,10 @@ components:
     PipelineRun:
       type: object
       properties:
+        name:
+          type: string
+        description:
+          type: string
         uuid:
           type: string
           format: uuid
@@ -1978,6 +2011,8 @@ components:
         started_at:
           type: string
         last_modified:
+          type: string
+        logs:
           type: string
     
     TaskExecution:
@@ -1997,27 +2032,34 @@ components:
           type: string
         last_modified:
           type: string
+        last_message:
+          type: string
+        stderr:
+          type: string
+        stdout:
+          type: string
 
     # --- Task ---
     Task:
       oneOf:
         - $ref: '#/components/schemas/ImageBuildTask'
         - $ref: '#/components/schemas/RequestTask'
-        - $ref: '#/components/schemas/ContainerRunTask'
+        - $ref: '#/components/schemas/ApplicationTask'
         - $ref: '#/components/schemas/TapisJobTask'
         - $ref: '#/components/schemas/TapisActorTask'
         - $ref: '#/components/schemas/FunctionTask'
+        - $ref: '#/components/schemas/TemplateTask'
       discriminator:
         propertyName: type
         mapping:
           image_build: "#/components/schemas/ImageBuildTask"
           request: "#/components/schemas/RequestTask"
-          container_run: "#/components/schemas/ContainerRunTask"
+          application: "#/components/schemas/ApplicationTask"
           tapis_job: "#/components/schemas/TapisJobTask"
           tapis_actor: "#/components/schemas/TapisActorTask"
           function: "#/components/schemas/FunctionTask"
+          template: "#/components/schemas/TemplateTask"
         
-    
     BaseTask:
       type: object
       required:
@@ -2035,13 +2077,11 @@ components:
         description:
           type: string
         execution_profile:
-          $ref: '#/components/schemas/ExecutionProfile'
+          $ref: '#/components/schemas/TaskExecutionProfile'
         input:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/Input"
         output:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/Output"
 
     ImageBuildTask:
       allOf:
@@ -2077,13 +2117,21 @@ components:
             url:
               type: string
 
-    ContainerRunTask:
+    ApplicationTask:
       allOf:
         - $ref: '#/components/schemas/BaseTask'
         - type: object
           properties:
             image:
               type: string
+
+    TemplateTask:
+      allOf:
+        - $ref: '#/components/schemas/BaseTask'
+        - type: object
+          properties:
+            uses:
+              $ref: '#/components/schemas/Uses'
 
     TapisJobTask:
       allOf:
@@ -2115,6 +2163,10 @@ components:
         - $ref: '#/components/schemas/BaseTask'
         - type: object
           properties:
+            git_repositories:
+              type: array
+              items:
+                $ref: "#/components/schemas/GitCloneDetails"
             runtime:
               $ref: "#/components/schemas/EnumRuntimeEnvironment"
             installer:
@@ -2136,6 +2188,8 @@ components:
         id:
           $ref: "#/components/schemas/ID"
         can_fail:
+          type: boolean
+        can_skip:
           type: boolean
         
     # --- Context ---
@@ -2235,37 +2289,172 @@ components:
         credentials:
           type: string
 
-    Event:
+    Spec:
       type: object
       properties:
+        description:
+          type: string
+        required:
+          type: boolean
+        type:
+          $ref: "#/components/schemas/EnumTaskIOType"
+
+    Params:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/Spec"
+
+    Value:
+      anyOf:
+        - type: string
+        - type: number
+        - type: boolean
+
+    ValueFromEnv:
+      type: object
+      properties:
+        env:
+          type: string
+
+    ValueFromArgs:
+      type: object
+      properties:
+        arg:
+          type: string
+
+    ValueFromTaskOutput:
+      type: object
+      properties:
+        task_output:
+          $ref: "#/components/schemas/TaskOutputRef"
+
+    ValueFromHost:
+      type: object
+      properties:
+        host:
+          type: string
+    
+    ValueFromSecret:
+      type: object
+      properties:
+        engine:
+          type: string
+        pk:
+          type: string
+        field_selector:
+          type: array
+          items:
+            type: string
+
+    ValueFrom:
+      anyOf: # Should be `oneOf` but type generating libraries can't handle discrimination without a property with which to do it
+        - $ref: "#/components/schemas/ValueFromArgs"
+        - $ref: "#/components/schemas/ValueFromEnv"
+        - $ref: "#/components/schemas/ValueFromTaskOutput"
+        - $ref: "#/components/schemas/ValueFromHost"
+        - $ref: "#/components/schemas/ValueFromSecret"
+
+    ValueFromSecretOrHost:
+      anyOf: # Should be `oneOf` but type generating libraries can't handle discrimination without a property with which to do it
+        - $ref: "#/components/schemas/ValueFromSecret"
+        - $ref: "#/components/schemas/ValueFromHost"
+
+    EnvSpecValueFrom:
+      $ref: "#/components/schemas/ValueFromSecretOrHost"
+
+    ArgSpecValueFrom:
+      $ref: "#/components/schemas/ValueFromSecretOrHost"
+
+    SpecWithValue:
+      allOf:
+        - $ref: "#/components/schemas/Spec"
+        - type: object
+          properties:
+            value:
+              nullable: true
+              $ref: "#/components/schemas/Value"
+            value_from:
+              nullable: true
+              $ref: "#/components/schemas/ValueFrom"
+
+    Input:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/SpecWithValue"
+
+    Output:
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          type:
+            $ref: "#/components/schemas/EnumTaskIOType"
+
+    EnvSpec:
+      allOf: 
+        - $ref: "#/components/schemas/SpecWithValue"
+        - type: object
+          properties:
+            value_from:
+              $ref: "#/components/schemas/EnvSpecValueFrom"
+
+    Env:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/EnvSpec"
+
+    ArgSpec:
+      allOf: 
+        - $ref: "#/components/schemas/SpecWithValue"
+        - type: object
+          properties:
+            value_from:
+              $ref: "#/components/schemas/ArgSpecValueFrom"
+
+    Args:
+      type: object
+      additionalProperties:
+        $ref: "#/components/schemas/ArgSpec"
+    
+    TaskOutputRef:
+      type: object
+      required:
+        - task_id
+        - output_id
+      properties:
+        task_id:
+          type: string
+        output_id:
+          type: string
+
+    GitRepository:
+      type: object
+      properties:
+        url:
+          type: string
         branch:
           type: string
-          default: null
-        commit:
-          type: string
-          default: null
-        commit_sha:
-          type: string
-          default: null
-        context_url:
-          type: string
-          default: null
-        directives:
-          type: string
-        message:
-          type: string
-        pipeline:
-          type: string
+
+    GitCloneDetails:
+      allOf:
+        - $ref: '#/components/schemas/GitRepository'
+        - type: object
+          required:
+            - directory
+          properties:
+            directory:
+              type: string
+
+    Uses:
+      type: object
+      required:
+        - name
+        - source
+      properties:
+        name:
+          $ref: '#/components/schemas/ID'
         source:
-          type: string
-        username:
-          $ref: '#/components/schemas/Username'
-        identity:
-          type: string
-          default: null
-        uuid:
-          type: string
-          format: uuid
+          $ref: '#/components/schemas/GitRepository'
 
     # --- String types with constraints ------------------------------------
     ID:
@@ -2279,6 +2468,7 @@ components:
     DescriptionString:
       type: string
       maxLength: 2048
+
 
     # -------------------------------------------------------------------------
     # --- Request objects -----------------------------------------------------
@@ -2425,6 +2615,8 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/ID'
+        uses:
+          $ref: '#/components/schemas/Uses'
         archive_ids:
           type: array
           items:
@@ -2461,13 +2653,11 @@ components:
         description:
           type: string
         execution_profile:
-          $ref: "#/components/schemas/ExecutionProfile"
+          $ref: "#/components/schemas/TaskExecutionProfile"
         input:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/Input"
         output:
-          type: object
-          additionalProperties: true
+          $ref: "#/components/schemas/Output"
 
     ReqImageBuildTask:
       allOf:
@@ -2510,7 +2700,7 @@ components:
             url:
               type: string
 
-    ReqContainerRunTask:
+    ReqApplicationTask:
       allOf:
         - $ref: '#/components/schemas/ReqBaseTask'
         - type: object
@@ -2519,6 +2709,16 @@ components:
           properties:
             image:
               type: string
+
+    ReqTemplateTask:
+      allOf:
+        - $ref: '#/components/schemas/ReqBaseTask'
+        - type: object
+          required:
+            - uses
+          properties:
+            uses:
+              $ref: '#/components/schemas/Uses'
 
     ReqTapisJobTask:
       allOf:
@@ -2531,7 +2731,7 @@ components:
               type: boolean
               default: true
             tapis_job_def:
-              $ref: '#/components/schemas/ReqTapisJobDef'
+              $ref: '#/components/schemas/TapisJobDef'
 
     ReqTapisActorTask:
       allOf:
@@ -2548,7 +2748,6 @@ components:
             tapis_actor_message:
               nullable: true
               type: string
-                    
     
     ReqFunctionTask:
       allOf:
@@ -2559,6 +2758,10 @@ components:
             - installer
             - code
           properties:
+            git_repositories:
+              type: array
+              items:
+                $ref: "#/components/schemas/ReqGitCloneDetails"
             runtime:
               $ref: "#/components/schemas/EnumRuntimeEnvironment"
             installer:
@@ -2573,23 +2776,224 @@ components:
               items:
                 type: string
 
+    ReqGitCloneDetails:
+      $ref: '#/components/schemas/GitCloneDetails'
+
     ReqTask:
       oneOf:
         - $ref: '#/components/schemas/ReqImageBuildTask'
         - $ref: '#/components/schemas/ReqRequestTask'
-        - $ref: '#/components/schemas/ReqContainerRunTask'
+        - $ref: '#/components/schemas/ReqApplicationTask'
         - $ref: '#/components/schemas/ReqTapisJobTask'
         - $ref: '#/components/schemas/ReqTapisActorTask'
         - $ref: '#/components/schemas/ReqFunctionTask'
+        - $ref: '#/components/schemas/ReqTemplateTask'
       discriminator:
         propertyName: type
         mapping:
           image_build: "#/components/schemas/ReqImageBuildTask"
           request: "#/components/schemas/ReqRequestTask"
-          container_run: "#/components/schemas/ReqContainerRunTask"
+          application: "#/components/schemas/ReqApplicationTask"
           tapis_job: "#/components/schemas/ReqTapisJobTask"
           tapis_actor: "#/components/schemas/ReqTapisActorTask"
           function: "#/components/schemas/ReqFunctionTask"
+          template: "#/components/schemas/ReqTemplateTask"
+
+    ########################### ETL
+
+    ReqCreateETLPipeline:
+      type: object
+      required:
+        - id
+        - local_inbox
+        - jobs
+        - local_outbox
+        - remote_inbox
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        description:
+          type: string
+        execution_profile:
+          $ref: '#/components/schemas/PipelineExecutionProfile'
+        remote_outbox:
+          $ref: '#/components/schemas/ETLRemoteOutbox'
+        local_inbox:
+          $ref: '#/components/schemas/ETLLocalInbox'
+        jobs:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkflowsExtendedTapisJobDef'
+        local_outbox:
+          $ref: '#/components/schemas/ETLLocalOutbox'
+        remote_inbox:
+          $ref: '#/components/schemas/ETLRemoteInbox'
+
+    WorkflowsTapisJobDefExtension:
+      type: object
+      properties:
+        workflows:
+          type: object
+          properties:
+            etl:
+              type: object
+              properties:
+                input:
+                  type: string
+                output:
+                  type: string
+
+    WorkflowsExtendedTapisJobDef:
+      allOf:
+        - $ref: "#/components/schemas/TapisJobDef"
+        - $ref: "#/components/schemas/WorkflowsTapisJobDefExtension"
+
+    BaseDataIntegrityProfile:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: "#/components/schemas/ETLEnumDataIntegrityType"
+
+    ChecksumDataIntegrityProfile:
+      allOf:
+        - $ref: "#/components/schemas/BaseDataIntegrityProfile"
+        - type: object
+          required:
+            - checksum_algo
+            - checksums_path
+          properties:
+            type:
+              type: string
+            checksum_algo:
+              $ref: "#/components/schemas/ETLEnumChecksumAlgorithm"
+            checksums_path:
+              type: string
+
+    DoneFileDataIntegrityProfile:
+      allOf:
+        - $ref: "#/components/schemas/BaseDataIntegrityProfile"
+        - type: object
+          required:
+            - done_files_path
+          properties:
+            type:
+              type: string
+            done_files_path:
+              type: string
+            pattern:
+              type: string
+
+    ByteCheckDataIntegrityProfile:
+      allOf:
+        - $ref: "#/components/schemas/BaseDataIntegrityProfile"
+        - type: object
+          properties:
+            type:
+              type: string
+
+    DataIntegrityProfile:
+      oneOf:
+        - $ref: "#/components/schemas/ChecksumDataIntegrityProfile"
+        - $ref: "#/components/schemas/DoneFileDataIntegrityProfile"
+        - $ref: "#/components/schemas/ByteCheckDataIntegrityProfile"
+      discriminator:
+        propertyName: type
+        mapping:
+          checksum: "#/components/schemas/ChecksumDataIntegrityProfile"
+          done_file: "#/components/schemas/DoneFileDataIntegrityProfile"
+          byte_check: "#/components/schemas/ByteCheckDataIntegrityProfile"
+
+    ETLLocalIOBox:
+      type: object
+      required:
+        - system_id
+        - data_path
+      properties:
+        system_id:
+          type: string
+        data_path:
+          type: string
+        manifests_path:
+          type: string
+        manifest_generation_policy:
+          $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
+        manifest_priority:
+          $ref: "#/components/schemas/ETLEnumManifestPriority"
+          default: 'oldest'
+        data_integrity_profile:
+          $ref: "#/components/schemas/DataIntegrityProfile"
+        exclude_pattern:
+          type: array
+          items:
+            type: string
+
+    ETLRemoteOutbox:
+      type: object
+      additionalProperties: true
+
+    ETLLocalInbox:
+      allOf:
+        - $ref: "#/components/schemas/ETLLocalIOBox"
+        - type: object
+          properties:
+            manifest_generation_policy:
+              $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
+              default: 'one_per_file'
+
+    ETLLocalOutbox:
+      allOf:
+        - $ref: "#/components/schemas/ETLLocalIOBox"
+        - type: object
+          properties:
+            manifest_generation_policy:
+              $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
+              default: 'one_for_all'
+
+    ETLTapisSystemRemoteInbox:
+      type: object
+      required:
+        - system_id
+        - path
+      properties:
+        system_id:
+          type: string
+        path:
+          type: string
+
+    ETLRemoteInbox:
+      allOf:
+        - $ref: "#/components/schemas/ETLTapisSystemRemoteInbox"
+
+    ETLEnumManifestGenerationPolicy:
+      type: string
+      enum:
+        - one_per_file
+        - one_for_all
+
+    ETLEnumManifestPriority:
+      type: string
+      enum:
+        - oldest
+        - newest
+        - any
+
+    ETLEnumDataIntegrityType:
+      type: string
+      enum:
+        - checksum
+        - byte_check
+        - done_file
+
+    ETLEnumChecksumAlgorithm:
+      type: string
+      enum:
+        - md5
+        - sha256
+        - sha3
+
+    ################################# End ETL
         
     ReqCIPipeline:
       type: object
@@ -2811,36 +3215,24 @@ components:
           dockerhub: "#/components/schemas/ReqDockerhubDestination"
           local: "#/components/schemas/ReqLocalDestination"
         
-    ReqTapisJobDef:
+    TapisJobDef:
       $ref: "https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml#components/schemas/ReqSubmitJob"
-
-    ReqWebhookEvent:
-      type: object
-      properties:
-        branch:
-          type: string
-        commit:
-          type: string
-        commit_sha:
-          type: string
-        source:
-          $ref: '#/components/schemas/EnumContextType'
-        context_url:
-          type: string
-        username:
-          type: string
 
     ReqRunPipeline:
       type: object
       properties:
-        params:
-          $ref: "#/components/schemas/Params"
+        name:
+          type: string
+        description:
+          type: string
+        args:
+          $ref: "#/components/schemas/Args"
         directives:
           type: array
           items:
             type: string
 
-    ReqTaskExecution:
+    ReqCreateTaskExecution:
       type: object
       required:
         - task_id
@@ -2855,7 +3247,22 @@ components:
         uuid:
           type: string
           format: uuid
-        
+
+    ReqPatchTaskExecution:
+      type: object
+      properties:
+        last_message:
+          type: string
+        stdout:
+          type: string
+        stderr:
+          type: string
+
+    ReqPatchPipelineRun:
+      type: object
+      properties:
+        logs:
+          type: string
 
     # -------------------------------------------------------------------------
     # --- Response objects ----------------------------------------------------
@@ -3077,24 +3484,6 @@ components:
               items:
                 $ref: '#/components/schemas/Task'
 
-    RespEvent:
-      allOf:
-        - $ref: '#/components/schemas/RespObject'
-        - type: object
-          properties:
-            result:
-              $ref: '#/components/schemas/Event'
-
-    # RespEventList:
-    #   allOf:
-    #     - $ref: '#/components/schemas/RespList' 
-    #     - type: object
-    #       properties:
-    #         result:
-    #           type: array
-    #           items:
-    #             $ref: '#/components/schemas/Event'
-
     # -------------------------------------------------------------------------
     # --- Enums ---------------------------------------------------------------
     # -------------------------------------------------------------------------
@@ -3109,12 +3498,14 @@ components:
       enum:
         - workflow
         - ci
+        - etl
 
     EnumRunStatus:
       type: string
       enum:
-        - active
+        - staging
         - submitted
+        - active
         - pending
         - backoff
         - completed
@@ -3142,20 +3533,23 @@ components:
         - allow
         - deny
         - terminate
+        - defer
 
     EnumTaskType:
       type: string
       enum:
         - image_build
-        - container_run
+        - application
         - request
         - tapis_job
         - tapis_actor
         - function
+        - template
 
     EnumTaskFlavor:
       type: string
       enum:
+        - c1tiny
         - c1sml
         - c1med
         - c1lrg
@@ -3221,5 +3615,32 @@ components:
     EnumRuntimeEnvironment:
       type: string
       enum:
-        - python:3.9
         - tapis/workflows-python-singularity:0.1.0
+        - "python:latest"
+        - "python:slim"
+        - "python:3.12"
+        - "python:3.12-slim"
+        - "python:3.11"
+        - "python:3.11-slim"
+        - "python:3.10"
+        - "python:3.10-slim"
+        - "python:3.9"
+        - "python:3.9-slim"
+        - "python:3.8"
+        - "python:3.8-slim"
+        - "python:2.7.18"
+        - "python:2.7.18-slim"
+        - "tensorflow/tensorflow:latest"
+        - "tensorflow/tensorflow:latest-gpu"
+        - "tensorflow/tensorflow:2.12.0"
+        - "tensorflow/tensorflow:2.12.0-gpu"
+        - "pytorch/pytorch:latest"
+        - "huggingface/transformers-pytorch-gpu:latest"
+        - "huggingface/transformers-pytorch-gpu:4.29.2"
+
+    EnumTaskIOType:
+      type: string
+      enum:
+        - string
+        - number
+        - boolean

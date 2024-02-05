@@ -494,13 +494,9 @@ paths:
       tags:
         - jobs
       description: |-
-        Download job's output files for previously submitted job by its UUID. 
-        The job must be in a terminal state (FINISHED or FAILED or CANCELLED). By default, allowIfRunning=false. 
-        allowIfRunning=true allows job output download even if job is not in the terminal state.  
+        Download a job's output files using the job's UUID. By default, the job must be in a terminal state (FINISHED or FAILED or CANCELLED) for this command to execute. To execute when a job is not in a terminal state--and possibly receive incomplete results--set _allowIfRunning=true_.  
 
-        The caller must be the job owner, creator or a tenant administrator.
-        The URL must ends with '/' even if there is no outputPath is specified. 
-        outputPath is relative to the job output path. 
+        The caller must be the job owner, creator or a tenant administrator. The _outputPath_ is always relative to the job output directory and must end with a '/'. 
       operationId: getJobOutputDownload
       parameters:
         - name: jobUuid
@@ -579,13 +575,9 @@ paths:
       tags:
         - jobs
       description: |-
-        Retrieve job's output files list for previously submitted job by its UUID. 
-        The job must be in a terminal state (FINISHED or FAILED or CANCELLED). By default, allowIfRunning=false. 
-        allowIfRunning=true allows job output listing even if job is not in the terminal state.  
+        Retrieve a job's output file listing using the job's UUID. By default, the job must be in a terminal state (FINISHED or FAILED or CANCELLED) for this command to execute. To execute when a job is not in a terminal state--and possibly receive incomplete results--set _allowIfRunning=true_.  
 
-        The caller must be the job owner, creator or a tenant administrator.
-        The URL must ends with '/' even if there is no outputPath is specified.
-        outputPath is relative to the job output path. 
+        The caller must be the job owner, creator or a tenant administrator. The _outputPath_ is always relative to the job output directory and must end with a '/'. 
       operationId: getJobOutputList
       parameters:
         - name: jobUuid
@@ -1744,6 +1736,10 @@ components:
         archiveTransactionId:
           type: string
         archiveCorrelationId:
+          type: string
+        stageAppTransactionId:
+          type: string
+        stageAppCorrelationId:
           type: string
         tapisQueue:
           type: string

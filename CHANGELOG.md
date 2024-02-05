@@ -1,7 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
-## 1.5.1 - 2023-01-12
+## 1.6.0 - 2024-02-05
+### Added
+- Adding globus-proxy.
+
+### Changed
+- Updating specs for systems, jobs, apps, workflows, notifications.
+
+### Removed
+- No change.
+
+
+## 1.5.1 - 2024-01-12
 ### Added
 - No change.
 

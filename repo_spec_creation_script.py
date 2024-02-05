@@ -120,7 +120,8 @@ RESOURCES = {
         'jobs': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-jobs.yml",
         'apps': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-apps.yml",
         'workflows': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-workflows.yml",
-        'notifications': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-notifications.yml"
+        'notifications': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-notifications.yml",
+        'globus-proxy': f"local: {os.path.join(os.path.dirname(__file__), 'tapipy/resources')}/openapi_v3-globus-proxy.yml"
     },
     'tapipy':{
         'actors': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-actors.yml',
@@ -137,7 +138,8 @@ RESOURCES = {
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-jobs.yml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-apps.yml',
         'workflows': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-workflows.yml',
-        'notifications': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-notifications.yml'
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-notifications.yml',
+        'globus-proxy': 'https://raw.githubusercontent.com/tapis-project/tapipy/prod/tapipy/resources/openapi_v3-globus-proxy.yml'
     },
     'prod': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/prod-v3/docs/specs/openapi_v3.yml',               
@@ -154,7 +156,8 @@ RESOURCES = {
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/prod/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/prod/AppsAPI.yaml',
         'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/prod/src/api/specs/WorkflowsAPI.yaml',
-        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/prod/NotificationsAPI.yaml'
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/prod/NotificationsAPI.yaml',
+        'globus-proxy': 'https://raw.githubusercontent.com/tapis-project/globus-proxy/prod/service/resources/openapi_v3.yml'
     },
     'staging': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',               
@@ -171,7 +174,8 @@ RESOURCES = {
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/staging/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/staging/AppsAPI.yaml',
         'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/stage/src/api/specs/WorkflowsAPI.yaml',
-        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/staging/NotificationsAPI.yaml'
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/staging/NotificationsAPI.yaml',
+        'globus-proxy': 'https://raw.githubusercontent.com/tapis-project/globus-proxy/staging/service/resources/openapi_v3.yml'
     },
     'dev': {
         'actors': 'https://raw.githubusercontent.com/TACC/abaco/dev-v3/docs/specs/openapi_v3.yml',
@@ -188,7 +192,8 @@ RESOURCES = {
         'jobs': 'https://raw.githubusercontent.com/tapis-project/tapis-client-java/dev/jobs-client/src/main/resources/JobsAPI.yaml',
         'apps': 'https://raw.githubusercontent.com/tapis-project/openapi-apps/dev/AppsAPI.yaml',
         'workflows': 'https://raw.githubusercontent.com/tapis-project/tapis-workflows/dev/src/api/specs/WorkflowsAPI.yaml',
-        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/dev/NotificationsAPI.yaml'
+        'notifications': 'https://raw.githubusercontent.com/tapis-project/openapi-notifications/dev/NotificationsAPI.yaml',
+        'globus-proxy': 'https://raw.githubusercontent.com/tapis-project/globus-proxy/dev/service/resources/openapi_v3.yml'
     }
 }
 
@@ -213,7 +218,8 @@ if __name__ == "__main__":
                             RESOURCES['local']['jobs']: RESOURCES['tapipy']['jobs'],
                             RESOURCES['local']['apps']: RESOURCES['tapipy']['apps'],
                             RESOURCES['local']['notifications']: RESOURCES['tapipy']['notifications'],
-                            RESOURCES['local']['workflows']: RESOURCES['tapipy']['workflows']}
+                            RESOURCES['local']['workflows']: RESOURCES['tapipy']['workflows'],
+                            RESOURCES['local']['globus-proxy']: RESOURCES['tapipy']['globus-proxy']}
 
     # Set 2 updates all tapipy pickle files with the specs contained
     # in each specs source's prod branch. So updating them completely.
