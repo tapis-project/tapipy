@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.6.1 - 2024-02-05
+### Added
+- No change.
+
+### Changed
+- No change.
+
+### Removed
+- Remove typing_extensions in pyproject.toml as it's no longer needed.
+
+
 ## 1.6.0 - 2024-02-05
 ### Added
 - Adding globus-proxy.
