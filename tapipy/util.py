@@ -1,3 +1,8 @@
+import time
+
+from tapipy import errors
+
+
 class AttrDict(dict):
     def __getattr__(self, key):
         return self[key]
@@ -79,3 +84,60 @@ def dereference_spec(spec, new_spec=None):
 
     # Return the new dictionary containing the dereferenced schema
     return new_spec
+
+def exponential_time(time_sec, _retry_exponential_base=2):
+    # If time_sec is 1, just double the time
+    if time_sec == 1: return 2 
+    return time_sec**_retry_exponential_base
+
+def constant_time(time_sec):
+    return time_sec
+
+# Wait the specified period of time then return the recalculated wait time
+# according to the backoff alogrithm provided
+def backoff(time_sec, algo="constant", **kwargs):
+    backoff_recalculation_fn = constant_time
+    if algo == "constant" or algo == None:
+        pass
+    elif algo == "exponential":
+        backoff_recalculation_fn = exponential_time
+    else:
+        raise errors.TapyClientConfigurationError
+    
+    if time_sec > 0:
+        time.sleep(time_sec)
+
+    return backoff_recalculation_fn(time_sec, **kwargs)
+
+# Decorator for Operation.__call__
+# Retries operation __call__ n times after delay t secs on InternalServerError
+# NOTE Only to be used on the __call__ function of an Operation instance
+def retriable(op__call__):
+    def wrapper(
+        *args,
+        _retries=0,
+        _retry_delay_sec=0,
+        _retry_on_exceptions=[errors.InternalServerError],
+        _retry_backoff_algo="constant",
+        **kwargs
+    ):
+        if type(_retries) != int or _retries < 0 :
+            raise ValueError("Value provided to _retry_delay_sec must be an integer and must be >= 0")
+        
+        exception = None
+        while _retries >= 0:
+            try:
+                return op__call__(*args, **kwargs)
+            except Exception as e:
+                exception = e
+                if type(e) in _retry_on_exceptions:
+                    _retries -= 1
+                    # Wait the delay time, then recalculate delay time based on 
+                    # backoff algorithm
+                    _retry_delay_sec = backoff(
+                        _retry_delay_sec,
+                        algo=_retry_backoff_algo
+                    )
+        raise exception
+
+    return wrapper
