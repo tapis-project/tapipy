@@ -1,0 +1,13 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+poetry = "==1.1.14"
+pytest = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"

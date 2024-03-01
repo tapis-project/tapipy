@@ -16,7 +16,7 @@ import copy
 from typing import Dict, NewType, Mapping, Optional
 from atomicwrites import atomic_write
 
-from tapipy.util import dereference_spec
+from tapipy.util import dereference_spec, retriable
 import tapipy.errors
 from . import errors
 
@@ -328,7 +328,6 @@ def get_basic_auth_header(username: str, password: str) -> str:
     """
     user_pass = bytes(f"{username}:{password}", 'utf-8')
     return 'Basic {}'.format(b64encode(user_pass).decode())
-
 
 class Tenants(object):
     """
@@ -965,6 +964,7 @@ class Operation(object):
         self.query_parameters = [p for p in op_desc.get('parameters', []) if p['in'] == 'query']
         self.request_body = op_desc.get('requestBody', {})
 
+    @retriable
     def __call__(self, **kwargs):
         """
         Turns the operation object into a callable. Arguments must be passed as kwargs, where the name of each kwarg
