@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.6.2 - 2024-03-01
+### Added
+- Add retry functionality to operation calls
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
 ## 1.6.1 - 2024-02-05
 ### Added
 - No change.

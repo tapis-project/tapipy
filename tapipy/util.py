@@ -114,6 +114,7 @@ def backoff(time_sec, algo="constant", **kwargs):
 # NOTE Only to be used on the __call__ function of an Operation instance
 def retriable(op__call__):
     def wrapper(
+        self,
         *args,
         _retries=0,
         _retry_delay_sec=0,
@@ -127,7 +128,7 @@ def retriable(op__call__):
         exception = None
         while _retries >= 0:
             try:
-                return op__call__(*args, **kwargs)
+                return op__call__(self, *args, **kwargs)
             except Exception as e:
                 exception = e
                 if type(e) in _retry_on_exceptions:
