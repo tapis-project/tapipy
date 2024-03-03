@@ -8,9 +8,13 @@ class RetriableMock:
         self._result = result
         self.times_called = 0
         self.times_retried = 0
+        self.args = []
+        self.kwargs = {}
 
     @retriable
     def __call__(self, *args, **kwargs):
+        self.args = (self, *args)
+        self.kwargs = kwargs
         if self.times_called >= 1:
             self.times_retried += 1
         self.times_called += 1
