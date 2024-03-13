@@ -15,7 +15,7 @@ class TestUtils(unittest.TestCase):
         assert exponential_time(0) == 0
         assert exponential_time(1) == 2
         assert exponential_time(2) == 4
-        assert exponential_time(2, _retry_exponential_base=3) == 8
+        assert exponential_time(2, _retry_exponent=3) == 8
 
     def testBackoff(self):
         assert backoff(0, algo="constant") == 0
