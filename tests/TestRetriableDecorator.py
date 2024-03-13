@@ -28,12 +28,28 @@ class TestRetriableDecorator(unittest.TestCase):
             raises=TypeError,
             succeeds_on_nth_retry=None # Fails forever
         )
+
         self.assertRaises(
             TypeError,
             mock2,
             _retries=3,
             _retry_on_exceptions=[TypeError]
         )
+
+    def testRetriableRaisesExceptionDifferentThanSpecifiedRetryOn(self):
+        mock = RetriableMock(
+            raises=TypeError,
+            succeeds_on_nth_retry=None # Fails forever
+        )
+
+        self.assertRaises(
+            TypeError,
+            mock,
+            _retries=3,
+            _retry_on_exceptions=[ValueError]
+        )
+        assert mock.times_called == 1
+        assert mock.times_retried == 0
         
     def testRetriableRetriesUnitilRetryLimitReached(self):
         mock = RetriableMock(
