@@ -128,7 +128,6 @@ def retriable(op__call__):
         exception = None
         while _retries >= 0:
             try:
-                print("CALLING OP")
                 return op__call__(self, *args, **kwargs)
             except Exception as e:
                 exception = e
