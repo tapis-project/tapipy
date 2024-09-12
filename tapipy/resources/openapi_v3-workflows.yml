@@ -37,6 +37,8 @@ tags:
     description: Manage external identities . Create, retrieve, delete.
   - name: Pipelines
     description: Manage collections of tasks. Create, retrieve and delete.
+  - name: PipelineLocks
+    description: Create locks help to manage concurrent state mutations between pipeline runs.
   - name: Tasks
     description: Manage tasks to be executed as part of a workflow. Create, retrieve and delete.
   - name: CI/CD
@@ -193,6 +195,193 @@ paths:
                 $ref: '#/components/schemas/RespError'
         '500':
           description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+    delete:
+      tags:
+        - Groups
+      summary: Delete a group
+      description: Delete a group and all of the objects that belong to them
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: deleteGroup
+      responses:
+        '200':
+          description: Delete group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespString'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot remove a user to this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+
+  '/v3/workflows/secrets':
+    get:
+      tags:
+        - Secrets
+      summary: Retrieve secrets
+      description: |
+        Retrieve all secrets for a user
+      operationId: listSecrets
+      responses:
+        '200':
+          description: List secrets successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSecretList'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+    post:
+      tags:
+        - Secrets
+      summary: Create a secret
+      description: |
+        Create a secret.
+      operationId: createSecret
+      requestBody:
+        required: true
+        description: A JSON object specifying information for the pipeline to be created.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqCreateSecret'
+      responses:
+        '201':
+          description: Secert created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSecret'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '409':
+          description: Conflict. Secret with provided id already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '415':
+          description: Unsupported media type.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+
+  '/v3/workflows/secrets/{secret_id}':
+    get:
+      tags:
+        - Secrets
+      summary: Retrieve a secret
+      description: |
+        Retrieve a secret
+      parameters:
+        - name: secret_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: getSecret
+      responses:
+        '200':
+          description: Get secret successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespSecret'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+    delete:
+      tags:
+        - Secrets
+      summary: Delete a secret
+      description: Delete a secret and all of the objects that belong to them
+      parameters:
+        - name: secret_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: deleteSecret
+      responses:
+        '200':
+          description: Delete secret.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespString'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot remove a user to this secret.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Secret does not exist.
           content:
             application/json:
               schema:
@@ -458,6 +647,216 @@ paths:
                 $ref: '#/components/schemas/RespError'
         '404':
           description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+
+  '/v3/workflows/groups/{group_id}/secrets':
+    get:
+      tags:
+        - GroupSecrets
+      summary: List group secrets
+      description: |
+        List group_secrets.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: listGroupSecrets
+      responses:
+        '200':
+          description: List Group Secrets successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGroupSecretList'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot access resources for this Group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+    post:
+      tags:
+        - GroupSecrets
+      summary: Add a user's secret to a group
+      description: |
+        Add a user's secret to a group.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: addGroupSecret
+      requestBody:
+        required: true
+        description: A JSON object specifying the GroupSecret to add.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReqGroupSecret'
+      responses:
+        '201':
+          description: GroupSecret successfully added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespResourceURL'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot add a secret to this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+
+  '/v3/workflows/groups/{group_id}/secrets/{group_secret_id}':
+    get:
+      tags:
+        - GroupSecrets
+      summary: Get group secret
+      description: |
+        Get a group secret
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: group_secret_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: getGroupSecret
+      responses:
+        '200':
+          description: Get GroupSecret successful.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespGroupSecret'
+        '400':
+          description: Bad request. Invalid JSON.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot access resources for this Group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Group does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '500':
+          description: Server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+    
+    delete:
+      tags:
+        - GroupSecrets
+      summary: Remove user from group
+      description: |
+        Remove a user from a group.
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: group_secret_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      operationId: removeGroupSecret
+      responses:
+        '200':
+          description: GroupSecret removed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespObject'
+        '401':
+          description: Not authorized. Invalid or Expired Token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '403':
+          description: Cannot remove a secret from this group.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespError'
+        '404':
+          description: Group or GroupSecret does not exist.
           content:
             application/json:
               schema:
@@ -1514,7 +1913,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespTask'
-    
+    patch:
+      tags:
+        - Tasks
+      summary: Update task details
+      description: Update details for a task
+      operationId: patchTask
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      requestBody:
+        required: true
+        description: Request body for the pathTask operation.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Task found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespTask'
+
     delete:
       tags:
         - Tasks
@@ -1591,6 +2026,64 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespPipelineRunList'
 
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/locks':
+    get:
+      tags:
+        - PipelineLocks
+      summary: PipelineLocks
+      description: List all locks for a given pipeline 
+      operationId: listPipelineLocks
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+      responses:
+        '200':
+          description: Pipeline Locks listed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespPipelineLockList'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/locks/{pipeline_lock_uuid}':
+    get:
+      tags:
+        - PipelineLocks
+      summary: PipelineLocks
+      description: Get a pipeline lock by its UUID 
+      operationId: getPipelineLock
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_lock_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Pipeline Lock fetched.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespPipelineLock'
+
   '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs/{pipeline_run_uuid}':
     get:
       tags:
@@ -1623,6 +2116,71 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespPipelineRun'
+
+  '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs/{pipeline_run_uuid}/locks':
+    post:
+      tags:
+        - PipelineRuns
+      summary: PipelineRuns
+      description: Attempt to acquire a lock on a Pipeline 
+      operationId: acquirePipelineLock
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        description: Data about the pipeline run attempting to acquire a lock.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReqPipelineLock"
+      responses:
+        '200':
+          description: Pipeline lock acquisition attempted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespPipelineLockAcquisition'
+    delete:
+      tags:
+        - PipelineLocks
+      summary: PipelineLocks
+      description: Release a lock on the Pipeline 
+      operationId: releasePipelineLock
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Pipeline lock released.
   
   '/v3/workflows/executor/runs/{pipeline_run_uuid}/{status}':
     patch:
@@ -1970,6 +2528,8 @@ components:
           $ref: '#/components/schemas/Uses'
         env:
           $ref: "#/components/schemas/Env"
+        enabled:
+          type: boolean
         params:
           $ref: "#/components/schemas/Params"
         group:
@@ -1992,6 +2552,24 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Task'
+
+    PipelineLock:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        pipeline_id:
+          $ref: "#/components/schemas/ID"
+        pipeline_run_uuid:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+        acquired_at:
+          type: string
+        expires_in:
+          type: integer
 
     PipelineRun:
       type: object
@@ -2040,6 +2618,16 @@ components:
           type: string
 
     # --- Task ---
+    ReqPatchTask:
+      anyOf:
+        - $ref: '#/components/schemas/ImageBuildTask'
+        - $ref: '#/components/schemas/RequestTask'
+        - $ref: '#/components/schemas/ApplicationTask'
+        - $ref: '#/components/schemas/TapisJobTask'
+        - $ref: '#/components/schemas/TapisActorTask'
+        - $ref: '#/components/schemas/FunctionTask'
+        - $ref: '#/components/schemas/TemplateTask'
+
     Task:
       oneOf:
         - $ref: '#/components/schemas/ImageBuildTask'
@@ -2062,9 +2650,6 @@ components:
         
     BaseTask:
       type: object
-      required:
-        - id
-        - type
       properties:
         id:
           type: string
@@ -2082,6 +2667,199 @@ components:
           $ref: "#/components/schemas/Input"
         output:
           $ref: "#/components/schemas/Output"
+        conditions:
+          $ref: "#/components/schemas/ConditionalExpressions"
+
+    ####### Conditions ##########
+    ConditionalExpressions:
+      type: array
+      items:
+        $ref: "#/components/schemas/ConditionalExpression"
+
+    ConditionalExpression:
+      additionalProperties: true
+
+    # ConditionalExpression:
+    #   anyOf:
+    #     -  $ref: "#/components/schemas/LogicalOperation"
+    #     -  $ref: "#/components/schemas/ComparisonOperation"
+    #     -  $ref: "#/components/schemas/MembershipOperation"
+
+    # Operand:
+    #   anyOf: 
+    #     - type: string
+    #     - type: integer
+    #     - type: number
+    #       format: float
+    #     - type: boolean
+    #     - type: string
+    #       format: bytes
+    #     - $ref: '#/components/schemas/OperandValueFrom'
+
+    # OperandValueFrom:
+    #   oneOf:
+    #     - $ref: "#/components/schemas/ValueFromEnv"
+    #     - $ref: "#/components/schemas/ValueFromArgs"
+    #     - $ref: "#/components/schemas/ValueFromTaskOutput"
+
+    # ComparisonOperand:
+    #   type: array
+    #   items:
+    #     $ref: "#/components/schemas/Operand"
+    #   minItems: 2
+    #   maxItems: 2
+
+    # NEComparisonOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       ne:
+    #         $ref: "#/components/schemas/ComparisonOperand" 
+
+    # EQComparisonOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       eq:
+    #         $ref: "#/components/schemas/ComparisonOperand"
+
+    # LTComparisonOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       lt:
+    #         $ref: "#/components/schemas/ComparisonOperand"
+
+    # GTComparisonOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       gt:
+    #         $ref: "#/components/schemas/ComparisonOperand"
+
+    # LEComparisonOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       le:
+    #         $ref: "#/components/schemas/ComparisonOperand"
+
+    # GEComparisonOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       ge:
+    #         $ref: "#/components/schemas/ComparisonOperand"
+
+    # ComparisonOperation:
+    #   anyOf:
+    #     - $ref: "#/components/schemas/EQComparisonOperation"
+    #     - $ref: "#/components/schemas/NEComparisonOperation"
+    #     - $ref: "#/components/schemas/LTComparisonOperation"
+    #     - $ref: "#/components/schemas/GTComparisonOperation"
+    #     - $ref: "#/components/schemas/GEComparisonOperation"
+    #     - $ref: "#/components/schemas/LEComparisonOperation"
+
+    # MembershipNeedle:
+    #   $ref: "#/components/schemas/Operand"
+
+    # MembershipHaystack:
+    #   type: array
+    #   items:
+    #     $ref: "#/components/schemas/Operand"
+
+    # MembershipOperands:
+    #   type: array
+    #   minItems: 2
+    #   maxItems: 2
+    #   items:
+    #     - type:
+    #       $ref: "#/components/schemas/MembershipNeedle"
+    #     - type:
+    #       $ref: "#/components/schemas/MembershipHaystack"
+
+    # MembershipOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       in:
+    #         $ref: "#/components/schemas/MembershipOperands"
+
+    # LogicalOperand:
+    #   anyOf:
+    #     - $ref: "#/components/schemas/ComparisonOperation"
+    #     - $ref: "#/components/schemas/MembershipOperation"
+
+    # LogicalOperands:
+    #   type: array
+    #   minItems: 2
+    #   items:
+    #     $ref: "#/components/schemas/LogicalOperand"
+
+    # AndLogicalOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       and:
+    #         $ref: "#/components/schemas/LogicalOperand" 
+
+    # OrLogicalOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       or:
+    #         $ref: "#/components/schemas/LogicalOperand"
+
+    # XorLogicalOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       xor:
+    #         $ref: "#/components/schemas/LogicalOperand"
+
+    # NandLogicalOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       nand:
+    #         $ref: "#/components/schemas/LogicalOperand"
+
+    # NorLogicalOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       nor:
+    #         $ref: "#/components/schemas/LogicalOperand"
+
+    # XnorLogicalOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       xnor:
+    #         $ref: "#/components/schemas/LogicalOperand"
+
+    # LogicalOperation:
+    #   anyOf:
+    #     - $ref: "#/components/schemas/AndLogicalOperation"
+    #     - $ref: "#/components/schemas/OrLogicalOperation"
+    #     - $ref: "#/components/schemas/XorLogicalOperation"
+    #     - $ref: "#/components/schemas/NandLogicalOperation"
+    #     - $ref: "#/components/schemas/NorLogicalOperation"
+    #     - $ref: "#/components/schemas/XnorLogicalOperation"
+
+    # NegationOperand:
+    #   anyOf:
+    #     - $ref: "#/components/schemas/ComparisonOperation"
+    #     - $ref: "#/components/schemas/LogicalOperation"
+    #     - $ref: "#/components/schemas/MembershipOperation"
+
+    # NegationOperation:
+    #   additionalProperties:
+    #     type: object
+    #     properties:
+    #       not:
+    #         $ref: "#/components/schemas/NegationOperand"
+    # ##############################
 
     ImageBuildTask:
       allOf:
@@ -2098,6 +2876,78 @@ components:
               $ref: '#/components/schemas/Context'
             destination: 
               $ref: '#/components/schemas/Destination'
+
+    Context:
+      type: object
+      required:
+        - type
+      properties:
+        branch:
+          type: string
+        credentials:
+          default: null
+        build_file_path:
+          type: string
+        sub_path:
+          type: string
+        type:
+          $ref: "#/components/schemas/EnumContextType"
+        url:
+          type: string
+        visibility:
+          $ref: "#/components/schemas/EnumContextVisibility"
+
+
+    Destination:
+      anyOf:
+        - $ref: '#/components/schemas/DockerhubDestination'
+        - $ref: '#/components/schemas/LocalDestination'
+      # discriminator:
+      #   propertyName: type
+      #   mapping:
+      #     dockerhub: "#/components/schemas/DockerhubDestination"
+      #     local: "#/components/schemas/LocalDestination"
+
+    BaseDestination:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: '#/components/schemas/EnumDestinationType'
+
+    LocalDestination:
+      allOf:
+        - $ref: "#/components/schemas/BaseDestination"
+        - type: object
+          properties:
+            filename:
+              type: string
+
+    RegistryDestination:
+      allOf:
+        - $ref: "#/components/schemas/BaseDestination"
+        - type: object
+          properties:
+            credentials:
+              $ref: '#/components/schemas/DockerhubCred'
+            tag: 
+              type: string
+            url:
+              type: string
+
+    DockerhubDestination:
+      allOf:
+        - $ref: '#/components/schemas/BaseDestination'
+        - $ref: '#/components/schemas/RegistryDestination'
+
+    DockerhubCred:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
 
     RequestTask:
       allOf:
@@ -2173,6 +3023,8 @@ components:
               $ref: "#/components/schemas/EnumInstaller"
             command:
               type: string
+            entrypoint:
+              type: string
             code:
               type: string
               format: byte
@@ -2191,40 +3043,6 @@ components:
           type: boolean
         can_skip:
           type: boolean
-        
-    # --- Context ---
-    Context:
-      type: object
-      required:
-        - type
-      properties:
-        branch:
-          type: string
-        credentials:
-          default: null
-        build_file_path:
-          type: string
-        sub_path:
-          type: string
-        type:
-          $ref: "#/components/schemas/EnumContextType"
-        url:
-          type: string
-        visibility:
-          $ref: "#/components/schemas/EnumContextVisibility"
-    
-    # --- Destination ---
-    Destination:
-      type: object
-      properties:
-        credentials:
-          default: null
-        tag: 
-          type: string
-        type:
-          $ref: '#/components/schemas/EnumDestinationType'
-        url:
-          type: string
 
     # --- Group and GroupUser ---
     GroupDetail:
@@ -2269,6 +3087,36 @@ components:
         uuid:
           type: string
           format: uuid
+
+    Secret:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        description:
+          type: string
+        tenant_id:
+          type: string
+        owner:
+          type: string
+        sk_secret_name:
+          type: string
+        uuid:
+          type: string
+          format: uuid
+
+    GroupSecret:
+      type: object
+      properties:
+        id:
+          $ref: "#/components/schemas/ID"
+        group_id:
+          $ref: "#/components/schemas/ID"
+        uuid:
+          type: string
+          format: uuid
+        secret:
+          $ref: "#/components/schemas/Secret"
 
     Identity:
       type: object
@@ -2319,7 +3167,7 @@ components:
     ValueFromArgs:
       type: object
       properties:
-        arg:
+        args:
           type: string
 
     ValueFromTaskOutput:
@@ -2335,6 +3183,12 @@ components:
           type: string
     
     ValueFromSecret:
+      type: object
+      properties:
+        secret:
+          $ref: "#/components/schemas/SecretRef"
+
+    SecretRef:
       type: object
       properties:
         engine:
@@ -2465,6 +3319,9 @@ components:
       type: string
       minLength: 1
       maxLength: 64
+    UUID:
+      type: string
+      format: uuid
     DescriptionString:
       type: string
       maxLength: 2048
@@ -2502,6 +3359,30 @@ components:
         is_admin:
           type: boolean
           default: false
+
+    ReqCreateSecret:
+      type: object
+      required:
+        - id
+        - data
+      properties:
+        id:
+          $ref: '#/components/schemas/ID'
+        description:
+          type: string
+        data:
+          type: object
+
+    ReqGroupSecret:
+      type: object
+      required:
+        - secret_id
+      properties:
+        secret_id:
+          $ref: '#/components/schemas/ID'
+        id:
+          type: string
+          description: The unique identifier of the secret in the group. Defaults to the secret_id of no id is provided
 
     ReqUpdateGroupUser:
       type: object
@@ -2607,6 +3488,13 @@ components:
             credentials:
               $ref: "#/components/schemas/ReqGithubCred"
 
+    ReqPipelineLock:
+      type: object
+      properties:
+        expires_in:
+          type: integer
+          default: 0
+
     ReqPipeline:
       type: object
       required:
@@ -2625,6 +3513,8 @@ components:
           $ref: '#/components/schemas/DescriptionString'
         env:
           $ref: "#/components/schemas/Env"
+        enabled:
+          type: boolean
         params:
           $ref: "#/components/schemas/Params"
         type:
@@ -2658,6 +3548,8 @@ components:
           $ref: "#/components/schemas/Input"
         output:
           $ref: "#/components/schemas/Output"
+        conditions:
+          $ref: "#/components/schemas/ConditionalExpressions"
 
     ReqImageBuildTask:
       allOf:
@@ -2756,7 +3648,6 @@ components:
           required:
             - runtime
             - installer
-            - code
           properties:
             git_repositories:
               type: array
@@ -2767,6 +3658,8 @@ components:
             installer:
               $ref: "#/components/schemas/EnumInstaller"
             command:
+              type: string
+            entrypoint:
               type: string
             code:
               type: string
@@ -2802,51 +3695,76 @@ components:
     ########################### ETL
 
     ReqCreateETLPipeline:
+      allOf:
+        - $ref: "#/components/schemas/ReqPipeline"
+        - type: object
+          required:
+            - id
+            - remote_outbox
+            - local_inbox
+            - jobs
+            - local_outbox
+            - remote_inbox
+          properties:
+            id:
+              $ref: '#/components/schemas/ID'
+            description:
+              type: string
+            before:
+              $ref: "#/components/schemas/ETLActionFilter"
+            remote_outbox:
+              $ref: '#/components/schemas/ETLRemoteOutbox'
+            local_inbox:
+              $ref: '#/components/schemas/ETLLocalInbox'
+            jobs:
+              type: array
+              items:
+                $ref: '#/components/schemas/TapisETLExtendedTapisJobDef'
+            local_outbox:
+              $ref: '#/components/schemas/ETLLocalOutbox'
+            remote_inbox:
+              $ref: '#/components/schemas/ETLRemoteInbox'
+            after:
+              $ref: "#/components/schemas/ETLActionFilter"
+
+    ETLActionFilter:
       type: object
-      required:
-        - id
-        - local_inbox
-        - jobs
-        - local_outbox
-        - remote_inbox
       properties:
-        id:
-          $ref: '#/components/schemas/ID'
-        description:
-          type: string
-        execution_profile:
-          $ref: '#/components/schemas/PipelineExecutionProfile'
-        remote_outbox:
-          $ref: '#/components/schemas/ETLRemoteOutbox'
-        local_inbox:
-          $ref: '#/components/schemas/ETLLocalInbox'
-        jobs:
+        pipeline_ids:
           type: array
           items:
-            $ref: '#/components/schemas/WorkflowsExtendedTapisJobDef'
-        local_outbox:
-          $ref: '#/components/schemas/ETLLocalOutbox'
-        remote_inbox:
-          $ref: '#/components/schemas/ETLRemoteInbox'
+            type: string
+          default: []
+        run_async:
+          type: boolean
+          default: true
 
-    WorkflowsTapisJobDefExtension:
+    TapisETLExtension:
       type: object
       properties:
-        workflows:
+        env_mappings:
           type: object
-          properties:
-            etl:
-              type: object
-              properties:
-                input:
-                  type: string
-                output:
-                  type: string
+          additionalProperties: true
+        last_status:
+          type: string
+          default: PENDING
+    
+    TapisJobExtensions:
+      type: object
+      properties:
+        tapis_etl:
+          $ref: "#/components/schemas/TapisETLExtension"
 
-    WorkflowsExtendedTapisJobDef:
+    ExtendedTapisJob:
+      type: object
+      properties:
+        extensions:
+          $ref: "#/components/schemas/TapisJobExtensions"
+
+    TapisETLExtendedTapisJobDef:
       allOf:
         - $ref: "#/components/schemas/TapisJobDef"
-        - $ref: "#/components/schemas/WorkflowsTapisJobDefExtension"
+        - $ref: "#/components/schemas/ExtendedTapisJob"
 
     BaseDataIntegrityProfile:
       type: object
@@ -2860,15 +3778,8 @@ components:
       allOf:
         - $ref: "#/components/schemas/BaseDataIntegrityProfile"
         - type: object
-          required:
-            - checksum_algo
-            - checksums_path
           properties:
             type:
-              type: string
-            checksum_algo:
-              $ref: "#/components/schemas/ETLEnumChecksumAlgorithm"
-            checksums_path:
               type: string
 
     DoneFileDataIntegrityProfile:
@@ -2882,8 +3793,14 @@ components:
               type: string
             done_files_path:
               type: string
-            pattern:
-              type: string
+            include_patterns:
+              type: array
+              items:
+                type: string
+            exclude_patterns:
+              type: array
+              items:
+                type: string
 
     ByteCheckDataIntegrityProfile:
       allOf:
@@ -2905,72 +3822,81 @@ components:
           done_file: "#/components/schemas/DoneFileDataIntegrityProfile"
           byte_check: "#/components/schemas/ByteCheckDataIntegrityProfile"
 
-    ETLLocalIOBox:
+    ETLSystem:
       type: object
-      required:
-        - system_id
-        - data_path
-      properties:
-        system_id:
-          type: string
-        data_path:
-          type: string
-        manifests_path:
-          type: string
-        manifest_generation_policy:
-          $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
-        manifest_priority:
-          $ref: "#/components/schemas/ETLEnumManifestPriority"
-          default: 'oldest'
-        data_integrity_profile:
-          $ref: "#/components/schemas/DataIntegrityProfile"
-        exclude_pattern:
-          type: array
-          items:
-            type: string
-
-    ETLRemoteOutbox:
-      type: object
-      additionalProperties: true
-
-    ETLLocalInbox:
-      allOf:
-        - $ref: "#/components/schemas/ETLLocalIOBox"
-        - type: object
-          properties:
-            manifest_generation_policy:
-              $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
-              default: 'one_per_file'
-
-    ETLLocalOutbox:
-      allOf:
-        - $ref: "#/components/schemas/ETLLocalIOBox"
-        - type: object
-          properties:
-            manifest_generation_policy:
-              $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
-              default: 'one_for_all'
-
-    ETLTapisSystemRemoteInbox:
-      type: object
-      required:
-        - system_id
-        - path
       properties:
         system_id:
           type: string
         path:
           type: string
+        include_patterns:
+          type: array
+          items: 
+            type: string
+        exclude_patterns:
+          type: array
+          items: 
+            type: string
+
+    ETLManifestsSystem:
+      allOf:
+        - $ref: "#/components/schemas/ETLSystem"
+        - type: object
+          properties:
+            generation_policy:
+              $ref: "#/components/schemas/ETLEnumManifestGenerationPolicy"
+            priority:
+              $ref: "#/components/schemas/ETLEnumManifestPriority"
+
+    ETLDataSystem:
+      allOf:
+        - $ref: "#/components/schemas/ETLSystem"
+        - type: object
+          properties:
+            integrity_profile:
+              $ref: "#/components/schemas/DataIntegrityProfile"
+
+    ETLControlSystem:
+      allOf:
+        - $ref: "#/components/schemas/ETLSystem"
+
+    ETLSystemsConfiguration:
+      type: object
+      required:
+        - manifests
+        - data
+      properties:
+        manifests:
+          $ref: "#/components/schemas/ETLManifestsSystem"
+        data:
+          $ref: "#/components/schemas/ETLDataSystem"
+    
+    ETLRemoteOutbox:
+      allOf:
+        - $ref: "#/components/schemas/ETLSystemsConfiguration"
+
+    ETLLocalInbox:
+      allOf:
+        - $ref: "#/components/schemas/ETLSystemsConfiguration"
+        - type: object
+          properties:
+            control:
+              $ref: "#/components/schemas/ETLControlSystem"
+
+    ETLLocalOutbox:
+      allOf:
+        - $ref: "#/components/schemas/ETLSystemsConfiguration"
 
     ETLRemoteInbox:
-      allOf:
-        - $ref: "#/components/schemas/ETLTapisSystemRemoteInbox"
+      allOf: 
+        - $ref: "#/components/schemas/ETLSystemsConfiguration"
 
     ETLEnumManifestGenerationPolicy:
       type: string
       enum:
-        - one_per_file
-        - one_for_all
+        - manual
+        - auto_one_per_file
+        - auto_one_for_all
 
     ETLEnumManifestPriority:
       type: string
@@ -2985,13 +3911,6 @@ components:
         - checksum
         - byte_check
         - done_file
-
-    ETLEnumChecksumAlgorithm:
-      type: string
-      enum:
-        - md5
-        - sha256
-        - sha3
 
     ################################# End ETL
         
@@ -3314,6 +4233,7 @@ components:
           properties:
             result:
               type: string
+              
 
     RespObject:
       $ref: "#/components/schemas/RespBase"
@@ -3366,6 +4286,42 @@ components:
               items:
                 $ref: '#/components/schemas/GroupUser'
 
+    RespSecret:
+      allOf:
+        - $ref: '#/components/schemas/RespObject'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/Secret'
+    
+    RespSecretList:
+      allOf:
+        - $ref: '#/components/schemas/RespList'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/Secret'
+
+    RespGroupSecret:
+      allOf:
+        - $ref: '#/components/schemas/RespObject'
+        - type: object
+          properties:
+            result:
+              $ref: '#/components/schemas/GroupSecret'
+    
+    RespGroupSecretList:
+      allOf:
+        - $ref: '#/components/schemas/RespList'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: '#/components/schemas/GroupSecret'
+
     RespGroupList:
       allOf:
         - $ref: '#/components/schemas/RespList'
@@ -3411,6 +4367,40 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Archive'
+
+    RespPipelineLock:
+      allOf:
+        - $ref: '#/components/schemas/RespObject'
+        - type: object
+          properties:
+            result:
+              $ref: "#/components/schemas/PipelineLock"
+
+    RespPipelineLockList:
+      allOf:
+        - $ref: '#/components/schemas/RespObject'
+        - type: object
+          properties:
+            result:
+              type: array
+              items:
+                $ref: "#/components/schemas/PipelineLock"
+
+    RespPipelineLockAcquisition:
+      allOf:
+        - $ref: '#/components/schemas/RespObject'
+        - type: object
+          properties:
+            result:
+              type: object
+              properties:
+                pipeline_lock_uuid:
+                  type: string
+                  format: uuid
+                acquired:
+                  type: boolean
+                message:
+                  type: string
 
     RespPipeline:
       allOf:
@@ -3644,3 +4634,27 @@ components:
         - string
         - number
         - boolean
+
+    EnumLogicalOperator:
+      type: string
+      enum:
+        - and
+        - or
+        - xor
+        - nand
+        - nor
+        - xnor
+
+    EnumMembershipOperator:
+      type: string
+      enum:
+        - in
+
+    EnumComparisonOperator:
+      type: string
+      enum: [ "eq", "ne", "gt", "lt", "ge", "le" ]
+
+    EnumNegationOperator:
+      type: string
+      enum: [ "not" ]
+        
