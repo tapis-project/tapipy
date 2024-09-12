@@ -13,8 +13,9 @@ import shutil
 import time
 import concurrent.futures
 import copy
-from typing import Dict, NewType, Mapping, Optional
+from typing import Dict, NewType, Mapping, Optional, Union
 from atomicwrites import atomic_write
+from tapipy.configuration import Config
 
 from tapipy.util import dereference_spec, retriable
 import tapipy.errors
@@ -362,7 +363,6 @@ class Tenants(object):
             except KeyError:
                 raise errors.BaseTapyException("Tenant not found.")
 
-
 class Tapis(object):
     """
     A client for the Tapis API.
@@ -386,6 +386,7 @@ class Tapis(object):
                  tenants: Tenants = None,
                  debug_prints: bool = True,
                  resource_dicts: dict = {},
+                 config: Union[Config, dict] = Config(), # Provide a default configuration object
                  plugins = [], # list[str] <-- this type doesn't compile in python < 3.9
                  **kwargs
                  ):
@@ -505,6 +506,14 @@ class Tapis(object):
             for tid, t in self.tenant_cache.tenants.items():
                 if t.base_url == base_url:
                     self.tenant_id = t.tenant_id
+
+        # Set the configuration object
+        if type(config) not in [Config, dict]:
+            raise TypeError("Tapis Client Config must be an instance of 'Config' or a dictionary")
+        
+        self.config = config
+        if type(config) == dict:
+            self.config = Config(**config)
 
         for p in plugins:
             # call each plugin's on_tapis_client_instantiation() function with all args passed in.
