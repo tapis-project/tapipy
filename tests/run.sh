@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# Exit if any command throws an error
+set -e 
+
 cd $(dirname $0)
 cd ../
 
