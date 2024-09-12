@@ -85,10 +85,10 @@ def dereference_spec(spec, new_spec=None):
     # Return the new dictionary containing the dereferenced schema
     return new_spec
 
-def exponential_time(time_sec, _retry_exponential_base=2):
+def exponential_time(time_sec, _retry_exponent=2):
     # If time_sec is 1, just double the time
     if time_sec == 1: return 2 
-    return time_sec**_retry_exponential_base
+    return time_sec**_retry_exponent
 
 def constant_time(time_sec):
     return time_sec
@@ -139,6 +139,10 @@ def retriable(op__call__):
                         _retry_delay_sec,
                         algo=_retry_backoff_algo
                     )
+                    continue
+                
+                raise exception
+
         raise exception
 
     return wrapper
