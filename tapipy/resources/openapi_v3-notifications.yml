@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Notifications API
   description: The Tapis Notifications API provides for management of subscriptions and event publication
-  version: '1.6.0'
+  version: '1.6.1'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Notifications API - CICSupport"
@@ -395,7 +395,7 @@ paths:
           - name: Short descriptive name.
           - description: Optional more verbose description.
           - enabled: Indicates if subscription is currently active. 
-          - typeFilter: Filter to use when matching events. Format is *<service>.<category>.<detail>*. Each field may be a specific type or the wildcard character *.
+          - typeFilter: Filter to use when matching events. Format is *service.category.detail*. Each field may be a specific type or the wildcard character *.
           - subjectFilter: Filter to use when matching events. Filter for subject. May be wildcard character *.
           - deliveryTargets: List of delivery targets to be used when delivering a matching event.
           - ttlMinutes: Time to live in minutes. 0 indicates no expiration.
@@ -578,7 +578,7 @@ paths:
           - name: Short descriptive name.
           - description: Optional more verbose description.
           - enabled: Indicates if subscription is currently active. 
-          - typeFilter: Filter to use when matching events. Format is *<service>.<category>.<detail>*. Each field may be a specific type or the wildcard character *.
+          - typeFilter: Filter to use when matching events. Format is *service.category.detail*. Each field may be a specific type or the wildcard character *.
           - subjectFilter: Filter to use when matching events. Filter for subject. May be wildcard character *.
           - deliveryTargets: List of delivery targets to be used when delivering a matching event.
           - ttlMinutes: Time to live in minutes. 0 indicates no expiration.
@@ -918,14 +918,21 @@ paths:
       description: |
         Publish an event to be distributed to all subscribers. Only services may publish events.
         
-        The attributes *source*, *type* and *timestamp* are required.
+        The attributes *source*, *type* and *timestamp* are required. Note that certain attributes, marked in
+        *italics* in the list below, are allowed but ignored. These attributes are maintained by Tapis. They are
+        present when the event is part of a delivered notification.
+
         Event attributes:
           - source: Context in which event happened: Examples: *Jobs*, *Systems*.
           - type: Type of event. Used for routing notifications. A series of 3 fields separated by the dot character. Pattern is *service.category.detail*. Examples: *jobs.new_status.complete*, *systems.system.create*, *files.object.delete*
           - subject: Subject of event in the context of the service. Examples: job Id, system Id, file path, role name, etc.
-          - seriesId: Optional Id that may be used to group events from the same source in a series, thereby preserving event order during notification delivery.
           - timestamp: When the event happened.
           - data: Optional additional information associated with the event. Data specific to the service associated with the event.
+          - deleteSubscriptionsMatchingSubject: Boolean indicating that all subscriptions whose *subjectFilter* matches the *subject* of the event should be deleted once all notifications are delivered.
+          - seriesId: Optional Id that may be used to group events from the same tenant, source and subject. In a series, event order is preserved when sending out notifications.
+          - *tenant*: Tapis tenant associated with the event.
+          - *uuid*: Tapis generated unique identifier.
+          - *user*: Tapis user associated with the event.
         
         Note that events are not persisted by the front end api service. When received they are simply sent to a
         message broker. The back end dispatch service will persist events temporarily in order to support recovery.
@@ -941,6 +948,14 @@ paths:
         
         For details on the schema for a Notification object, please see the request body specification included under
         the endpoint for *recordTestNotification*, at path */v3/notifications/test/callback/{name}*
+
+        Note that certain attributes in the request body (such as tenant) are allowed but ignored. These attributes
+        are maintained by Tapis. They are present when the event is part of a delivered notification.
+        The attributes that are allowed but ignored are
+
+          - tenant
+          - uuid
+          - user
       operationId: postEvent
       parameters:
         - name: tenant
@@ -990,21 +1005,22 @@ paths:
         Only services may perform this operation.
         
         The subscription will have the following properties:
-          - owner: <api_user>
-          - name: <subscription_uuid>
+          - owner: *api_user*
+          - name: *subscription_uuid*
           - typeFilter: notifications.test.*
-          - subjectFilter: <subscription_uuid>
+          - subjectFilter: *subscription_uuid*
           - deliveryTarget:
             - deliveryMethod: WEBHOOK
-            - deliveryAddress: <tenant_base_url>/v3/notifications/test/callback/<subscription_uuid>
+            - deliveryAddress: *tenant_base_url*/v3/notifications/test/callback/*subscription_uuid*
           - ttlMinutes: 60
 
         The default TTL of 1 hour may be overridden using the query parameter *subscriptionTTL*.
 
         The initial event will have the following properties:
-          - source: <tenant_base_url>/v3/notifications/test
+          - source: *tenant_base_url*/v3/notifications/test
           - type: notifications.test.begin
-          - subject: <subscription_uuid>
+          - subject: *subscription_uuid*
+          - seriesId: *subscription_uuid*
 
         The initial event will be published to the main queue and the subscription will be returned to the caller.
         The sequence of test events may be continued by publishing events that match the test subscription. 
@@ -1256,6 +1272,13 @@ components:
           type: string
         deleteSubscriptionsMatchingSubject:
           type: boolean
+          default: false
+        tenant:
+          type: string
+        user:
+          type: string
+        uuid:
+          type: string
     # --- Notification ------------------------------------------------------------
     Notification:
       type: object
