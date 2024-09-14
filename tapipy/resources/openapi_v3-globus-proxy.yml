@@ -56,7 +56,7 @@ paths:
           description: Server error.
 
   # --- Paths for Auth -----------------------------------------------------
-  '/v3/globus-proxy/auth/url/{client_id}':
+  '/v3/globus-proxy/auth/url/{client_id}/{endpoint_id}':
     get:
       tags:
         - Auth
@@ -72,6 +72,12 @@ paths:
           description: Globus client associated with the request.
           schema:
             $ref: '#/components/schemas/ClientIdString'
+        - name: endpoint_id
+          in: path
+          required: true
+          description: Globus endpoint associated with the request.
+          schema:
+            $ref: '#/components/schemas/EndpointIdString'
       responses:
         '200':
           description: Success.
@@ -129,6 +135,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespAuthTokens'
+        '407':
+          description: Consent required.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -503,6 +515,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespEndpointArray'
+        '409':
+          description: Directory already exists.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
           content:
@@ -727,6 +745,11 @@ components:
     #    }
     #  }
     #  ============================================================================================
+    GlobusConsentInfo:
+      type: object
+      properties:
+        scopes:
+          type: string
     # --- GlobusFileInfo -------------------------------------------------------------
     GlobusFileInfo:
       type: object
@@ -747,6 +770,7 @@ components:
           type: string
         size:
           type: integer
+          format: int64
           description: size in bytes
     # --- GlobusTransferItem -------------------------------------------------------------
     GlobusTransferItem:
@@ -823,7 +847,7 @@ components:
           type: string
           example: "ddb59aef-6d04-11e5-ba46-22000b92c6ec"
         status:
-          $ref: '#/components/schemas/GlobusTaskStatusEnum'
+          type: string
         symlinks:
           type: integer
         sync_level:
@@ -832,7 +856,7 @@ components:
           type: string
           example: "36ccfc18-8493-11ec-9008-3132d806a822"
         type:
-          $ref: '#/components/schemas/GlobusTaskTypeEnum'
+          type: string
         verify_checksum:
           type: boolean
     # TRANSFER TASK
@@ -964,6 +988,10 @@ components:
       type: string
       example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
       minLength: 1
+    EndpointIdString:
+      type: string
+      example: "1784148a-8ae0-44b7-80b5-b5999e92de3a"
+      minLength: 1
     AuthCodeString:
       type: string
       example: "T0aymuUlUyLaOvvR58xxDCzycq5Cd3"
@@ -1074,6 +1102,19 @@ components:
           $ref: '#/components/schemas/AuthTokens'
         metadata:
           type: object
+    RespConsentRequired:
+      type: object
+      properties:
+        status:
+          type: string
+        message:
+          type: string
+        version:
+          type: string
+        result:
+          $ref: '#/components/schemas/GlobusConsentInfo'
+        metadata:
+          type: object
     RespEndpointArray:
       type: object
       properties:
@@ -1176,6 +1217,8 @@ components:
       enum:
         - TRANSFER
         - DELETE
+        - NULL
+        - UNKNOWN
     GlobusTaskStatusEnum:
       type: string
       enum:
@@ -1183,6 +1226,8 @@ components:
         - INACTIVE
         - SUCCEEDED
         - FAILED
+        - NULL
+        - UNKNOWN
     GlobusTaskCancelEnum:
       type: string
       enum:

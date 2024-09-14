@@ -1,6 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+
+## 1.7.0 - 2024-09-13
+### Added
+- Poetry lock update
+
+### Changed
+- Updating specs for systems, pods, jobs, apps, notifications, globus-proxy.
+
+### Removed
+- No change.
+
+
 ## 1.6.3 - 2024-03-13
 ### Added
 - Poetry lock update

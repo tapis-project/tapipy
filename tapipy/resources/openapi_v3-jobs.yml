@@ -1637,6 +1637,34 @@ components:
             - FINISHED
             - CANCELLED
             - FAILED
+        condition:
+          type: string
+          enum:
+            - CANCELLED_BY_USER
+            - JOB_ARCHIVING_FAILED
+            - JOB_DATABASE_ERROR
+            - JOB_EXECUTION_MONITORING_ERROR
+            - JOB_EXECUTION_MONITORING_TIMEOUT
+            - JOB_FILES_SERVICE_ERROR
+            - JOB_INTERNAL_ERROR
+            - JOB_INVALID_DEFINITION
+            - JOB_LAUNCH_FAILURE
+            - JOB_QUEUE_MONITORING_ERROR
+            - JOB_RECOVERY_FAILURE
+            - JOB_RECOVERY_TIMEOUT
+            - JOB_REMOTE_ACCESS_ERROR
+            - JOB_REMOTE_OUTCOME_ERROR
+            - JOB_UNABLE_TO_STAGE_INPUTS
+            - JOB_UNABLE_TO_STAGE_JOB
+            - JOB_TRANSFER_FAILED_OR_CANCELLED
+            - JOB_TRANSFER_MONITORING_TIMEOUT
+            - NORMAL_COMPLETION
+            - SCHEDULER_CANCELLED
+            - SCHEDULER_DEADLINE
+            - SCHEDULER_OUT_OF_MEMORY
+            - SCHEDULER_STOPPED
+            - SCHEDULER_TIMEOUT
+            - SCHEDULER_TERMINATED
         lastMessage:
           type: string
         created:
@@ -1671,9 +1699,9 @@ components:
           type: string
         dtnSystemId:
           type: string
-        dtnMountSourcePath:
+        dtnSystemInputDir:
           type: string
-        dtnMountPoint:
+        dtnSystemOutputDir:
           type: string
         nodeCount:
           type: integer
@@ -1741,6 +1769,14 @@ components:
           type: string
         stageAppCorrelationId:
           type: string
+        dtnInputTransactionId:
+          type: string
+        dtnInputCorrelationId:
+          type: string
+        dtnOutputTransactionId:
+          type: string
+        dtnOutputCorrelationId:
+          type: string
         tapisQueue:
           type: string
         visible:
@@ -1775,6 +1811,9 @@ components:
               - SAC_EXEC_SYSTEM_OUTPUT_DIR
               - SAC_ARCHIVE_SYSTEM_ID
               - SAC_ARCHIVE_SYSTEM_DIR
+              - SAC_DTN_SYSTEM_ID
+              - SAC_DTN_SYSTEM_INPUT_DIR
+              - SAC_DTN_SYSTEM_OUTPUT_DIR
         notes:
           type: string
         mpi:
@@ -1859,6 +1898,34 @@ components:
             - FINISHED
             - CANCELLED
             - FAILED
+        condition:
+          type: string
+          enum:
+            - CANCELLED_BY_USER
+            - JOB_ARCHIVING_FAILED
+            - JOB_DATABASE_ERROR
+            - JOB_EXECUTION_MONITORING_ERROR
+            - JOB_EXECUTION_MONITORING_TIMEOUT
+            - JOB_FILES_SERVICE_ERROR
+            - JOB_INTERNAL_ERROR
+            - JOB_INVALID_DEFINITION
+            - JOB_LAUNCH_FAILURE
+            - JOB_QUEUE_MONITORING_ERROR
+            - JOB_RECOVERY_FAILURE
+            - JOB_RECOVERY_TIMEOUT
+            - JOB_REMOTE_ACCESS_ERROR
+            - JOB_REMOTE_OUTCOME_ERROR
+            - JOB_UNABLE_TO_STAGE_INPUTS
+            - JOB_UNABLE_TO_STAGE_JOB
+            - JOB_TRANSFER_FAILED_OR_CANCELLED
+            - JOB_TRANSFER_MONITORING_TIMEOUT
+            - NORMAL_COMPLETION
+            - SCHEDULER_CANCELLED
+            - SCHEDULER_DEADLINE
+            - SCHEDULER_OUT_OF_MEMORY
+            - SCHEDULER_STOPPED
+            - SCHEDULER_TIMEOUT
+            - SCHEDULER_TERMINATED
         remoteStarted:
           type: string
           format: date-time
@@ -2068,6 +2135,8 @@ components:
       properties:
         status:
           type: string
+        condition:
+          type: string
     RespGetJobStatus:
       type: object
       properties:
@@ -2118,6 +2187,8 @@ components:
           type: string
         description:
           type: string
+        envKey:
+          type: string
         autoMountLocal:
           type: boolean
         sourceUrl:
@@ -2132,6 +2203,8 @@ components:
         name:
           type: string
         description:
+          type: string
+        envKey:
           type: string
         sourceUrls:
           type: array
@@ -2234,6 +2307,10 @@ components:
         archiveSystemId:
           type: string
         archiveSystemDir:
+          type: string
+        dtnSystemInputDir:
+          type: string
+        dtnSystemOutputDir:
           type: string
         nodeCount:
           type: integer

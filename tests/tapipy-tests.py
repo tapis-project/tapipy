@@ -330,7 +330,7 @@ def test_download_service_dev_specs():
               password=PASSWORD,
               resource_set="dev")
     t.get_tokens()
-    return t
+    assert(t)
 
 def test_download_service_local_specs():
     t = Tapis(base_url=BASE_URL,
@@ -338,4 +338,4 @@ def test_download_service_local_specs():
               password=PASSWORD,
               resource_set="local")
     t.get_tokens()
-    return t
+    assert(t)
