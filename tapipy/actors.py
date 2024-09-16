@@ -20,7 +20,7 @@ def get_client():
     """Returns a pre-authenticated Tapis client using the abaco environment variables."""
     # if we have an access token, use that:
     if os.environ.get('_abaco_access_token'):
-        tp = tapis.Tapis(base_url=os.environ.get('_abaco_api_server'),
+        tp = tapis.Tapis(base_url=os.environ.get('_abaco_api_server').strip('/'),
                          access_token=os.environ.get('_abaco_access_token'))
     else:
         raise errors.BaseTapyException("Unable to instantiate a Tapis client: no token found.")
