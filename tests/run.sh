@@ -9,3 +9,5 @@ cd ../
 python3 -m unittest -v tests.TestConfig
 python3 -m unittest -v tests.TestUtils
 python3 -m unittest -v tests.TestRetriableDecorator
+
+pytest --verbose /home/tapis/tapipy-tests.py
