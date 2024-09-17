@@ -341,8 +341,9 @@ class Tenants(object):
 
     def reload_tenants(self):
         try:
-            sites = self.tapi_client.tenants.list_sites()
-            tenants = self.tapi_client.tenants.list_tenants()
+            # _config required to ensure user client-level config isn't applied during Tapipy initialization
+            sites = self.tapi_client.tenants.list_sites(_config=Config())
+            tenants = self.tapi_client.tenants.list_tenants(_config=Config())
         except Exception as e:
             raise errors.BaseTapyException(f"Unable to retrieve sites and tenants from the Tenants API. e: {e}")
         for t in tenants:
@@ -495,6 +496,14 @@ class Tapis(object):
         # method signature should be def fn(op: Opertaion, response: Response, **kwargs)
         self.plugin_on_call_post_request_callables = []
 
+        self.config = config
+        if type(config) == dict:
+            self.config = Config(**config)
+        # Set the configuration object
+        if type(config) not in [Config, dict]:
+            raise TypeError("Tapis Client Config must be an instance of 'Config' or a dictionary")
+
+
         # we lazy-load the tenant_cache to prevent making a call to the Tenants API when not needed.
         if tenants:
             self.tenant_cache = tenants
@@ -507,13 +516,7 @@ class Tapis(object):
                 if t.base_url == base_url:
                     self.tenant_id = t.tenant_id
 
-        # Set the configuration object
-        if type(config) not in [Config, dict]:
-            raise TypeError("Tapis Client Config must be an instance of 'Config' or a dictionary")
         
-        self.config = config
-        if type(config) == dict:
-            self.config = Config(**config)
 
         for p in plugins:
             # call each plugin's on_tapis_client_instantiation() function with all args passed in.
