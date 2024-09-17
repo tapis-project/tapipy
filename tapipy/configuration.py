@@ -1,4 +1,5 @@
-from typing import List, Union, Literal
+from typing import List, Union
+from typing_extensions import Literal
 
 from tapipy import errors
 
