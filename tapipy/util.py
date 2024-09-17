@@ -1,6 +1,7 @@
 import time
 
 from tapipy import errors
+from tapipy.configuration import Config
 
 
 class AttrDict(dict):
@@ -85,22 +86,24 @@ def dereference_spec(spec, new_spec=None):
     # Return the new dictionary containing the dereferenced schema
     return new_spec
 
-def exponential_time(time_sec, _retry_exponent=2):
+def exponential_time(time_sec, retry_backoff_exponent=2):
     # If time_sec is 1, just double the time
     if time_sec == 1: return 2 
-    return time_sec**_retry_exponent
+    return time_sec**retry_backoff_exponent
 
 def constant_time(time_sec):
     return time_sec
 
 # Wait the specified period of time then return the recalculated wait time
 # according to the backoff alogrithm provided
-def backoff(time_sec, algo="constant", **kwargs):
+def backoff(time_sec, algo="constant", exponent=2):
     backoff_recalculation_fn = constant_time
+    kwargs = {}
     if algo == "constant" or algo == None:
         pass
     elif algo == "exponential":
         backoff_recalculation_fn = exponential_time
+        kwargs["retry_backoff_exponent"] = exponent
     else:
         raise errors.TapyClientConfigurationError
     
@@ -114,30 +117,35 @@ def backoff(time_sec, algo="constant", **kwargs):
 # NOTE Only to be used on the __call__ function of an Operation instance
 def retriable(op__call__):
     def wrapper(
-        self,
+        self, # Operation object
         *args,
-        _retries=0,
-        _retry_delay_sec=0,
-        _retry_on_exceptions=[errors.InternalServerError],
-        _retry_backoff_algo="constant",
+        _config: Config=None,
         **kwargs
     ):
-        if type(_retries) != int or _retries < 0 :
-            raise ValueError("Value provided to _retry_delay_sec must be an integer and must be >= 0")
+        config = self.tapis_client.config
+        retries = config.retries if _config == None else _config.retries
+        retry_delay_sec = config.retry_delay_sec if _config == None else _config.retry_delay_sec
+        retry_on_exceptions = config.retry_on_exceptions if _config == None else _config.retry_on_exceptions
+        retry_backoff_algo = config.retry_backoff_algo if _config == None else _config.retry_backoff_algo
+        retry_backoff_exponent = config.retry_backoff_exponent if _config == None else _config.retry_backoff_exponent
+
+        if type(retries) != int or retries < 0 :
+            raise ValueError("Value provided to retry_delay_sec must be an integer and must be >= 0")
         
         exception = None
-        while _retries >= 0:
+        while retries >= 0:
             try:
                 return op__call__(self, *args, **kwargs)
             except Exception as e:
                 exception = e
-                if type(e) in _retry_on_exceptions:
-                    _retries -= 1
+                if type(e) in retry_on_exceptions:
+                    retries -= 1
                     # Wait the delay time, then recalculate delay time based on 
                     # backoff algorithm
-                    _retry_delay_sec = backoff(
-                        _retry_delay_sec,
-                        algo=_retry_backoff_algo
+                    retry_delay_sec = backoff(
+                        retry_delay_sec,
+                        algo=retry_backoff_algo,
+                        exponent=retry_backoff_exponent
                     )
                     continue
                 

@@ -1,30 +1,26 @@
 import unittest
 
-from .mocks import RetriableMock
+from .mocks import OperationMock
 from tapipy.errors import InternalServerError
+from tapipy.configuration import Config
 
 
 class TestRetriableDecorator(unittest.TestCase):
     def testRetriableCallsOnce(self):
         # NOTE Retriable decorator can be found on the __call__ method of the
-        # RetriableMock
-        mock = RetriableMock()
-        mock()
-        assert mock.times_called == 1
-        assert mock.times_retried == 0
-
-    def testRetriableMisconfigured(self):
-        mock = RetriableMock(result=1337)
-        assert mock(_retries=0) == 1337
-        self.assertRaises(ValueError, mock, _retries=1.5) # Only integers
-        self.assertRaises(ValueError, mock, _retries=-1) # Must be >= 0
+        # OperationMock
+        mock_op = OperationMock()
+        mock_op()
+        assert mock_op.times_called == 1
+        assert mock_op.times_retried == 0
     
     def testRetriableRaisesSpecifedExceptionWhichOverridesDefault(self):
-        _ = RetriableMock(
+        _ = OperationMock(
             raises=InternalServerError,
-            succeeds_on_nth_retry=None # Fails forever
+            succeeds_on_nth_retry=None, # Fails forever
+            config=Config(retries=3, retry_on_exceptions=[TypeError])
         )
-        mock2 = RetriableMock(
+        mock2 = OperationMock(
             raises=TypeError,
             succeeds_on_nth_retry=None # Fails forever
         )
@@ -32,105 +28,110 @@ class TestRetriableDecorator(unittest.TestCase):
         self.assertRaises(
             TypeError,
             mock2,
-            _retries=3,
-            _retry_on_exceptions=[TypeError]
         )
 
     def testRetriableRaisesExceptionDifferentThanSpecifiedRetryOn(self):
-        mock = RetriableMock(
+        mock_op = OperationMock(
             raises=TypeError,
-            succeeds_on_nth_retry=None # Fails forever
+            succeeds_on_nth_retry=None, # Fails forever
+            config=Config(retries=3, retry_on_exceptions=[ValueError])
         )
 
         self.assertRaises(
             TypeError,
-            mock,
-            _retries=3,
-            _retry_on_exceptions=[ValueError]
+            mock_op,
         )
-        assert mock.times_called == 1
-        assert mock.times_retried == 0
+        assert mock_op.times_called == 1
+        assert mock_op.times_retried == 0
         
-    def testRetriableRetriesUnitilRetryLimitReached(self):
-        mock = RetriableMock(
+    def testRetriableRetriesUntilRetryLimitReached(self):
+        mock_op = OperationMock(
             raises=InternalServerError,
-            succeeds_on_nth_retry=None # Fails forever
+            succeeds_on_nth_retry=None, # Fails forever
+            config=Config(retries=3, retry_on_exceptions=[InternalServerError])
         )
         self.assertRaises(
             InternalServerError,
-            mock,
-            _retries=3,
-            _retry_on_exceptions=[InternalServerError]
+            mock_op,
         )
-        assert mock.times_called == 4
-        assert mock.times_retried == 3
+        assert mock_op.times_called == 4
+        assert mock_op.times_retried == 3
 
     def testRetriableSuccedsBeforeReachingRetryLimit(self):
-        mock = RetriableMock(
+        mock_op = OperationMock(
             raises=InternalServerError,
             succeeds_on_nth_retry=2,
-            result=1337
+            result=1337,
+            config=Config(retries=3, retry_on_exceptions=[InternalServerError])
         )
-        result = mock(
-            _retries=3,
-            _retry_on_exceptions=[InternalServerError]
-        )
+        result = mock_op()
         assert result == 1337
-        assert mock.times_called == 3
-        assert mock.times_retried == 2
+        assert mock_op.times_called == 3
+        assert mock_op.times_retried == 2
 
     def testRetriableSucceedsOnFirstRetry(self):
-        mock = RetriableMock(
+        mock_op = OperationMock(
             raises=InternalServerError,
+            succeeds_on_nth_retry=1,
+            result=1337,
+            config=Config(retries=1, retry_on_exceptions=[InternalServerError])
+        )
+        result = mock_op()
+        assert result == 1337
+        assert mock_op.times_called == 2
+        assert mock_op.times_retried == 1
+
+    def testSucceedsWithClientConfigOverrideViaCallMethod(self):
+        mock_op = OperationMock(
+            raises=ValueError,
             succeeds_on_nth_retry=1,
             result=1337
         )
-        result = mock(
-            _retries=1,
-            _retry_on_exceptions=[InternalServerError]
+        result = mock_op(
+            _config=Config(retries=1, retry_on_exceptions=[ValueError])
         )
         assert result == 1337
-        assert mock.times_called == 2
-        assert mock.times_retried == 1
+        assert mock_op.times_called == 2
+        assert mock_op.times_retried == 1
         
     def testRetriableFirstArgIsSelfPlusArgsKwargsZeroRetries(self):
-        mock = RetriableMock(result=1337)
+        mock_op = OperationMock(result=1337)
         args = ("arg1", "arg2")
         kwargs = {"kwarg1":1, "kwarg2":2}
-        result = mock(*args, **kwargs)
+        result = mock_op(*args, **kwargs)
         assert result == 1337
-        assert mock.times_called == 1
-        assert mock.times_retried == 0
+        assert mock_op.times_called == 1
+        assert mock_op.times_retried == 0
 
         # Testing args kwargs
-        assert isinstance(mock.args[0], RetriableMock) # Self is first arg
-        assert "arg1" in mock.args and mock.args[1] == "arg1"
-        assert "arg2" in mock.args and mock.args[2] == "arg2"
-        assert "kwarg1" in mock.kwargs and mock.kwargs.get("kwarg1") == 1
-        assert "kwarg2" in mock.kwargs and mock.kwargs.get("kwarg2") == 2
+        assert isinstance(mock_op.args[0], OperationMock) # Self is first arg
+        assert "arg1" in mock_op.args and mock_op.args[1] == "arg1"
+        assert "arg2" in mock_op.args and mock_op.args[2] == "arg2"
+        assert "kwarg1" in mock_op.kwargs and mock_op.kwargs.get("kwarg1") == 1
+        assert "kwarg2" in mock_op.kwargs and mock_op.kwargs.get("kwarg2") == 2
 
     def testRetriableFirstArgIsSelfPlusArgsKwargsAndNRetries(self):
-        mock = RetriableMock(
+        mock_op = OperationMock(
             raises=InternalServerError,
             succeeds_on_nth_retry=2,
-            result=1337
+            result=1337,
+            config=Config(retries=2),
         )
         args = ("arg1", "arg2")
         kwargs = {"kwarg1":1, "kwarg2":2}
-        result = mock(
+        result = mock_op(
             *args,
-            _retries=2,
             **kwargs
         )
         assert result == 1337
-        assert mock.times_called == 3
-        assert mock.times_retried == 2
+        assert mock_op.times_called == 3
+        assert mock_op.times_retried == 2
 
         # Testing args kwargs
-        assert isinstance(mock.args[0], RetriableMock)
-        assert "arg1" in mock.args and mock.args[1] == "arg1"
-        assert "arg2" in mock.args and mock.args[2] == "arg2"
-        assert "kwarg1" in mock.kwargs and mock.kwargs.get("kwarg1") == 1
-        assert "kwarg2" in mock.kwargs and mock.kwargs.get("kwarg2") == 2
+        assert isinstance(mock_op.args[0], OperationMock)
+        assert "arg1" in mock_op.args and mock_op.args[1] == "arg1"
+        assert "arg2" in mock_op.args and mock_op.args[2] == "arg2"
+        assert "kwarg1" in mock_op.kwargs and mock_op.kwargs.get("kwarg1") == 1
+        assert "kwarg2" in mock_op.kwargs and mock_op.kwargs.get("kwarg2") == 2
 
 

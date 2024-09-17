@@ -13,8 +13,9 @@ import shutil
 import time
 import concurrent.futures
 import copy
-from typing import Dict, NewType, Mapping, Optional
+from typing import Dict, NewType, Mapping, Optional, Union
 from atomicwrites import atomic_write
+from tapipy.configuration import Config
 
 from tapipy.util import dereference_spec, retriable
 import tapipy.errors
@@ -340,8 +341,9 @@ class Tenants(object):
 
     def reload_tenants(self):
         try:
-            sites = self.tapi_client.tenants.list_sites()
-            tenants = self.tapi_client.tenants.list_tenants()
+            # _config required to ensure user client-level config isn't applied during Tapipy initialization
+            sites = self.tapi_client.tenants.list_sites(_config=Config())
+            tenants = self.tapi_client.tenants.list_tenants(_config=Config())
         except Exception as e:
             raise errors.BaseTapyException(f"Unable to retrieve sites and tenants from the Tenants API. e: {e}")
         for t in tenants:
@@ -361,7 +363,6 @@ class Tenants(object):
                 return self.tenants[tenant_id]
             except KeyError:
                 raise errors.BaseTapyException("Tenant not found.")
-
 
 class Tapis(object):
     """
@@ -386,6 +387,7 @@ class Tapis(object):
                  tenants: Tenants = None,
                  debug_prints: bool = True,
                  resource_dicts: dict = {},
+                 config: Union[Config, dict] = Config(), # Provide a default configuration object
                  plugins = [], # list[str] <-- this type doesn't compile in python < 3.9
                  **kwargs
                  ):
@@ -494,6 +496,14 @@ class Tapis(object):
         # method signature should be def fn(op: Opertaion, response: Response, **kwargs)
         self.plugin_on_call_post_request_callables = []
 
+        self.config = config
+        if type(config) == dict:
+            self.config = Config(**config)
+        # Set the configuration object
+        if type(config) not in [Config, dict]:
+            raise TypeError("Tapis Client Config must be an instance of 'Config' or a dictionary")
+
+
         # we lazy-load the tenant_cache to prevent making a call to the Tenants API when not needed.
         if tenants:
             self.tenant_cache = tenants
@@ -505,6 +515,8 @@ class Tapis(object):
             for tid, t in self.tenant_cache.tenants.items():
                 if t.base_url == base_url:
                     self.tenant_id = t.tenant_id
+
+        
 
         for p in plugins:
             # call each plugin's on_tapis_client_instantiation() function with all args passed in.

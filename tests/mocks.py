@@ -1,8 +1,14 @@
 from tapipy.util import retriable
+from tapipy.configuration import Config
 
 
-class RetriableMock:
-    def __init__(self, raises=None, succeeds_on_nth_retry=None, result=None):
+class TapisClientMock:
+    def __init__(self, config: Config=None):
+        self.config = Config() if config == None else config
+
+class OperationMock:
+    def __init__(self, raises=None, succeeds_on_nth_retry=None, result=None, config: Config=None):
+        self.tapis_client = TapisClientMock(config=config)
         self._raises = raises
         self._succeeds_on_nth_retry=succeeds_on_nth_retry
         self._result = result

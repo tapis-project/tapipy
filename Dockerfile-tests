@@ -14,6 +14,7 @@ RUN python -m pip install --upgrade pip
 
 # Moving files
 ADD tests/tapipy-tests.py /home/tapis/tapipy-tests.py
+ADD tests /home/tapis/tests
 
 # Add tapipy files and build with Poetry build.
 ADD . /home/tapis/tapipy-install-dir
@@ -25,4 +26,5 @@ RUN pip install *.whl
 WORKDIR /home/tapis
 
 # Testing
-ENTRYPOINT ["pytest", "--verbose", "/home/tapis/tapipy-tests.py"]
+#ENTRYPOINT ["pytest", "--verbose", "/home/tapis/tapipy-tests.py"]
+ENTRYPOINT [ "/home/tapis/tests/run.sh" ]
