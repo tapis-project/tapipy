@@ -6,6 +6,7 @@ import time
 import subprocess
 import pytest
 from tapipy.tapis import Tapis, TapisResult
+from tapipy.errors import InvalidInputError
 
 
 BASE_URL = os.getenv("base_url", "https://dev.develop.tapis.io")
@@ -24,6 +25,7 @@ def client():
 # -----------------------------------------------------
 # Tests to check parsing of different result structures -
 # -----------------------------------------------------
+
 def test_tapisresult_list_simple():
     result = ['a',  1, 'b', True, None, 3.14159, b'some bytes']
     tr = TapisResult(result)
@@ -308,6 +310,74 @@ def test_debug_flag_tenants(client):
     assert hasattr(debug.request, 'url')
     assert hasattr(debug.response, 'content')
 
+# ----------------
+# tracking_id tests - Confluence: Proposal for File Provenance Auditing
+# ----------------
+
+def validate_tracking_id(tracking_id):
+    if not isinstance(tracking_id, str):
+        raise InvalidInputError(
+            msg="The _x_tapis_tracking_id argument, if passed, must be a string.")
+
+    if not tracking_id.isascii():
+        raise InvalidInputError(
+            msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed by a single period, followed by an ASCII universally unique identifier string. Must be an entirely ASCII string.")
+
+    if len(tracking_id) > 126:
+        raise InvalidInputError(
+            msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed by a single period, followed by an ASCII universally unique identifier string. Must be less than 126 characters.")
+
+    if tracking_id.count('.') != 1:
+        raise InvalidInputError(
+            msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed by a single period, followed by an ASCII universally unique identifier string. count('.') != 1.")
+
+    tracking_namespace, tracking_id = tracking_id.split('.')
+    if not all(c.isalnum() or c == '_' for c in tracking_namespace):
+        raise InvalidInputError(msg="Error: tracking_namespace contains invalid characters. Alphanumeric + underscores only.")
+
+    if not all(c.isalnum() or c == '-' for c in tracking_id):
+        raise InvalidInputError(msg="Error: tracking_id contains invalid characters. Alphanumeric + hyphens only.")
+
+def test_tracking_id_validation(client):
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id=True) # Not a string
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.iden.tifier") # More than one period
+
+    result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifier") # Should work
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifier-with-non-ascii-字符")  # Non-ASCII characters
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifier" * 10)  # Length > 126
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespaceidentifier")  # No period
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace..identifier")  # More than one period
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifi.er")  # More than one period
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifi_er")  # id only allowed alphanumeric and hyphens after .
+
+    result = client.tenants.list_tenants(_x_tapis_tracking_id="names_ace.identifi-er")  # namespace only allowed alphanumeric and underscores (This is proper)
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace!@#.identifier")  # Invalid characters in namespace
+
+    with pytest.raises(InvalidInputError):
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifier!@#")  # Invalid characters in identifier
+
+    # Valid case
+    try:
+        result = client.tenants.list_tenants(_x_tapis_tracking_id="namespace.identifier")
+    except InvalidInputError:
+        pytest.fail("validate_tracking_id() raised InvalidInputError unexpectedly!")
 
 # -----------------------
 # Tapipy import timing test -

@@ -1100,6 +1100,57 @@ class Operation(object):
                 raise errors.InvalidInputError(
                     msg="The headers argument, if passed, must be a dictionary-like object.")
 
+        # if X-Tapis-Tracking_ID (regardless of case) is in the headers we need to set tracking_id for validation
+        tracking_id = None
+        for k, v in headers.items():
+            if k.lower() == 'x-tapis-tracking-id' or k.lower() == 'x_tapis_tracking_id':
+                tracking_id = headers.pop(k)
+                break
+        if '_x_tapis_tracking_id' in kwargs:
+            if tracking_id:
+                raise errors.InvalidInputError(msg="The _x_tapis_tracking_id argument and the X-Tapis-Tracking-ID header cannot both be set.")
+            else:
+                tracking_id = kwargs.pop('_x_tapis_tracking_id')
+
+        # tracking_id header needs to be passed through to __call__ headers for splunk audit trails
+        if tracking_id:
+            try:
+                if not isinstance(tracking_id, str):
+                    raise errors.InvalidInputError(
+                        msg="The _x_tapis_tracking_id argument, if passed, must be a string.")
+
+                if not tracking_id.isascii():
+                    raise errors.InvalidInputError(
+                        msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed be a single period, followed by an ASCII universally unique identifier string. Must be an entirely ASCII string.")
+
+                if len(tracking_id) > 126:
+                    raise errors.InvalidInputError(
+                        msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed be a single period, followed by an ASCII universally unique identifier string. Must be less than 126 characters.")
+
+                # only one . in string
+                if tracking_id.count('.') != 1:
+                    raise errors.InvalidInputError(
+                        msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed be a single period, followed by an ASCII universally unique identifier string. count('.') != 1.")
+
+                # ensure doesn't start or end with .
+                if tracking_id.startswith('.') or tracking_id.endswith('.'):
+                    raise errors.InvalidInputError(
+                        msg="_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed be a single period, followed by an ASCII universally unique identifier string. Cannot start or end with '.'.")
+
+                tracking_namespace, tracking_unique_identifier = tracking_id.split('.')
+                # check namespace is alphanumeric + underscores
+                if not all(c.isalnum() or c == '_' for c in tracking_namespace):
+                    raise errors.InvalidInputError(msg="Error: tracking_namespace contains invalid characters. Alphanumeric + underscores only.")
+
+                # check tracking_unique_identifier is alphanumeric + hyphens
+                if not all(c.isalnum() or c == '-' for c in tracking_unique_identifier):
+                    raise errors.InvalidInputError(msg="Error: tracking_unique_identifier contains invalid characters. Alphanumeric + hyphens only.")
+
+                headers.update({'X-Tapis-Tracking-ID': tracking_id})
+            except ValueError:
+                raise errors.InvalidInputError(
+                    msg=f"_x_tapis_tracking_id validation error. <namespace>.<unique identifier>. namespace is a non-empty, ASCII string of alphanumeric characters and underscores, followed be a single period, followed by an ASCII universally unique identifier string. Got x_tapis_tracking_id: {tracking_id}")
+
         # construct the data -
         data = None
         files = None
