@@ -2,6 +2,17 @@
 All notable changes to this project will be documented in this file.
 
 
+## 1.7.1 - 2024-11-15
+### Added
+- Adding support for _x_tapis_tracking_id variable with validation. This sends the header when users call tapipy operations and specify the value in the call.
+
+### Changed
+- No change.
+
+### Removed
+- No change.
+
+
 ## 1.7.0 - 2024-09-13
 ### Added
 - Poetry lock update
