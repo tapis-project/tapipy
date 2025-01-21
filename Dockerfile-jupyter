@@ -11,7 +11,7 @@ ADD requirements-jupyter.txt /requirements.txt
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 RUN pip install -r /requirements.txt
-ENTRYPOINT ["jupyter-notebook", "--ip", "0.0.0.0", "--allow-root"]
+ENTRYPOINT ["jupyter", "lab", "--ip", "0.0.0.0", "--allow-root"]
 ENV JUPYTER_ENABLE_LAB yes
 WORKDIR "/home"
 
