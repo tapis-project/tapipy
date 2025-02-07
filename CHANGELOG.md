@@ -1,6 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.8.1 - 2025-02-07
+### Added
+- No change.
+
+### Changed
+- Updated specs for systems and files.
+
+### Removed
+- No change.
+
+
 ## 1.8.0 - 2025-02-07
 ### Added
 - No change.
