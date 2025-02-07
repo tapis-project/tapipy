@@ -1,6 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
 
+## 1.8.0 - 2025-02-07
+### Added
+- No change.
+
+### Changed
+- Updated specs for apps, files, jobs, notifications, sk, systems, workflows.
+
+### Removed
+- No change.
+
 
 ## 1.7.1 - 2024-11-15
 ### Added

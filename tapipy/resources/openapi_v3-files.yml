@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Files API
   description: The Tapis Files API provides for management of file resources on Tapis systems
-  version: '1.3.6'
+  version: '1.8.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Files API - CICSupport"
@@ -21,8 +21,6 @@ servers:
   - url: 'https://dev.develop.tapis.io/'
     description: Development environment
     variables: {}
-security:
-  - TapisJWT: []
 tags:
   - name: General
     description: General service health and readiness
@@ -49,7 +47,13 @@ tags:
     description: |
       In addition to fine grained permissions support, Tapis also supports a higher level approach to granting access.
       This approach is known simply as *sharing*. The sharing API allows you to share a path with a set of users as
-      well as share publicly with all users in a tenant. Sharing a path grants users READ or MODIFY access to the path.
+      well as share publicly with all users in a tenant.
+      Sharing a path grants users READ access to the path. If the system has a dynamic *effectiveUserId*, then
+      MODIFY access is also granted.
+      Note that if system type is ``IRODS`` and the attribute *useProxy* is set to ``true`` then the system is
+      also treated as having a dynamic *effectiveUserId* and users will be granted MODIFY access. 
+
+      In the context of running a job, sharing will also grant users READ and MODIFY access to the path.
       
       Please note that the underlying host associated with a system typically also has it's own access controls.
 
@@ -113,6 +117,8 @@ paths:
         context. *sharedCtx* must be set to the share grantor.
         Tapis will include the share grantor as part of authorization checks.
       operationId: listFiles
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -128,6 +134,20 @@ paths:
           schema:
             type: string
           example: directoryA/directoryB/
+        - name: pattern
+          in: query
+          description: |
+            Wildcard pattern (glob) or regular expression to filter the results returned by this request.  Regular 
+            expressions must have the prefix "regex:".  Only files where the name matches the pattern will be 
+            returned.  The pattern is evaluated against the filename portion of the path only, and not the entire 
+            path.  For example to match a file that begins with "myFile" you could use a pattern of "myFile*" or 
+            "regex:myFile.*".  Or, to match files that end with .txt, you could supply a pattern of "*.txt" or 
+            "regex:.*\.txt$".  Recursive listings filter only against filnames also - so even if the directory 
+            doesn't match the pattern, files in the directory can be returned.  See documentation for Java regex 
+            for the exact details of how Java handles regular expressions.  NOTE - this is only supported for linux 
+            systems at present.
+          schema:
+            type: string
         - name: limit
           in: query
           description: pagination limit
@@ -205,6 +225,8 @@ paths:
         Move or copy a file, directory or object on {systemID} at path {path}.
         Not all operations supported for all system types.
       operationId: moveCopy
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -266,6 +288,8 @@ paths:
       description: |
         The file or object will be uploaded at the {path} independent of the original name.
       operationId: insert
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -336,6 +360,8 @@ paths:
         the prefix *rootDir* will be deleted. So if the *rootDir* is also the empty string, then all objects in the bucket
         will be removed.
       operationId: delete
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -400,6 +426,8 @@ paths:
 
         If the path already exists as a directory, no error will be returned.
       operationId: mkdir
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -457,6 +485,8 @@ paths:
       description: |
         Get native stat information for a file or directory for a system of type LINUX.
       operationId: getStatInfo
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -522,6 +552,8 @@ paths:
       description: |
         Run a native operation on a path. Operations are chmod, chown or chgrp. For a system of type LINUX.
       operationId: runLinuxNativeOp
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -592,6 +624,8 @@ paths:
       description: |
         Get file ACLs for files or directories for a system of type LINUX.
       operationId: getFacl
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -650,6 +684,8 @@ paths:
         The operations support adding or removing Acl Entries as well as removing all acls or all
         default acls
       operationId: setFacl
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -730,6 +766,8 @@ paths:
         context. *sharedCtx* must be set to the share grantor.
         Tapis will include the share grantor as part of authorization checks.
       operationId: getContents
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -794,6 +832,8 @@ paths:
       description: |
         Get a list of transfer tasks starting with the most recent.
       operationId: getRecentTransferTasks
+      security:
+        - TapisJWT: []
       parameters:
         - name: limit
           in: query
@@ -826,6 +866,8 @@ paths:
         Note that not all combinations of system types are supported. For example, transfers involving a GLOBUS
         system must be GLOBUS to GLOBUS.
       operationId: createTransferTask
+      security:
+        - TapisJWT: []
       requestBody:
         content:
           application/json:
@@ -844,8 +886,31 @@ paths:
       tags:
         - Transfers
       description: |
-        Retrieve a transfer task.
+        Retrieve a transfer task. By default only the top level attributes are included in the result.
+        The top level attributes are: tenantId, uuid, status, username, tag, created, startTime, endTime, errorMessage.
+        The query parameter *includeSummary* may be set to *true* to also include totalTransfers, completeTransfers
+        and estimatedTotalBytes. The default for *includeSummary* is *false*.
+
+        Certain services may use the query parameter *impersonationId* to be used in place of the requesting
+        Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*
+        for the system.
+
+        TransferTask attributes:
+          - *tenantId*: tenant associated with the transfer task.
+          - *uuid*: Unique id of the transfer task.
+          - *tag*: Optional tag provided by user who requested the transfer.
+          - *username*: Tapis user who requested the transfer. 
+          - *status*: ACCEPTED, STAGED, IN_PROGRESS, COMPLETED, CANCELLED, FAILED, FAILED_OPT, PAUSED
+          - *created*: Timestamp 
+          - *startTime*: Timestamp
+          - *endTime*: Timestamp
+          - *errorMessage*: Error message, if applicable.
+          - *totalTransfers*: Total number of child transfers requested.
+          - *completeTransfers*: Number of child transfers completed.
+          - *estimatedTotalBytes*: Estimate of total number of bytes transferred by all child tasks.
       operationId: getTransferTask
+      security:
+        - TapisJWT: []
       parameters:
         - name: transferTaskId
           in: path
@@ -854,6 +919,16 @@ paths:
           schema:
             type: string
           example: 6491c2a5-acb2-40ef-b2c0-bc1fc4cd7e6c
+        - name: includeSummary
+          in: query
+          description: Indicates if summary information such as *estimatedTotalBytes* should be included.
+          schema:
+            type: boolean
+        - name: impersonationId
+          in: query
+          description: Restricted. Only certain services may impersonate a Tapis user.
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -867,6 +942,8 @@ paths:
       description: |
         Request that a transfer task be cancelled.
       operationId: cancelTransferTask
+      security:
+        - TapisJWT: []
       parameters:
         - name: transferTaskId
           in: path
@@ -887,8 +964,17 @@ paths:
       tags:
         - Transfers
       description: |
-        Retrieve detailed information for a transfer task.
+        Retrieve all information for a transfer task, including totalTransfers, completedTransfers, estimatedTotalBytes,
+        list of parents and list of children for each parent.
+
+        Certain services may use the query parameter *impersonationId* to be used in place of the requesting
+        Tapis user. Tapis will use this user Id when performing authorization and resolving the *effectiveUserId*
+        for the system.
+
+        For more information on transfer task attributes please see *getTransferTask*.
       operationId: getTransferTaskDetails
+      security:
+        - TapisJWT: []
       parameters:
         - name: transferTaskId
           in: path
@@ -919,6 +1005,8 @@ paths:
         Get the Tapis permissions for a user for the system and path.
         If no user specified then permissions are retrieved for the user making the request.
       operationId: getPermissions
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -950,6 +1038,8 @@ paths:
       description: |
         Grant access to a path for a user. Access may be READ or MODIFY. MODIFY implies READ.
       operationId: grantPermissions
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -982,6 +1072,8 @@ paths:
       description: |
         Revoke access for a user for the system and path. All access is revoked.
       operationId: deletePermissions
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1018,7 +1110,11 @@ paths:
       description: |
         Retrieve all sharing information for a path on a system. This includes all users with whom the path
         has been shared and whether or not the path has been made publicly available.
+        Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
+        and MODIFY access to the path.
       operationId: getShareInfo
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1069,7 +1165,11 @@ paths:
         Create or update sharing information for a path on a system. The path will be shared with the list of users
         provided in the request body. Requester must be owner of the system. For LINUX systems path sharing is
         hierarchical.
+        Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
+        and MODIFY access to the path.
       operationId: sharePath
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1121,7 +1221,11 @@ paths:
       summary: Share a path on a system publicly with all users in the tenant.
       description: |
         Share a path on a system with all users in the tenant. Requester must be owner of the system.
+        Sharing a path grants users READ access to the path or, in the context of running a job, it grants users READ
+        and MODIFY access to the path.
       operationId: sharePathPublic
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1162,6 +1266,8 @@ paths:
         Create or update sharing information for a path on a system. The path will be unshared with the list of users
         provided in the request body. Requester must be owner of the system.
       operationId: unSharePath
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1214,6 +1320,8 @@ paths:
       description: |
         Remove public sharing for a path on a system. Requester must be owner of the system.
       operationId: unSharePathPublic
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1253,6 +1361,8 @@ paths:
       description: |
         Remove all shares for a path on a system including public access. This will also be done for all sub-paths.
       operationId: unSharePathAll
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           in: path
@@ -1302,6 +1412,8 @@ paths:
         further authorization.  This will nearly identical to calling
         the files service getContents endpoint.
       operationId: createPostIt
+      security:
+        - TapisJWT: []
       parameters:
         - name: systemId
           description: The name of the system to create the PostIt for.
@@ -1372,6 +1484,8 @@ paths:
           - *OWNED* Include only items owned by requester (Default)
           - *ALL* Include all items requester is authorized to view. (Tenant admins can view all PostIts in their tenant).
       operationId: listPostIts
+      security:
+        - TapisJWT: []
       parameters:
         - name: listType
           in: query 
@@ -1449,6 +1563,8 @@ paths:
         - PostIts
       description: Get a single PostIt.  This does not redeem the PostIt. 
       operationId: getPostIt
+      security:
+        - TapisJWT: []
       parameters:
         - name: postitId
           in: path
@@ -1500,6 +1616,8 @@ paths:
       description: |
         Update selected fields of a PostIt. 
       operationId: updatePostIt
+      security:
+        - TapisJWT: []
       parameters:
         - name: postitId
           in: path
@@ -1557,6 +1675,8 @@ paths:
         - PostIts
       description: Delete a PostIt. 
       operationId: deletePostIt
+      security:
+        - TapisJWT: []
       parameters:
         - name: postitId
           in: path
@@ -1664,6 +1784,12 @@ paths:
 # --- Components ---------------------------------------------------------------
 # ------------------------------------------------------------------------------
 components:
+  securitySchemes:
+    TapisJWT:
+      type: apiKey
+      description: Tapis signed JWT token authentication
+      name: X-Tapis-Token
+      in: header
   schemas:
     # ------------------------------------------------------------------------------
     # --- Model objects ------------------------------------------------------------
@@ -1756,6 +1882,10 @@ components:
             $ref: '#/components/schemas/FileInfo'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     # --- FilePermission -----------------------------------------------------------
@@ -1811,9 +1941,6 @@ components:
     TransferTask:
       type: object
       properties:
-        id:
-          type: integer
-          format: int32
         username:
           type: string
         tenantId:
@@ -1856,9 +1983,6 @@ components:
     TransferTaskParent:
       type: object
       properties:
-        id:
-          type: integer
-          format: int32
         tenantId:
           type: string
         username:
@@ -1901,9 +2025,6 @@ components:
     TransferTaskChild:
       type: object
       properties:
-        id:
-          type: integer
-          format: int32
         tenantId:
           type: string
         username:
@@ -2075,6 +2196,20 @@ components:
           type: boolean
           default: false
           description: Allow the full transfer to succeed even if this element fails.
+        transferType:
+          type: string
+          enum:
+          - TRANSFER
+          - SERVICE_MOVE_DIRECTORY_CONTENTS
+          - SERVICE_MOVE_FILE_OR_DIRECTORY
+          default: null
+          description: |
+            If this value is set to anything other than TRANSFER, both the source and target MUST,
+            be on the same tapis system.  If the value is SERVICE_MOVE_DIRECTORY_CONTENTS, the 
+            source URI is expected to be a directory, and the contents of that directory will be
+            transfered to the target URI.  The target must be an existing directory or the operation
+            will fail.  If the value is SERVICE_MOVE_FILE_OR_DIRECTORY the file or directory will
+            be moved to the target URI.  If the target already exists, it will be overwritten.
         srcSharedCtx:
           $ref: '#/components/schemas/UserNameString'
         destSharedCtx:
@@ -2173,6 +2308,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         result:
           type: object
         metadata:
@@ -2188,6 +2327,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     StringResponse:
@@ -2200,6 +2343,10 @@ components:
         result:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           type: object
@@ -2214,6 +2361,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     RespChangeCount:
@@ -2224,6 +2375,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultChangeCount'
@@ -2249,6 +2404,10 @@ components:
             $ref: '#/components/schemas/FileInfo'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     FileStatInfoResponse:
@@ -2262,6 +2421,10 @@ components:
           $ref: '#/components/schemas/FileStatInfo'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     NativeLinuxOpResponse:
@@ -2274,6 +2437,10 @@ components:
         result:
           $ref: '#/components/schemas/NativeLinuxOpResultResponse'
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           type: object
@@ -2299,6 +2466,10 @@ components:
         result:
           $ref: '#/components/schemas/NativeLinuxSetFaclResult'
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           type: object
@@ -2326,6 +2497,10 @@ components:
             $ref: '#/components/schemas/AclEntryInfo'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
         
@@ -2340,6 +2515,10 @@ components:
           $ref: '#/components/schemas/FilePermission'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     RespShareInfo:
@@ -2350,6 +2529,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         result:
           $ref: '#/components/schemas/ResultShareInfo'
@@ -2393,6 +2576,10 @@ components:
           $ref: '#/components/schemas/TransferTask'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     TransferTaskListResponse:
@@ -2408,6 +2595,10 @@ components:
             $ref: '#/components/schemas/TransferTask'
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           type: object
     PostItResponse:
@@ -2420,6 +2611,10 @@ components:
         result:
           $ref: '#/components/schemas/PostIt'
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           type: object
@@ -2435,6 +2630,10 @@ components:
           items:
             $ref: '#/components/schemas/PostIt'
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           type: object

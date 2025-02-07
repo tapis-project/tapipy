@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Systems API
   description: The Tapis Systems API provides for management of Tapis Systems including permissions, credentials and Scheduler Profiles.
-  version: '1.6.3'
+  version: '1.8.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Systems API - CICSupport"
@@ -43,6 +43,8 @@ tags:
       as well as share publicly with all users in a tenant. Sharing grants users READ and EXECUTE access to the system.
       When the system has a dynamic *effectiveUserId*, sharing also allows for MODIFY access to all paths for calls
       made through the Files service.
+      If system type is ``IRODS`` and the attribute *useProxy* is set to ``true`` then the system is also treated as
+      having a dynamic *effectiveUserId* and users will be granted MODIFY access.
       Note that Tapis permissions and sharing are independent of native permissions enforced by the underlying
       system host.
   - name: Child Systems
@@ -234,7 +236,6 @@ paths:
         If after resolution the final path does not have the required leading slash (/) to make it an absolute path,
         then one will be prepended.
         The following conditions must be met in order to use the macro
-
           - System must be of type LINUX
           - Credentials must be provided when system is created.
           - Macro HOST_EVAL() must only appear once and must be the first element of the path. Including a leading slash is optional.
@@ -728,19 +729,10 @@ paths:
       description: |
         Update all updatable attributes of a system using a request body identical to POST. System must exist.
 
-        If the *effectiveUserId* is static (i.e. not *${apiUserId}*) then credentials may optionally be provided in the
-        *authnCredential* attribute of the request body. The Systems service does not store the secrets in its
-        database, they are persisted in the Security Kernel.
-
-
-        By default for LINUX and S3 type systems credentials provided are verified. Use query parameter
-        skipCredentialCheck=true to bypass initial verification of credentials.
-
         Note that certain attributes in the request body (such as tenant) are allowed but ignored so that the JSON
         result returned by a GET may be modified and used when making a PUT request to update a system.
 
         The attributes that are allowed but ignored for both PUT and POST are
-
           - tenant
           - uuid
           - deleted
@@ -748,16 +740,18 @@ paths:
           - updated
 
         In addition for a PUT operation the following non-updatable attributes are allowed but ignored
-
           - id
           - systemType
           - owner
+          - effectiveUserId
+          - authnCredential
           - enabled
           - bucketName
           - rootDir
           - canExec
 
-        Note that the attributes owner and enabled may be modified using other endpoints.
+        Note that the attributes *owner*, *enabled* and *authnCredential* may be modified using other endpoints.
+        Attribute *effectiveUserId* may be updated using the endpoint **patchSystem**.
       operationId: putSystem
       security:
         - TapisJWT: []
@@ -1294,6 +1288,14 @@ paths:
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then the operation is allowed
         if *{userName}* is the Tapis user making the request.
 
+        Use query parameter *createTmsKeys=true* to have the service call a Trust Manager System (TMS) server to create and
+        store an ssh keypair. Default is *false*.
+        Please note that the following restrictions apply:
+          - Tapis installation for your site must be configured to support the Trust Manager System (TMS).
+          - The host for the system must have the sshd configuration set up to use TMS.
+          - The *effectiveUserId* must be dynamic.
+          - Mapping of user using *loginUser* is not supported.
+
         By default credentials for LINUX and S3 type systems are verified. Use query parameter
         *skipCredentialCheck=true* to bypass initial credential validation.
       operationId: createUserCredential
@@ -1310,6 +1312,12 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/UserNameString'
+        - name: createTmsKeys
+          in: query
+          description: Use TMS to generate and store an ssh keypair. Default is false.
+          schema:
+            type: boolean
+            default: false
         - name: skipCredentialCheck
           in: query
           description: Bypass initial credential validation. Default is false.
@@ -1405,7 +1413,9 @@ paths:
         for LINUX and S3 type systems.
 
         If the *effectiveUserId* for the system is dynamic (i.e. equal to *${apiUserId}*) then *{userName}* is interpreted
-        as a Tapis user and a search is made for credentials associated with *{userName}*.
+        as a Tapis user and a search is made for credentials associated with *{userName}*. Note that the Tapis user
+        *{userName}* may have a mapping to a host *loginUser* in which case the *loginUser* will be used when
+        verifying the credentials.
 
         If the *effectiveUserId* for the system is static (i.e. not *${apiUserId}*) then *{userName}* is interpreted
         as the login user to be used when accessing the host. Note that this would typically be the current
@@ -1476,7 +1486,7 @@ paths:
       summary: Retrieve a Globus URL that can be used to generate an authorization code for an OAuth2 flow.
       description: |
         Retrieve a Globus URL + Session Id that can be used to generate an oauth2 authorization code associated with
-        the given system.
+        the given system. System must be of type GLOBUS.
         In Globus, the code is referred to as a *Native App Authorization Code*.
         The host property of the system is used as the Globus Endpoint Id or Globus Collection Id.
         Once a user has obtained an authorization code, the corresponding Systems endpoint for generating
@@ -1502,7 +1512,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespGlobusAuthUrl'
         '400':
-          description: Input error.
+          description: Input error or system not of type GLOBUS.
           content:
             application/json:
               schema:
@@ -1532,6 +1542,7 @@ paths:
       summary: Use a Globus authorization code + Tapis session Id to generate tokens
       description: |
         Use a Globus *Native App Authorization Code* and a Tapis session Id to generate a pair of access and refresh tokens.
+        System must be of type GLOBUS.
         The Systems service will use the Tapis Security Kernel to store the tokens for the given system and user.
         The session Id is a Tapis Id that is used to track the oauth2 flow that is started when a call to the
         getGlobusAuthUrl endpoint is made.
@@ -1567,6 +1578,12 @@ paths:
       responses:
         '200':
           description: Tokens generated and credentials updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
+        '400':
+          description: Input error or system not of type GLOBUS.
           content:
             application/json:
               schema:
@@ -2263,6 +2280,8 @@ components:
           type: boolean
           default: false
           description: Indicates if system allows for the creation of child systems.
+        parentId:
+          $ref: '#/components/schemas/ParentSysId'
         mpiCmd:
           type: string
           minLength: 1
@@ -2456,6 +2475,12 @@ components:
           type: string
         refreshToken:
           type: string
+        tmsPrivateKey:
+          type: string
+        tmsPublicKey:
+          type: string
+        tmsFingerprint:
+          type: string
         certificate:
           type: string
     # --- ShareInfo ------------------------------------------------------------------
@@ -2510,6 +2535,11 @@ components:
       minLength: 1
       maxLength: 80
       description: An alternate system to use as a Data Transfer Node (DTN) during job execution.
+    ParentSysId:
+      type: string
+      minLength: 1
+      maxLength: 80
+      description: Parent system associated with this child system.
     IdString:
       type: string
       minLength: 1
@@ -2684,12 +2714,8 @@ components:
           $ref: '#/components/schemas/DescriptionString'
         host:
           $ref: '#/components/schemas/SysHost'
-        effectiveUserId:
-          $ref: '#/components/schemas/EffectiveUserId'
         defaultAuthnMethod:
           $ref: '#/components/schemas/AuthnEnum'
-        authnCredential:
-          $ref: '#/components/schemas/ReqPostPutCredential'
         port:
           type: integer
           format: int32
@@ -3186,7 +3212,7 @@ components:
       properties:
         url:
           type: string
-        sesssionId:
+        sessionId:
           type: string
         systemId:
           type: string
@@ -3233,6 +3259,7 @@ components:
         - PKI_KEYS
         - ACCESS_KEY
         - TOKEN
+        - TMS_KEYS
         - CERT
     CategoryEnum:
       type: string
@@ -3272,6 +3299,7 @@ components:
       type: string
       enum:
         - MEM
+        - PARTITION
     OperationTypeEnum:
       type: string
       enum:

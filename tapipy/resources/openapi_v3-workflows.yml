@@ -729,7 +729,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RespResourceURL'
+                $ref: '#/components/schemas/RespGroupSecret'
         '400':
           description: Bad request. Invalid JSON.
           content:
@@ -2085,6 +2085,35 @@ paths:
                 $ref: '#/components/schemas/RespPipelineLock'
 
   '/v3/workflows/groups/{group_id}/pipelines/{pipeline_id}/runs/{pipeline_run_uuid}':
+    post:
+      tags:
+        - PipelineRuns
+      summary: Terminate a running pipeline
+      description: Terminate a running pipeline
+      operationId: terminatePipeline
+      parameters:
+        - name: group_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_id
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/ID'
+        - name: pipeline_run_uuid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pipeline terminated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespPipelineRun'
     get:
       tags:
         - PipelineRuns
@@ -4627,6 +4656,7 @@ components:
         - "pytorch/pytorch:latest"
         - "huggingface/transformers-pytorch-gpu:latest"
         - "huggingface/transformers-pytorch-gpu:4.29.2"
+        - "ghcr.io/tobiashi26/pygeoflood-container:main"
 
     EnumTaskIOType:
       type: string
