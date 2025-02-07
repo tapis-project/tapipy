@@ -28,7 +28,7 @@ paths:
     get:
       tags:
         - general
-      description: Lightwieght health check for liveness. No authorization required.
+      description: Lightweight health check for liveness. No authorization required.
       operationId: checkHealth
       responses:
         '200':
@@ -47,8 +47,28 @@ paths:
     get:
       tags:
         - general
-      description: Lightwieght readiness check. No authorization required.
+      description: Lightweight readiness check. No authorization required.
       operationId: ready
+      responses:
+        '200':
+          description: Service ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+      deprecated: true
+  /jobs/readycheck:
+    get:
+      tags:
+        - general
+      description: Lightweight readiness check. No authorization required.
+      operationId: readycheck
       responses:
         '200':
           description: Service ready.
@@ -83,6 +103,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
+      deprecated: true
   /jobs/{jobUuid}/hide:
     post:
       tags:
@@ -1814,6 +1835,8 @@ components:
               - SAC_DTN_SYSTEM_ID
               - SAC_DTN_SYSTEM_INPUT_DIR
               - SAC_DTN_SYSTEM_OUTPUT_DIR
+        trackingId:
+          type: string
         notes:
           type: string
         mpi:

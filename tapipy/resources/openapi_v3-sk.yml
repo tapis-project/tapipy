@@ -1048,6 +1048,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespProbe'
+      deprecated: true
+  /security/readycheck:
+    get:
+      tags:
+        - general
+      description: Lightwieght readiness check. No authorization required.
+      operationId: readycheck
+      responses:
+        '200':
+          description: Service ready.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
+        '503':
+          description: Service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespProbe'
   /security/hello:
     get:
       tags:
@@ -1069,6 +1089,7 @@ paths:
                 $ref: '#/components/schemas/RespBasic'
         '500':
           description: Server error.
+      deprecated: true
   /security/share:
     get:
       tags:
@@ -2646,7 +2667,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -2776,7 +2797,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -2900,7 +2921,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -3020,7 +3041,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -3137,7 +3158,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -3272,7 +3293,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -3416,7 +3437,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -3542,7 +3563,7 @@ paths:
           - **system**
             - *sysid*: the unique system id
             - *sysuser*: the accessing user (except when keytype=cert)
-            - keytype: *sshkey* | password | accesskey | cert
+            - keytype: *sshkey* | password | accesskey | token | tmskey | cert
           - **dbcred**
             - *dbhost*:  the DBMS hostname, IP address or alias
             - *dbname*:  the database name or alias
@@ -3721,6 +3742,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -3742,6 +3767,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -3754,6 +3783,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -3791,6 +3824,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -3817,6 +3854,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -3850,6 +3891,9 @@ components:
           type: string
         updatedbyTenant:
           type: string
+        hasChildren:
+          type: boolean
+          writeOnly: true
     RespNameArray:
       type: object
       properties:
@@ -3858,6 +3902,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -3878,6 +3926,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -3986,6 +4038,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -3996,12 +4052,6 @@ components:
         checkNum:
           type: integer
           format: int64
-        databaseAccess:
-          type: boolean
-        vaultAccess:
-          type: boolean
-        tenantsAccess:
-          type: boolean
     RespShare:
       type: object
       properties:
@@ -4010,6 +4060,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -4051,6 +4105,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -4070,6 +4128,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -4141,6 +4203,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -4240,6 +4306,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -4268,6 +4338,10 @@ components:
           type: string
         version:
           type: string
+        commit:
+          type: string
+        build:
+          type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
         result:
@@ -4289,6 +4363,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -4323,6 +4401,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
@@ -4377,6 +4459,10 @@ components:
         message:
           type: string
         version:
+          type: string
+        commit:
+          type: string
+        build:
           type: string
         metadata:
           $ref: '#/components/schemas/ResultMetadata'
