@@ -239,7 +239,7 @@ def unpickle_and_create_specs(resources: Resources, spec_dir: str):
                 dicts.update({resource_name: spec_dict})
             except Exception as e:
                 print(f'Error reading local "{resource_name}" resource. '
-                      f'Ensure path is absolute {spec_path}. e:{e}')
+                      f'Ensure path is absolute {spec_path} e:{e}')
             continue
         _, _, spec_path = get_file_info_from_url(url, spec_dir)
         try:

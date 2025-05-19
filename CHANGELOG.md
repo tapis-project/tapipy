@@ -1,5 +1,26 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+## 1.8.3 - 2025-05-19
+### Added
+- Added flake.nix for development.
+
+### Changed
+- Updated specs for apps and pods.
+
+### Removed
+- No change.
+
+
+## 1.8.2 - 2025-03-26
+### Added
+- No change.
+
+### Changed
+- Updated specs for authenticator and pods.
+
+### Removed
+- No change.
+
 
 ## 1.8.1 - 2025-02-07
 ### Added

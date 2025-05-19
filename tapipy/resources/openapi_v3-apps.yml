@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Tapis Applications API
   description: The Tapis Applications API provides for management of Tapis applications including permissions.
-  version: '1.8.1'
+  version: '1.8.2'
   termsOfService: "https://tapis-project.org"
   contact:
     name: "Applications API - CICSupport"
@@ -590,7 +590,7 @@ paths:
               $ref: '#/components/schemas/ReqPatchApp'
       responses:
         '200':
-          description: Application updated.
+          description: Application version updated.
           content:
             application/json:
               schema:
@@ -608,7 +608,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/RespBasic'
         '404':
-          description: Application not found.
+          description: Application version not found.
           content:
             application/json:
               schema:
@@ -672,7 +672,7 @@ paths:
               $ref: '#/components/schemas/ReqPutApp'
       responses:
         '200':
-          description: Application updated.
+          description: Application version updated.
           content:
             application/json:
               schema:
@@ -689,8 +689,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/RespBasic'
+        '404':
+          description: Application version not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RespBasic'
         '409':
-          description: Application already exists.
+          description: Application version already exists.
           content:
             application/json:
               schema:

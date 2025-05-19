@@ -619,6 +619,9 @@ components:
         client_id:
           type: string
           description: The client_id being authenticated (for device_code grant).
+        client_key:
+          type: string
+          description: The client_key being authenticated (optional for authorization_code grant).
         grant_type:
           type: string
           description: The OAuth2 grant type being used; either password, authorization_code or refresh_token.
@@ -702,6 +705,9 @@ components:
           description: A Tapis access token object.
           properties:
             access_token:
+              type: string
+              description: The actual access token as a JWT
+            id_token:
               type: string
               description: The actual access token as a JWT
             expires_at:

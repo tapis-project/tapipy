@@ -17,7 +17,8 @@ install: build
 
 test: build
 	docker build -t tapis/tapipy-tests -f Dockerfile-tests .
-	docker run -e base_url=https://tacc.develop.tapis.io -e username=username -e password=password. $$interactive --rm  tapis/tapipy-tests
+	echo 'docker run -e base_url=https://tacc.develop.tapis.io -e username=****** -e password=****** $$interactive --rm  tapis/tapipy-tests'
+	@docker run -e base_url=https://tacc.develop.tapis.io -e username=REPLACEUSERNAME -e password=REPLACEPASSWORD $$interactive --rm  tapis/tapipy-tests
 
 pull_specs:
 	python3 repo_spec_pull_script.py

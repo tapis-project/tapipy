@@ -77,49 +77,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-  /pods/auth:
-    get:
-      tags:
-      - Misc
-      summary: OAuth2 endpoint to act as middleware between pods and user traffic,
-        checking for authorization on a per url basis.
-      description: "Write to session\n\nTraefik continues to user pod if 200, otherwise\
-        \ goes to result.\nProcess a callback from a Tapis authorization server:\n\
-        \  1) Get the authorization code from the query parameters.\n  2) Exchange\
-        \ the code for a token\n  3) Add the user and token to the sessionhttps\n\
-        \  4) Redirect to the /data endpoint."
-      operationId: auth
-      parameters:
-      - required: false
-        schema:
-          type: string
-          title: Username
-        name: username
-        in: query
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-  /pods/auth/callback:
-    get:
-      tags:
-      - Misc
-      summary: callback.
-      operationId: auth
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema: {}
   /pods/templates:
     get:
       tags:
@@ -150,7 +107,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Template'
+              $ref: '#/components/schemas/NewTemplate'
         required: true
       responses:
         '200':
@@ -404,7 +361,7 @@ paths:
   /pods/templates/{template_id}/permissions:
     get:
       tags:
-      - Templates
+      - Permissions
       summary: get_template_permissions
       description: 'Get a templates permissions.
 
@@ -442,7 +399,7 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
     post:
       tags:
-      - Templates
+      - Permissions
       summary: set_template_permission
       description: 'Set a permission for a template.
 
@@ -477,7 +434,7 @@ paths:
   /pods/templates/{template_id}/permissions/{user}:
     delete:
       tags:
-      - Templates
+      - Permissions
       summary: delete_template_permission
       description: 'Delete a permission from a template.
 
@@ -515,6 +472,7 @@ paths:
       summary: get_images
       description: 'Get all images allowed globally + in respective tenant.
 
+
         Returns a list of images.'
       operationId: get_images
       responses:
@@ -546,6 +504,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ImageResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/images/bulk:
+    post:
+      tags:
+      - Images
+      summary: add_images
+      description: 'Add multiple images with inputted information.
+
+
+        Returns new image objects.'
+      operationId: add_images
+      parameters:
+      - description: Whether to skip duplicates or fail on duplicates.
+        required: false
+        schema:
+          type: boolean
+          title: Skip Duplicates
+          description: Whether to skip duplicates or fail on duplicates.
+          default: false
+        name: skip_duplicates
+        in: query
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/NewImage'
+              type: array
+              title: New Images
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImagesResponse'
         '422':
           description: Validation Error
           content:
@@ -1504,7 +1504,7 @@ paths:
   /pods/{pod_id}/credentials:
     get:
       tags:
-      - Credentials
+      - Pods
       summary: get_pod_credentials
       description: 'Get the credentials created for a pod.
 
@@ -1539,7 +1539,7 @@ paths:
   /pods/{pod_id}/logs:
     get:
       tags:
-      - Logs
+      - Pods
       summary: get_pod_logs
       description: 'Get a pods stdout logs and action_logs.
 
@@ -1638,6 +1638,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PodPermissionsResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/exec:
+    post:
+      tags:
+      - Pods
+      summary: exec_pod_commands
+      description: 'Execute one or more commands in a pod.
+
+
+        Accepts either:
+
+        - Single command: ["sleep", "5"]
+
+        - Multiple commands: [["sleep", "5"], ["echo", "hello"]]
+
+
+        Executes commands synchronously in the pod:
+
+        - Each command runs sequentially
+
+        - Total request time = sum of all command execution times
+
+        - Request remains open until all commands complete
+
+        - Returns consolidated results for all commands
+
+
+        Response includes:
+
+        - Individual command outputs
+
+        - Success/failure status
+
+        - Execution duration'
+      operationId: exec_pod_commands
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id
+        name: pod_id
+        in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecutePodCommands'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
         '422':
           description: Validation Error
           content:
@@ -1760,6 +1818,9 @@ paths:
         - Sets status_requested to RESTART. If pod status gets to STOPPED, status_requested
         will be flipped to ON. Health should then create new pod.
 
+        - If grab_latest_template_tag is True, attempts to grab the latest version
+        of the template tag if the pod has a template.
+
 
         Returns updated pod object.'
       operationId: restart_pod
@@ -1769,6 +1830,13 @@ paths:
           title: Pod Id
         name: pod_id
         in: path
+      - required: false
+        schema:
+          type: boolean
+          title: Grab Latest Template Tag
+          default: false
+        name: grab_latest_template_tag
+        in: query
       responses:
         '200':
           description: Successful Response
@@ -1782,17 +1850,83 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id_net}/save_pod_as_template_tag:
+    post:
+      tags:
+      - Pods
+      summary: save_pod_as_template_tag
+      description: 'Endpoint takes pod_id and derives a pod_definition to create a
+        template tag from it.
+
+        Allows users to save the configuration of a particular pod as a template tag.
+
+
+        POST data contains location to save the tag and tag creation data
+
+
+        Return the template tag object.'
+      operationId: save_pod_as_template_tag
+      parameters:
+      - required: true
+        schema:
+          title: Pod Id Net
+        name: pod_id_net
+        in: path
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTemplateTagFromPod'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TemplateTagResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /pods/{pod_id_net}/auth:
     get:
       tags:
       - Pods
-      summary: OAuth2 endpoint to act as middleware between pods and user traffic,
-        checking for authorization on a per pod basis.
-      description: "Write to session\n\nTraefik continues to user pod if 200, otherwise\
-        \ goes to result.\nProcess a callback from a Tapis authorization server:\n\
-        \  1) Get the authorization code from the query parameters.\n  2) Exchange\
-        \ the code for a token\n  3) Add the user and token to the sessionhttps\n\
-        \  4) Redirect to the /data endpoint."
+      summary: pod_auth
+      description: "Auth endpoint for each pod. When a networking object defines tapis_auth=True,\
+        \ this endpoint manages auth.\n\nTraefik has a forwardAuth middleware for\
+        \ http routes. This redirects users, auth happens, if traefik gets 200 then\
+        \ traefik allows user to endpoint.\nAuth flow for a user getting to \"fastapi\
+        \ hello world\" pod at https://fastapi.pods.tacc.tapis.io.\n  1) User navigates\
+        \ to https://fastapi.pods.tacc.tapis.io\n  2) Traefik redirects user to https://tacc.tapis.io/v3/pods/fastapi/auth\n\
+        \  3) Check if logged in via cookies, if logged in, respond 200 + set user\
+        \ defined headers. Otherwise...\n  4) Pods service creates client in correct\
+        \ tenant for user or updates client if it already exists. (we expect only\
+        \ one client in use at a time)\n  5) With client the /auth endpoint redirects\
+        \ users to https://tacc.tapis.io/v3/oauth2/authorize?client_id={client_id}&redirect_uri={callback_url}&response_type=code\n\
+        \  6) User logs in via browser, authorizes client, redirects to callback_url\
+        \ at https://tacc.tapis.io/v3/pods/fastapi/auth/callback?code=CodeHere\n \
+        \ 7) Callback url exchanges code for token, gets username from token, sets\
+        \ X-Tapis-Token and X-Tapis-Username cookies\n  8) User gets redirected back\
+        \ to https://fastapi.pods.tacc.tapis.io, Traefik starts forwardAuth, user\
+        \ at this point should be authenticated\n  9) Auth endpoint responds with\
+        \ 200, sets headers specified by networking stanza, and users gets to fastapi\
+        \ hello world response.\n\nusers can specify:\n - tapis_auth=True/False -\
+        \ Turns on auth\n - tapis_auth_response_headers - dict[str] - headers to set\
+        \ on response and their values\n - tapis_auth_allowed_users - list[str] -\
+        \ list of tapis users allowed to access pod\n - tapis_auth_return_path - str\
+        \ - uri to return to after auth, default is \"passthrough\", which we save\
+        \ in cookies(?) and return to. x-forwarded-host?\n\n - response headers need\
+        \ to be slightly modifiable to allow for different application requirements\n\
+        \ - for example we have to pass username, but many apps require @email.bit,\
+        \ so user must be able to append to user.\n - tapis_auth_response_headers:\
+        \ {\"X-Tapis-Username\": \"<<tapisusername>>@tapis.io\", \"X-Tapis-Token\"\
+        : \"<<token>>\", \"OAUTH2_USERNAME_KEY\": \"username\"}\n\n - tapis_auth_allowed_users,\
+        \ checks username against .lower() of username list to make sure it's in list.\
+        \ otherwise deny"
       operationId: pod_auth
       parameters:
       - required: true
@@ -1917,6 +2051,42 @@ components:
       - status
       - version
       title: DeleteVolumeResponse
+    ExecutePodCommands:
+      properties:
+        commands:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - items:
+              items:
+                type: string
+              type: array
+            type: array
+          title: Commands
+          description: List of commands to run in pod. ex. `['sleep 5000', 'ls -l']`
+            or `[['sleep', '5000'], ['ls', '-l']]
+        total_timeout:
+          type: integer
+          title: Total Timeout
+          description: Total time (sec) to wait for all commands to finish. Default
+            300 seconds.
+          default: 300
+        command_timeout:
+          type: integer
+          title: Command Timeout
+          description: Time (sec) to wait for each command to finish. Default 60 seconds.
+          default: 60
+        fail_on_non_success:
+          type: boolean
+          title: Fail On Non Success
+          description: If True, will fail if any command does not return 0. Default
+            True.
+          default: true
+      type: object
+      required:
+      - commands
+      title: ExecutePodCommands
     FileModel:
       properties:
         path:
@@ -2090,7 +2260,6 @@ components:
           format: date-time
           title: Creation Ts
           description: Time (UTC) that this image was created.
-          default: '2024-09-11T14:11:37.342300'
         added_by:
           type: string
           title: Added By
@@ -2318,6 +2487,35 @@ components:
       title: NewSnapshot
       description: Object with fields that users are allowed to specify for the Snapshot
         class.
+    NewTemplate:
+      properties:
+        template_id:
+          type: string
+          title: Template Id
+          description: Name of template.
+        description:
+          type: string
+          title: Description
+          description: Description of template.
+          default: ''
+        metatags:
+          items:
+            type: string
+          type: array
+          title: Metatags
+          description: Metadata tags for additional search/listing functionality for
+            the template.
+          default: []
+        archive_message:
+          type: string
+          title: Archive Message
+          description: If set, metadata message to give users of this template.
+          default: ''
+      additionalProperties: false
+      type: object
+      required:
+      - template_id
+      title: NewTemplate
     NewTemplateTag:
       properties:
         pod_definition:
@@ -2342,6 +2540,29 @@ components:
       title: NewTemplateTag
       description: Object with fields that users are allowed to specify for the Template
         class.
+    NewTemplateTagFromPod:
+      properties:
+        commit_message:
+          type: string
+          title: Commit Message
+          description: Commit message for this template tag.
+        tag:
+          type: string
+          title: Tag
+          description: Tag for this template. Default is 'latest'.
+          default: latest
+        template_id:
+          type: string
+          title: Template Id
+          description: template_id this tag is linked to
+      additionalProperties: false
+      type: object
+      required:
+      - commit_message
+      - template_id
+      title: NewTemplateTagFromPod
+      description: Object with fields that users are allowed to specify for the Template
+        class when creating a new template tag from a pod.
     NewVolume:
       properties:
         volume_id:
@@ -2822,62 +3043,6 @@ components:
       - status
       - version
       title: SnapshotsResponse
-    Template:
-      properties:
-        template_id:
-          type: string
-          title: Template Id
-          description: Name of template.
-        description:
-          type: string
-          title: Description
-          description: Description of template.
-          default: ''
-        metatags:
-          items:
-            type: string
-          type: array
-          title: Metatags
-          description: Metadata tags for additional search/listing functionality for
-            the template.
-          default: []
-        archive_message:
-          type: string
-          title: Archive Message
-          description: If set, metadata message to give users of this template.
-          default: ''
-        creation_ts:
-          type: string
-          format: date-time
-          title: Creation Ts
-          description: Time (UTC) that this template was created.
-        update_ts:
-          type: string
-          format: date-time
-          title: Update Ts
-          description: Time (UTC) that this template was updated.
-        tenant_id:
-          type: string
-          title: Tenant Id
-          description: Tapis tenant used during creation of this template.
-          default: ''
-        site_id:
-          type: string
-          title: Site Id
-          description: Tapis site used during creation of this template.
-          default: ''
-        permissions:
-          items:
-            type: string
-          type: array
-          title: Permissions
-          description: Template permissions in user:level format.
-          default: []
-      additionalProperties: false
-      type: object
-      required:
-      - template_id
-      title: Template
     TemplateDeleteResponse:
       properties:
         message:
@@ -3504,20 +3669,27 @@ components:
           description: If true, will require Tapis auth to access the pod.
           default: false
         tapis_auth_response_headers:
-          items:
+          additionalProperties:
             type: string
-          type: array
+          type: object
           title: Tapis Auth Response Headers
-          description: List of headers to forward to the pod when using Tapis auth.
-          default: []
+          description: Specification of headers to forward to the pod when using Tapis
+            auth.
+          default: {}
         tapis_auth_allowed_users:
           items:
             type: string
           type: array
           title: Tapis Auth Allowed Users
           description: List of users allowed to access the pod when using Tapis auth.
+            Also accepts basic regex patterns to match against.
           default:
           - '*'
+        tapis_auth_return_path:
+          type: string
+          title: Tapis Auth Return Path
+          description: Path to redirect to when accessing the pod via Tapis auth.
+          default: /
         tapis_ui_uri:
           type: string
           title: Tapis Ui Uri
@@ -3608,6 +3780,56 @@ components:
           title: Url
           description: URL used to access the port of the pod defined in this networking
             object. Generated by service.
+          default: ''
+        ip_allow_list:
+          items:
+            type: string
+          type: array
+          title: Ip Allow List
+          description: List of IPs that are allowed to access this specific pod port.
+            If empty, all IPs are allowed. ex. ['127.0.0.1/32', '192.168.1.7']
+          default: []
+        tapis_auth:
+          type: boolean
+          title: Tapis Auth
+          description: If true, will require Tapis auth to access the pod.
+          default: false
+        tapis_auth_response_headers:
+          additionalProperties:
+            type: string
+          type: object
+          title: Tapis Auth Response Headers
+          description: Specification of headers to forward to the pod when using Tapis
+            auth.
+          default: {}
+        tapis_auth_allowed_users:
+          items:
+            type: string
+          type: array
+          title: Tapis Auth Allowed Users
+          description: List of users allowed to access the pod when using Tapis auth.
+          default:
+          - '*'
+        tapis_auth_return_path:
+          type: string
+          title: Tapis Auth Return Path
+          description: Path to redirect to when accessing the pod via Tapis auth.
+          default: /
+        tapis_ui_uri:
+          type: string
+          title: Tapis Ui Uri
+          description: Path to redirect to when accessing the pod via Tapis UI.
+          default: ''
+        tapis_ui_uri_redirect:
+          type: boolean
+          title: Tapis Ui Uri Redirect
+          description: If true, will redirect to the tapis_ui_uri when accessing the
+            pod via Tapis UI. Otherwise, just read-only uri.
+          default: false
+        tapis_ui_uri_description:
+          type: string
+          title: Tapis Ui Uri Description
+          description: Describing where the tapis_ui_uri will redirect to.
           default: ''
       additionalProperties: false
       type: object
