@@ -1,5 +1,17 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+## 1.8.4 - 2025-06-03
+### Added
+- No change.
+
+### Changed
+- Updated specs for jobs, notifications, and updated repo for sk spec.
+- Made jsonschema dependency less stringent.
+
+### Removed
+- No change.
+
+
 ## 1.8.3 - 2025-05-19
 ### Added
 - Added flake.nix for development.
