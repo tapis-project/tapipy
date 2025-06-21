@@ -211,8 +211,11 @@ def _thread_download_spec_dict(resource_info: ResourceInfo) -> None:
             with atomic_write(f'{spec_path}', overwrite=True, mode='wb') as spec_file:
                 pickle.dump(spec_dict, spec_file, protocol=4)
         except Exception as e:
-            print(f'Got exception when attempting to pickle spec_dict for '
-                  f'"{resource_name}" resource; exception: {e}')
+            error_msg = f'Got exception when attempting to pickle spec_dict for "{resource_name}" resource; exception: {e}'
+            # If it's a permission error, provide additional guidance
+            if "Permission denied" in str(e) or "Errno 13" in str(e):
+                error_msg += f'\nTip: Set the "spec_dir" parameter to a writable directory when creating your Tapis client to avoid permission issues.'
+            print(error_msg)
             return
     else:
         raise KeyError(f'Error getting "{resource_name}" resource. URL: "{resource_url}".'
@@ -420,9 +423,14 @@ class Tapis(object):
         # pass in a "raw" JWT directly. This is only used if the access_token is not set.
         self.jwt = jwt
         if not self.access_token and self.jwt and type(self.jwt) == str:
-            tok = TapisResult(**{'access_token': self.jwt})
-            self.jwt = self.add_claims_to_token(tok)
-            self.access_token = self.jwt
+            if jwt == 'dummy':
+                # jwt is set to dummy during tenant-api initialization, in this case, don't mess with add_claims_to_token
+                logger.info("Found jwt='dummy', not adding claims to token, this is only expected during tenant-api initialization.")
+                self.access_token = self.jwt
+            else:
+                tok = TapisResult(**{'access_token': self.jwt})
+                self.jwt = self.add_claims_to_token(tok)
+                self.access_token = self.jwt
 
         # whether to verify the TLS certificate at the base_url
         self.verify = verify

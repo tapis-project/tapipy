@@ -1,5 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+## 1.8.5 - 2025-06-20
+### Added
+- No change.
+
+### Changed
+- 1.8.5 - added back logic for tenants-api env initialization
+
+### Removed
+- No change.
+
+
 ## 1.8.4 - 2025-06-03
 ### Added
 - No change.

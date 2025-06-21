@@ -7,7 +7,7 @@
 #    docker run -it --rm -v $(pwd)/test/resource_examples:/home/tapis/resource_examples tapis/tapipy-tests bash
 #    docker run -it --rm --network tenants-api_tenants tapis/tapipy-tests bash
 
-FROM python:3.8
+FROM python:3.10
 
 # Upgrade pip
 RUN python -m pip install --upgrade pip
@@ -21,6 +21,7 @@ ADD . /home/tapis/tapipy-install-dir
 RUN pip install -r /home/tapis/tapipy-install-dir/requirements.txt
 WORKDIR /home/tapis/tapipy-install-dir
 RUN poetry build
+RUN poetry install
 WORKDIR /home/tapis/tapipy-install-dir/dist
 RUN pip install *.whl
 WORKDIR /home/tapis
