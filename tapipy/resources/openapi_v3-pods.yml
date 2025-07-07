@@ -20,7 +20,7 @@ info:
   license:
     name: BSD 3.0
     url: https://github.com/tapis-project/pods_service
-  version: 1.6.0
+  version: 1.9.0
 paths:
   /traefik-config:
     get:
@@ -1322,6 +1322,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /pods/jupyter/ensure:
+    get:
+      tags:
+      - Jupyter
+      summary: Ensure user has a running Jupyter pod, useful for starting up coding
+        environment
+      description: 'Ensure the current user has a running Jupyter pod.
+
+        If not, create a new one named ''{username}jupyter'' from the base Jupyter
+        template.
+
+        Returns pod name and URL.'
+      operationId: ensure_jupyter_pod
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                title: Response Ensure Jupyter Pod
+  /pods/jupyter/{pod_id}/upload:
+    post:
+      tags:
+      - Jupyter
+      summary: Upload a document to the user's Jupyter pod
+      description: 'Upload a document to the user''s running Jupyter pod using the
+        Jupyter API.
+
+        Input: multipart form (file), and ''path'' (destination in Jupyter).'
+      operationId: upload_to_jupyter
+      parameters:
+      - required: true
+        schema:
+          type: string
+          title: Pod Id
+        name: pod_id
+        in: path
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_to_jupyter'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /pods:
     get:
       tags:
@@ -1702,6 +1757,39 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /pods/{pod_id}/upload_to_pod:
+    post:
+      tags:
+      - Pods
+      summary: Upload a file directly into the pod's filesystem
+      description: Upload a file to a specific path inside the pod using Kubernetes
+        exec/copy (chunked streaming, no temp file).
+      operationId: upload_to_pod
+      parameters:
+      - required: true
+        schema:
+          type: string
+          title: Pod Id
+        name: pod_id
+        in: path
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Body_upload_to_pod'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /pods/{pod_id}/permissions/{user}:
     delete:
       tags:
@@ -1910,23 +1998,23 @@ paths:
         \  6) User logs in via browser, authorizes client, redirects to callback_url\
         \ at https://tacc.tapis.io/v3/pods/fastapi/auth/callback?code=CodeHere\n \
         \ 7) Callback url exchanges code for token, gets username from token, sets\
-        \ X-Tapis-Token and X-Tapis-Username cookies\n  8) User gets redirected back\
-        \ to https://fastapi.pods.tacc.tapis.io, Traefik starts forwardAuth, user\
-        \ at this point should be authenticated\n  9) Auth endpoint responds with\
-        \ 200, sets headers specified by networking stanza, and users gets to fastapi\
-        \ hello world response.\n\nusers can specify:\n - tapis_auth=True/False -\
-        \ Turns on auth\n - tapis_auth_response_headers - dict[str] - headers to set\
-        \ on response and their values\n - tapis_auth_allowed_users - list[str] -\
-        \ list of tapis users allowed to access pod\n - tapis_auth_return_path - str\
-        \ - uri to return to after auth, default is \"passthrough\", which we save\
-        \ in cookies(?) and return to. x-forwarded-host?\n\n - response headers need\
-        \ to be slightly modifiable to allow for different application requirements\n\
+        \ X-Tapis-Token cookies, sets response headers according to tapis_auth_response_headers\n\
+        \  8) User gets redirected back to https://fastapi.pods.tacc.tapis.io/{tapis_auth_return_path},\
+        \ Traefik starts forwardAuth, user at this point should be authenticated\n\
+        \  9) Auth endpoint responds with 200, sets headers specified by networking\
+        \ stanza, and users gets to fastapi hello world response.\n\nusers can specify:\n\
+        \ - tapis_auth=True/False - Turns on auth\n - tapis_auth_response_headers\
+        \ - dict[str] - headers to set on response and their values\n - tapis_auth_allowed_users\
+        \ - list[str] - list of tapis users allowed to access pod\n - tapis_auth_return_path\
+        \ - str - uri to return to after auth, default is \"passthrough\", which we\
+        \ save in cookies(?) and return to. x-forwarded-host?\n\n - response headers\
+        \ need to be slightly modifiable to allow for different application requirements\n\
         \ - for example we have to pass username, but many apps require @email.bit,\
         \ so user must be able to append to user.\n - tapis_auth_response_headers:\
-        \ {\"X-Tapis-Username\": \"<<tapisusername>>@tapis.io\", \"X-Tapis-Token\"\
-        : \"<<token>>\", \"OAUTH2_USERNAME_KEY\": \"username\"}\n\n - tapis_auth_allowed_users,\
-        \ checks username against .lower() of username list to make sure it's in list.\
-        \ otherwise deny"
+        \ {\"X-Tapis-Username\": \"<<tapisusername>>@tapis.io\", \"FROM\": \"pods\
+        \ auth endpoint from <<tenant>>.<<site>>\", \"OAUTH2_USERNAME_KEY\": \"username\"\
+        }\n\n - tapis_auth_allowed_users, checks username against .lower() of username\
+        \ list to make sure it's in list. otherwise deny"
       operationId: pod_auth
       parameters:
       - required: true
@@ -1974,6 +2062,34 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
+    Body_upload_to_jupyter:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+        path:
+          type: string
+          title: Path
+      type: object
+      required:
+      - file
+      - path
+      title: Body_upload_to_jupyter
+    Body_upload_to_pod:
+      properties:
+        file:
+          type: string
+          format: binary
+          title: File
+        dest_path:
+          type: string
+          title: Dest Path
+      type: object
+      required:
+      - file
+      - dest_path
+      title: Body_upload_to_pod
     Body_upload_to_volume:
       properties:
         file:
@@ -2260,6 +2376,7 @@ components:
           format: date-time
           title: Creation Ts
           description: Time (UTC) that this image was created.
+          default: '2025-05-15T00:28:39.897690'
         added_by:
           type: string
           title: Added By
@@ -3690,6 +3807,38 @@ components:
           title: Tapis Auth Return Path
           description: Path to redirect to when accessing the pod via Tapis auth.
           default: /
+        cors_allow_origins:
+          items:
+            type: string
+          type: array
+          title: Cors Allow Origins
+          description: List of CORS allowed origins. ex. ['https://tacc.develop.tapis.io',
+            'https://tacc.tapis.io']
+          default: []
+        cors_allow_methods:
+          items:
+            type: string
+          type: array
+          title: Cors Allow Methods
+          description: List of CORS allowed methods. ex. ['GET', 'POST', 'PUT', 'DELETE']
+          default: []
+        cors_allow_headers:
+          items:
+            type: string
+          type: array
+          title: Cors Allow Headers
+          description: List of CORS allowed headers. ex. ['Content-Type', 'X-Tapis-Token']
+          default: []
+        cors_allow_credentials:
+          type: boolean
+          title: Cors Allow Credentials
+          description: Boolean to allow credentials to be sent with CORS requests.
+          default: false
+        cors_max_age:
+          type: integer
+          title: Cors Max Age
+          description: Max age of CORS preflight requests in seconds.
+          default: 100
         tapis_ui_uri:
           type: string
           title: Tapis Ui Uri
@@ -3815,6 +3964,38 @@ components:
           title: Tapis Auth Return Path
           description: Path to redirect to when accessing the pod via Tapis auth.
           default: /
+        cors_allow_origins:
+          items:
+            type: string
+          type: array
+          title: Cors Allow Origins
+          description: List of CORS allowed origins. ex. ['https://tacc.develop.tapis.io',
+            'https://tacc.tapis.io']
+          default: []
+        cors_allow_methods:
+          items:
+            type: string
+          type: array
+          title: Cors Allow Methods
+          description: List of CORS allowed methods. ex. ['GET', 'POST', 'PUT', 'DELETE']
+          default: []
+        cors_allow_headers:
+          items:
+            type: string
+          type: array
+          title: Cors Allow Headers
+          description: List of CORS allowed headers. ex. ['Content-Type', 'X-Tapis-Token']
+          default: []
+        cors_allow_credentials:
+          type: boolean
+          title: Cors Allow Credentials
+          description: Boolean to allow credentials to be sent with CORS requests.
+          default: false
+        cors_max_age:
+          type: integer
+          title: Cors Max Age
+          description: Max age of CORS preflight requests in seconds.
+          default: 100
         tapis_ui_uri:
           type: string
           title: Tapis Ui Uri
@@ -3885,14 +4066,14 @@ components:
 tags:
 - name: Pods
   description: Create and command pods.
-- name: Credentials
-  description: Manage pod's credentials used.
-- name: Logs
-  description: Manage pod logs.
-- name: Permissions
-  description: Manage pod permissions. Grant specific TACC users **READ**, **USER**,
-    and **ADMIN** level permissions.
+- name: Templates
+  description: Create and manage templated pod definitions for use in pod deployment.
 - name: Volumes
   description: Create and manage volumes.
 - name: Snapshots
   description: Create and manage snapshots.
+- name: Images
+  description: Create and manage docker images available in the service.
+- name: Permissions
+  description: Manage pod permissions. Grant specific TACC users **READ**, **USER**,
+    and **ADMIN** level permissions.
