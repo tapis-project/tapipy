@@ -14,9 +14,9 @@
         tapipyPython = python.withPackages (ps: [
           ps.requests
           ps.pip
-          #ps.pyaml
-          #ps.openapi-core
-          #ps.atomicwrites
+          ps.pyaml
+          ps.openapi-core
+          ps.atomicwrites
         ]);
         commonPackages = [
           tapipyPython

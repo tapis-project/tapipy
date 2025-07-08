@@ -1,4 +1,8 @@
 # tapipy - Tapis V3 Python SDK
+[![PyPI version](https://img.shields.io/pypi/v/tapipy.svg)](https://pypi.org/project/tapipy/)
+[![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/tapis-project/tapipy?label=git%20tag&sort=semver)](https://github.com/tapis-project/tapipy/tags)
+[![docs](https://img.shields.io/badge/docs-grey)](https://tapis.readthedocs.io/en/latest/technical/pythondev.html#tapipy-user-guide)
+[![live-docs](https://img.shields.io/badge/live--docs-grey)](https://tapis-project.github.io/live-docs/)
 
 Python library for interacting with an instance of the Tapis API Framework.
 

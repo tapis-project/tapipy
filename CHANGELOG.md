@@ -1,5 +1,16 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+## 1.9.0 - 2025-07-07
+### Added
+- No change.
+
+### Changed
+- 1.9.0 release
+- Update pods and notifications specs
+
+### Removed
+- No change.
+
 ## 1.8.5 - 2025-06-20
 ### Added
 - No change.
