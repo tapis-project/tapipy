@@ -864,7 +864,11 @@ paths:
       description: |
         Create a background task which will transfer files between systems.
         Note that not all combinations of system types are supported. For example, transfers involving a GLOBUS
-        system must be GLOBUS to GLOBUS.
+        system must be GLOBUS to GLOBUS.  
+
+        Transfers will fail if there are more than a set number of files per directory.  The current limit is 
+        10,000 files, however that could change in the future.  It's recommended that for large numbers of files
+        you build an archive (tar, zip, etc) and transfer that instead.
       operationId: createTransferTask
       security:
         - TapisJWT: []

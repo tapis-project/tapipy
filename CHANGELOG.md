@@ -1,5 +1,18 @@
 # Change Log
 All notable changes to this project will be documented in this file.
+
+## 25Q4.0
+### Added
+- No change.
+
+### Changed
+- 25Q4.0 release
+- Updated specs for files, sk, systems, apps, notifications
+- Python package version is 25.4.0, omitting alpha character
+
+### Removed
+- No change.
+
 ## 1.9.1 - 2025-08-28
 ### Added
 - No change.
